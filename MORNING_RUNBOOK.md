@@ -1,0 +1,89 @@
+# Morning runbook: turning mock evidence into real evidence
+
+This build is complete offline. Everything below is PENDING only because this
+machine has no provider keys, no Bifrost gateway, no Ollama, and no Go toolchain.
+Do not edit BUILD_REPORT.md with estimates; run the commands and paste the real
+numbers.
+
+## 1. Environment
+
+```bash
+# Gidorah shell
+export GIDORAH_MODE=cloud
+export BIFROST_BASE_URL=http://127.0.0.1:8080/openai
+export BIFROST_VK_CLOUD=gidorah-<user>-cloud
+export BIFROST_VK_LOCAL=gidorah-<user>-local
+export TAVILY_API_KEY=tvly-...
+export OLLAMA_URL=http://127.0.0.1:11434
+export GIDORAH_HOME=~/.gidorah
+```
+
+## 2. Start the real dependencies
+
+```bash
+# terminal 1: Bifrost gateway (pin the release in the report)
+npx -y @maximhq/bifrost
+# or: docker run -p 8080:8080 -v "$(pwd)/data:/app/data" maximhq/bifrost
+
+# terminal 2: local model for confidential mode
+ollama serve
+ollama pull qwen2.5-coder:3b
+
+# Bifrost provider key lives in Bifrost config, never in the Gidorah process.
+# Create providers: deepseek flash/pro, ollama qwen2.5-coder:3b.
+# Create virtual keys from config/bifrost/virtual-keys.example.json:
+#   gidorah-<user>-cloud  (deepseek/*, monthly budget)
+#   gidorah-<user>-local  (ollama/* only, no dollar budget)
+# Apply routing rules from config/bifrost/routing-rules.example.json and the
+# aliases gidorah-auto/fast/strong/local.
+```
+
+## 3. Verify wiring
+
+```bash
+node apps/cli/src/main.ts doctor          # expect PASS for bifrost, policy, mode=cloud
+node apps/cli/src/main.ts policy validate config/policy.example.yml
+```
+
+## 4. Run the real evidence
+
+```bash
+# 3-task pilot first; inspect every row of raw.jsonl before the full run
+node apps/cli/src/main.ts bench --pilot
+
+# Full run only if the pilot rows are clean and the budget allows
+node apps/cli/src/main.ts bench --full
+
+# Real demo plus a fresh replay trace
+node apps/cli/src/main.ts demo --record
+node apps/cli/src/main.ts demo --replay
+
+# Security evidence
+node apps/cli/src/main.ts audit verify --all
+node apps/cli/src/main.ts redteam
+node apps/cli/src/main.ts chaos
+node apps/cli/src/main.ts conformance
+```
+
+## 5. Go plugin
+
+```bash
+cd plugins/bifrost-dlp
+go vet ./...
+go test ./...
+# then load the plugin into the pinned Bifrost build per its plugin docs
+```
+
+## 6. Update the report
+
+For each command, replace the matching PENDING row in BUILD_REPORT.md with:
+- the exact command,
+- the date and machine,
+- the exit code,
+- the headline numbers from `bench/<run>/report.md` and `raw.jsonl`.
+
+Rules that do not relax with keys:
+- 402 is never retried; a task cap never authorizes spend Bifrost would reject.
+- Confidential sessions still make zero cloud and zero Tavily calls.
+- No benchmark number is estimated; every number comes from Bifrost/Tavily usage.
+- If a lever loses (Tavily, compaction, Code Mode), report the negative result.

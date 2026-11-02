@@ -1,0 +1,40 @@
+{
+  "_comment": "Illustrative Gidorah Bifrost virtual keys. Names and budgets are placeholders, and no key material appears here: Bifrost issues the virtual key values. The cloud key may use DeepSeek models. The local-only key may use Ollama only, which is the primary enforcement for confidential mode. PENDING: virtual key and budget API shapes must be verified against the pinned Bifrost release.",
+  "virtual_keys": [
+    {
+      "name": "gidorah-alice-cloud",
+      "provider_configs": [
+        {
+          "provider": "deepseek",
+          "weight": 1.0,
+          "allowed_models": ["deepseek-flash", "deepseek-pro"],
+          "key_ids": ["*"]
+        }
+      ],
+      "budgets": [
+        {
+          "max_limit": 50.0,
+          "reset_duration": "1M"
+        }
+      ],
+      "rate_limit": {
+        "request_max_limit": 120,
+        "request_reset_duration": "1h"
+      },
+      "is_active": true
+    },
+    {
+      "name": "gidorah-alice-local",
+      "provider_configs": [
+        {
+          "provider": "ollama",
+          "weight": 1.0,
+          "allowed_models": ["qwen2.5-coder:3b"],
+          "key_ids": ["*"]
+        }
+      ],
+      "budgets": [],
+      "is_active": true
+    }
+  ]
+}

@@ -402,3 +402,63 @@ Full-file rewrites and full-file reads are the largest avoidable token costs in 
 
 ### References
 [agent-runtime.md](../01-architecture/agent-runtime.md#2-tools), benchmark arms I/J
+
+---
+
+<a id="adr-0013--dependency-free-offline-runtime"></a>
+## ADR-0013 — Dependency-free offline runtime
+
+- **Status:** Accepted
+- **Date:** 2026-11-03
+- **Deciders:** Engineering
+
+### Context
+The build machine had no registry access at the start and no TypeScript compiler. The docs prescribe pnpm, Vitest, Zod, Commander, better-sqlite3, and a bundler. None could be installed until a later npm probe succeeded through Node's fetch with a local cache.
+
+### Decision
+Run TypeScript directly on Node 26 type stripping, use `node:test` with `--test-isolation=none`, use `node:sqlite` instead of better-sqlite3, and keep the runtime dependency-free. Custom `scripts/lint.ts`, `scripts/typecheck.ts`, and `scripts/build.ts` stand in for Biome/tsdown; the typecheck script runs the real `tsc` when the toolchain is present (it now is, installed from a local npm cache). Subprocess output is captured through temp files because the sandbox denies piped child stdio.
+
+### Consequences
+The repository runs with zero runtime dependencies and still passes a strict `tsc --noEmit`. Vitest, Zod, Commander, pino, and canonicalize are substituted with small in-repo equivalents (node:test, hand-rolled validators, argv parser, redacted JSONL logging, canonical JSON).
+
+### References
+[scripts/typecheck.ts](../../scripts/typecheck.ts), [scripts/run-tests.ts](../../scripts/run-tests.ts), BUILD_STATUS.md
+
+---
+
+<a id="adr-0014--plain-tui-adapter-before-dsh-vendoring"></a>
+## ADR-0014 — Plain TUI adapter before DSH vendoring
+
+- **Status:** Accepted
+- **Date:** 2026-11-03
+- **Deciders:** Frontend, Delivery
+
+### Context
+ADR-0003 plans to vendor `@deepseek-ai/dsh-tui`. The package could not be fetched in this build, and the docs already require a `--plain` renderer and allow a line-based CLI fallback.
+
+### Decision
+Ship a line-based renderer behind the full `TuiEvent` contract (status line, transcript, approval, takeover, research card, DLP notice, Docs Guard badge, receipt) and keep the vendoring step PENDING in MORNING_RUNBOOK.md. Untrusted text is stripped of ANSI/control characters before rendering.
+
+### References
+[apps/tui/src/index.ts](../../apps/tui/src/index.ts), docs/01-architecture/tui-adaptation.md
+
+---
+
+<a id="adr-0015--mock-first-evidence-and-honest-pending"></a>
+## ADR-0015 — Mock-first evidence and honest PENDING labels
+
+- **Status:** Accepted
+- **Date:** 2026-11-03
+- **Deciders:** Lead, Security
+
+### Context
+No real provider keys, Bifrost gateway, Ollama, or Go toolchain existed. The overnight policy requires building, testing, and reporting without fabricating results.
+
+### Decision
+Implement a mock Bifrost gateway (auth, provider allowlists, budgets with 402, phase routing, fallbacks with headers, DLP, logs) and mock DeepSeek/Ollama/Tavily upstreams, and run every automated gate against them. Label every affected result PENDING with the exact unblocking step. The benchmark runner executes the real loop, tools, context, and audit with a scripted mock model and says so in its report. Runtime data defaults to a repo-local `.gidorah` directory when `GIDORAH_HOME` is unset because the sandbox cannot write the user home.
+
+### Consequences
+Every automated guarantee is testable now; no claim about real providers, real model quality, real invoices, or the Go plugin is made until MORNING_RUNBOOK.md is executed.
+
+### References
+BUILD_STATUS.md, MORNING_RUNBOOK.md, BUILD_REPORT.md

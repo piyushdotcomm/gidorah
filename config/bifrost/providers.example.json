@@ -1,0 +1,40 @@
+{
+  "_comment": "Illustrative Gidorah Bifrost provider configuration. Fake endpoints and fake key references only, no real credentials. Field names must be verified against the pinned Bifrost release before use. PENDING: not validated against a running Bifrost gateway.",
+  "providers": {
+    "deepseek": {
+      "enabled": true,
+      "api_key": "env:DEEPSEEK_API_KEY",
+      "base_url": "https://deepseek.example.invalid/v1",
+      "models": [
+        {
+          "id": "deepseek-flash",
+          "role": "default explore and edit model",
+          "context_window": 64000,
+          "max_output_tokens": 8192,
+          "enabled": true
+        },
+        {
+          "id": "deepseek-pro",
+          "role": "verify and escalation model",
+          "context_window": 64000,
+          "max_output_tokens": 8192,
+          "enabled": true
+        }
+      ]
+    },
+    "ollama": {
+      "enabled": true,
+      "api_key": null,
+      "base_url": "http://127.0.0.1:11434",
+      "models": [
+        {
+          "id": "qwen2.5-coder:3b",
+          "role": "confidential and local fallback model",
+          "context_window": 32768,
+          "max_output_tokens": 4096,
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

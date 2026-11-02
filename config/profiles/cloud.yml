@@ -1,0 +1,18 @@
+# Gidorah cloud profile overlay. This is not a second policy file: the loader
+# merges the policy block onto ~/.gidorah/policy.yml for one session. It only
+# references the fields the cloud profile changes. Placeholder values only.
+#
+# References: mode.default, budgets.llm.virtual_key_cloud, research.enabled.
+
+version: 1
+profile: cloud
+description: "Normal work: cloud virtual key and research enabled."
+
+policy:
+  mode:
+    default: cloud
+  budgets:
+    llm:
+      virtual_key_cloud: "gidorah-alice-cloud"
+  research:
+    enabled: true

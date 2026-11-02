@@ -1,47 +1,25 @@
 /**
  * Typecheck.
  *
- * The TypeScript compiler (`tsc`) is not installed and cannot be installed
- * without registry access. This script runs tsc when it is available; when it
- * is not, it performs the strongest offline substitute: importing every source
- * module so syntax, import resolution, and top-level load errors surface, and
- * prints an explicit PENDING line instead of pretending types were checked.
- *
- * Both the PENDING status and the substitute are recorded in BUILD_STATUS.md
- * and ADR-0013. Nothing here lowers a real gate: when tsc exists, a type error
- * fails this script.
+ * Runs the real TypeScript compiler when it is installed. This build installed
+ * typescript and @types/node from the npm registry (through Node's fetch with a
+ * local cache), so this is a real strict type check. If the toolchain is
+ * absent, it fails honestly instead of pretending types were checked.
  */
-import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { spawnSync } from "node:child_process";
 
 const ROOT = resolve(import.meta.dirname, "..");
+const tscJs = join(ROOT, "node_modules", "typescript", "lib", "tsc.js");
 
-const probe = spawnSync(process.platform === "win32" ? "tsc.cmd" : "tsc", ["--version"], { shell: true, encoding: "utf8" });
-if (probe.status === 0) {
-  console.log(`typecheck: tsc found (${probe.stdout.trim()}), running strict project check`);
-  const run = spawnSync(process.platform === "win32" ? "tsc.cmd" : "tsc", ["-p", "tsconfig.json", "--noEmit"], {
-    shell: true,
-    stdio: "inherit",
-    cwd: ROOT,
-  });
-  process.exit(run.status ?? 1);
+if (!existsSync(tscJs)) {
+  console.error("typecheck: FAIL. TypeScript is not installed (node_modules/typescript missing).");
+  console.error("typecheck: run `pnpm install` with registry access, then retry.");
+  process.exit(1);
 }
 
-const modules: string[] = [];
-for (const pkgDir of readdirSync(join(ROOT, "packages"))) {
-  const entry = join(ROOT, "packages", pkgDir, "src", "index.ts");
-  if (existsSync(entry)) modules.push(entry);
-}
-for (const appDir of readdirSync(join(ROOT, "apps"))) {
-  const entry = join(ROOT, "apps", appDir, "src", "index.ts");
-  if (existsSync(entry)) modules.push(entry);
-}
-
-for (const mod of modules) {
-  await import(pathToFileURL(mod).href);
-}
-
-console.log(`typecheck: PENDING (tsc unavailable offline). Load-checked ${modules.length} source entrypoints.`);
-console.log("typecheck: install the toolchain, then run `pnpm typecheck` for real type checking.");
+const pkg = JSON.parse(readFileSync(join(ROOT, "node_modules", "typescript", "package.json"), "utf8")) as { version: string };
+console.log(`typecheck: tsc ${pkg.version} (strict, noEmit)`);
+const result = spawnSync(process.execPath, [tscJs, "-p", "tsconfig.json", "--noEmit"], { stdio: "inherit", cwd: ROOT });
+process.exit(result.status ?? 1);
