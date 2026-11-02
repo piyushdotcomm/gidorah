@@ -1,0 +1,22 @@
+{"type":"notice","level":"info","text":"scene 1: approvals. reads are free; writes, shell, and git ask."}
+{"type":"tool_call","callId":"call_read","name":"read","args":{"path":"src/auth.ts"}}
+{"type":"tool_result","callId":"call_read","ok":true,"summary":"read 42 lines (no approval)"}
+{"type":"approval_request","approvalId":"apr_1","tool":"edit","risk":"write","preview":"src/auth.ts: -12 +12"}
+{"type":"approval_decision","approvalId":"apr_1","decision":"allow"}
+{"type":"approval_request","approvalId":"apr_2","tool":"bash","risk":"shell","preview":"git push --force"}
+{"type":"approval_decision","approvalId":"apr_2","decision":"deny"}
+{"type":"notice","level":"info","text":"scene 2: confidential mode and adversarial input."}
+{"type":"notice","level":"warn","text":"injection blocked: research verdict=allow (policy-gated, budgeted research)"}
+{"type":"dlp_blocked","class":"aws-access-key","action":"blocked"}
+{"type":"assistant_delta","text":"local model served: ollama/qwen2.5-coder:3b"}
+{"type":"notice","level":"info","text":"confidential trace: 0 cloud calls, 0 Tavily calls"}
+{"type":"notice","level":"info","text":"scene 3: provider outage. Bifrost falls back and the takeover is durable."}
+{"type":"route_changed","from":"deepseek/deepseek-pro","to":"deepseek/deepseek-flash","reason":"429","fallbackIndex":1}
+{"type":"notice","level":"warn","text":"takeover banner is persisted and survives resume"}
+{"type":"notice","level":"info","text":"scene 4: docs-dependent task. one cited card prevents failed iterations."}
+{"type":"research_card","card":{"id":"card_8d62a52a8771","question":"Stripe webhook signature verification","answer":"Use stripe.webhooks.constructEvent(rawBody, signature, secret). The raw body is required. The stripe-signature header carries the signature.","facts":["Use stripe.webhooks.constructEvent(rawBody, signature, secret).","The raw body is required.","The stripe-signature header carries the signature."],"sources":[{"title":"Stripe webhook signatures","url":"https://docs.stripe.com/webhooks/signature","domain":"docs.stripe.com","retrievedAt":"2026-11-02T22:09:39.032Z"}],"confidence":"medium","package":{"name":"stripe","version":"18.2.0"},"tokenEstimate":88,"cached":false}}
+{"type":"notice","level":"info","text":"card: 88 tokens, 1 sources, confidence medium"}
+{"type":"notice","level":"info","text":"scene 5: budget and receipt."}
+{"type":"budget_updated","llmUsd":0.42,"llmLimit":0.5,"researchCredits":2,"researchLimit":50}
+{"type":"notice","level":"warn","text":"budget warning at 80% (one warning per threshold crossing)"}
+{"type":"turn_done","receipt":{"sessionId":"demo","taskId":"demo","status":"success","summary":"demo scenes completed offline","tokens":{"input":12340,"output":980,"cacheRead":0,"cacheWrite":0,"total":13320},"llmCostUsd":0.4213,"researchCredits":2,"fallbacks":1,"budgetRemaining":{"llmUsd":0.0787,"researchCredits":48}}}

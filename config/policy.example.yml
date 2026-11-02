@@ -1,0 +1,102 @@
+# Gidorah example policy. Placeholder values only: no real user, paths,
+# remotes, keys, or budgets. Copy to ~/.gidorah/policy.yml and edit for the
+# machine. The policy file lives outside the repository and is the root of
+# trust, so a repository cannot change its own classification.
+#
+# This file must parse with the minimal YAML subset parser in
+# packages/shared/src/yaml.ts: nested mappings, block scalar lists, and
+# comments. Inline maps and lists of maps are not supported.
+
+version: 1
+user: alice
+
+mode:
+  default: cloud
+  confidential:
+    paths:
+      - "C:/work/bank-*"
+      - "C:/work/security-review-*"
+    remotes:
+      - "git@github.com:acme/secret-*"
+    marker: ".gidorah/confidential"
+
+budgets:
+  llm:
+    virtual_key_cloud: "gidorah-alice-cloud"
+    virtual_key_local: "gidorah-alice-local"
+    soft_threshold: 0.80
+    at_limit: local_first
+  research:
+    credits_per_day: 50
+    calls_per_task: 2
+  task:
+    default_usd: 0.10
+    on_limit: ask
+
+research:
+  enabled: true
+  # Vendor or package name to allowed documentation hosts. The minimal parser
+  # has no inline lists, so each host list is a block sequence.
+  official_domains:
+    example.com:
+      - "docs.example.com"
+    nodejs.org:
+      - "nodejs.org"
+  ttl_seconds: 604800
+  card_token_cap: 700
+
+docs_guard:
+  enabled: true
+  max_lookups_per_edit: 1
+  advisory_only: true
+
+context:
+  tool_cap_tokens: 4000
+  clear_after_tool_results: 8
+  compact_at_pressure: 0.90
+  compaction: measured
+
+editing:
+  patch_first: true
+  require_reason_for_full_write: true
+
+repo_map:
+  enabled: true
+  max_tokens: 2000
+
+audit:
+  enabled: true
+  anchor_path: "~/.gidorah/audit-anchor.log"
+  sign_head: false
+
+redteam:
+  enabled: true
+  corpus: "tests/redteam/corpus.ts"
+  canary_required: true
+
+dlp:
+  enabled: true
+  default_action: block
+  # Pattern class names that are reported in the decision event but not
+  # blocked. Empty by default. An example entry would be env-assignment.
+  allowlist: []
+
+approvals:
+  reads: allow
+  writes: ask
+  shell: ask
+  git_read: allow
+  git_write: ask
+  confidential_network: deny
+
+providers:
+  aliases:
+    gidorah-auto: "deepseek/deepseek-flash"
+    gidorah-fast: "deepseek/deepseek-flash"
+    gidorah-strong: "deepseek/deepseek-pro"
+    gidorah-local: "ollama/qwen2.5-coder:3b"
+  cloud:
+    - "deepseek/deepseek-flash"
+    - "deepseek/deepseek-pro"
+  local:
+    - "ollama/qwen2.5-coder:3b"

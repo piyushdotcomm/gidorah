@@ -1,0 +1,26 @@
+Gidorah
+Copyright 2026 The Gidorah authors
+
+Gidorah is licensed under the Apache License, Version 2.0. See LICENSE.
+
+Third-party attributions and the register of components used (or planned) by
+this distribution are recorded in third_party/README.md. Summary:
+
+- Bifrost (maximhq/bifrost), Apache-2.0, by Maxim AI. Used as the model plane.
+  Gidorah is not an official Bifrost product and is not endorsed by Maxim AI.
+- Tavily API, commercial terms. Used as the knowledge plane under its API terms
+  and acceptable-use policy. Research results are cited in agent answers; the
+  benchmark stores metadata, sources, and aggregate metrics, not full pages.
+- DeepSeek Harness TUI (@deepseek-ai/dsh-tui), MIT AND BSD-3-Clause, Copyright
+  (c) 2026 DeepSeek. NOT vendored in this offline build (adaptation PENDING).
+  When vendored, third_party/dsh-tui/LICENSE and NOTICE must be added and the
+  SPDX expression preserved.
+- pi-tui (@earendil-works/pi-tui), MIT, pinned 0.80.7 when the TUI is vendored.
+  NOT vendored in this build.
+- Node.js, MIT-style license, runtime.
+- TypeScript and @types/node, Apache-2.0 and MIT respectively, development
+  toolchain only.
+- plugins/bifrost-dlp is original Gidorah code licensed Apache-2.0.
+
+No DeepSeek, Bifrost, or Tavily name or logo is used as Gidorah's product
+identity. No real credentials are included in this repository.

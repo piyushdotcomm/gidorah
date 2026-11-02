@@ -29,3 +29,6 @@ desktop.ini
 # Worktrees
 .worktrees/
 worktrees/
+
+# Local npm cache used to install the dev toolchain offline-friendly
+.npm-cache/

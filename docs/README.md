@@ -127,3 +127,9 @@ Any decision that changes the architecture, a public contract, a security bounda
 | 2026-11-03 | 0.4 | Added external research findings and source-backed plan revisions |
 | 2026-11-03 | 0.5 | Added benchmark task catalog and final consistency pass |
 | 2026-11-03 | 0.6 | Added tamper-evident audit, red-team canary, patch-first edits, repo map, and new skills |
+
+---
+
+## Implementation status (2026-11-03)
+
+The docs above remain the design source of truth. A working offline implementation now exists: see the repository root `README.md`, `BUILD_REPORT.md`, `BUILD_STATUS.md`, and `MORNING_RUNBOOK.md`. Deviations from the planned toolchain are recorded in ADR-0013 (dependency-free runtime), ADR-0014 (plain TUI first), and ADR-0015 (mock-first evidence and honest PENDING). Real-provider, Go-plugin, DSH-TUI, and bundler items remain PENDING with explicit unblock steps.

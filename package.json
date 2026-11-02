@@ -23,5 +23,9 @@
     "conformance": "node apps/cli/src/main.ts conformance",
     "chaos": "node apps/cli/src/main.ts chaos",
     "doctor": "node apps/cli/src/main.ts doctor"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "@types/node": "26.6.6"
   }
 }

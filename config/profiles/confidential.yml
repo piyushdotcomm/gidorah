@@ -1,0 +1,27 @@
+# Gidorah confidential profile overlay. This is not a second policy file: the
+# loader merges the policy block onto ~/.gidorah/policy.yml for one session.
+# It references only the fields the confidential profile changes. Placeholder
+# values only.
+#
+# References: mode.default, budgets.llm.virtual_key_local, research.enabled,
+# providers.cloud, providers.local, approvals.confidential_network.
+
+version: 1
+profile: confidential
+description: "Confidential work: local virtual key only, research disabled, network shell denied."
+
+policy:
+  mode:
+    default: confidential
+  budgets:
+    llm:
+      virtual_key_local: "gidorah-alice-local"
+  research:
+    enabled: false
+  providers:
+    cloud: []
+    local:
+      - "ollama/qwen2.5-coder:3b"
+  approvals:
+    # Network shell commands are denied, not asked, in confidential mode.
+    confidential_network: deny

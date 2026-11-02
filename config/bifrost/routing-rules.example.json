@@ -1,0 +1,114 @@
+{
+  "_comment": "Illustrative Gidorah Bifrost routing rules and aliases. Provider ids, model ids, and priorities are placeholders that mirror docs/01-architecture/bifrost-model-plane.md. Lower priority evaluates first, so the budget rule runs before the phase rules. CEL variable names and scope semantics must be verified against the pinned Bifrost release. PENDING: not validated against a running Bifrost gateway.",
+  "routing_rules": [
+    {
+      "id": "gidorah-budget-degrade",
+      "name": "Gidorah budget above 85 percent to flash",
+      "enabled": true,
+      "cel_expression": "budget_used > 85",
+      "targets": [
+        {
+          "provider": "deepseek",
+          "model": "deepseek-flash",
+          "weight": 1
+        }
+      ],
+      "fallbacks": ["ollama/qwen2.5-coder:3b"],
+      "scope": "global",
+      "priority": 5
+    },
+    {
+      "id": "gidorah-phase-explore",
+      "name": "Gidorah explore to flash",
+      "enabled": true,
+      "cel_expression": "headers[\"x-gidorah-phase\"] == \"explore\"",
+      "targets": [
+        {
+          "provider": "deepseek",
+          "model": "deepseek-flash",
+          "weight": 1
+        }
+      ],
+      "fallbacks": ["deepseek/deepseek-pro", "ollama/qwen2.5-coder:3b"],
+      "scope": "global",
+      "priority": 10
+    },
+    {
+      "id": "gidorah-phase-edit",
+      "name": "Gidorah edit to flash",
+      "enabled": true,
+      "cel_expression": "headers[\"x-gidorah-phase\"] == \"edit\"",
+      "targets": [
+        {
+          "provider": "deepseek",
+          "model": "deepseek-flash",
+          "weight": 1
+        }
+      ],
+      "fallbacks": ["ollama/qwen2.5-coder:3b"],
+      "scope": "global",
+      "priority": 15
+    },
+    {
+      "id": "gidorah-phase-verify",
+      "name": "Gidorah verify to pro",
+      "enabled": true,
+      "cel_expression": "headers[\"x-gidorah-phase\"] == \"verify\"",
+      "targets": [
+        {
+          "provider": "deepseek",
+          "model": "deepseek-pro",
+          "weight": 1
+        }
+      ],
+      "fallbacks": ["deepseek/deepseek-flash", "ollama/qwen2.5-coder:3b"],
+      "scope": "global",
+      "priority": 20
+    }
+  ],
+  "aliases": {
+    "gidorah-auto": {
+      "description": "Default alias for the main conversation. The phase rules choose the concrete model.",
+      "strategy": "phase-rules",
+      "fallbacks": ["deepseek/deepseek-pro", "ollama/qwen2.5-coder:3b"]
+    },
+    "gidorah-fast": {
+      "description": "Deterministic sub-calls: explore, routine edits, and summaries.",
+      "targets": [
+        {
+          "provider": "deepseek",
+          "model": "deepseek-flash",
+          "weight": 1
+        }
+      ],
+      "fallbacks": ["ollama/qwen2.5-coder:3b"]
+    },
+    "gidorah-strong": {
+      "description": "Deterministic sub-calls: verify and hard repairs.",
+      "targets": [
+        {
+          "provider": "deepseek",
+          "model": "deepseek-pro",
+          "weight": 1
+        }
+      ],
+      "fallbacks": ["deepseek/deepseek-flash", "ollama/qwen2.5-coder:3b"]
+    },
+    "gidorah-local": {
+      "description": "Confidential work and budget fallback. This alias never falls back to a cloud provider.",
+      "targets": [
+        {
+          "provider": "ollama",
+          "model": "qwen2.5-coder:3b",
+          "weight": 1
+        }
+      ],
+      "fallbacks": []
+    }
+  },
+  "fallback_chains": {
+    "cloud": ["deepseek/deepseek-pro", "deepseek/deepseek-flash", "ollama/qwen2.5-coder:3b"],
+    "cloud_cheap": ["deepseek/deepseek-flash", "ollama/qwen2.5-coder:3b"],
+    "local": ["ollama/qwen2.5-coder:3b"]
+  }
+}
