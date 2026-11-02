@@ -1,4 +1,4 @@
-# Dependencies and build output
+﻿# Dependencies and build output
 node_modules/
 dist/
 coverage/
@@ -14,8 +14,6 @@ coverage/
 *.key
 
 # Runtime data and generated artifacts
-bench/**/raw.jsonl
-bench/**/traces/
 bench/**/charts/
 artifacts/
 sessions/
