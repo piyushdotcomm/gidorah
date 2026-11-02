@@ -1,0 +1,27 @@
+{
+  "name": "gidorah",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The governed coding agent. Bifrost is the model plane, Tavily is the knowledge plane, and every task ends with a receipt.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "lint": "node scripts/lint.ts",
+    "typecheck": "node scripts/typecheck.ts",
+    "test": "node scripts/run-tests.ts",
+    "gidorah": "node apps/cli/src/main.ts",
+    "demo": "node apps/cli/src/main.ts demo",
+    "bench": "node apps/cli/src/main.ts bench",
+    "conformance": "node apps/cli/src/main.ts conformance",
+    "chaos": "node apps/cli/src/main.ts chaos",
+    "doctor": "node apps/cli/src/main.ts doctor"
+  }
+}
