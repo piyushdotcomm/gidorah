@@ -1,3 +1,6 @@
+> **Current state (2026-11-03):** the runtime is npm + `node:test` + `node:sqlite` +
+> custom scripts (ADR-0013). The pnpm/Vitest/better-sqlite3/tsdown table below is
+> historical. See `README.md` and `FINAL_STATE.md` for what is verified today.
 # Tech Stack and Repository
 
 **Status:** Draft · **Owner:** Engineering · **Last updated:** 2026-11-03

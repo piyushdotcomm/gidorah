@@ -76,3 +76,12 @@ LICENSE/NOTICE in `third_party/dsh-tui`. Full register: `third_party/README.md`.
 - Metrics are derived from session events: research calls count `research/result` only, research credits sum real Tavily usage, patch tokens/full-file reads/approval prompts/cache hits come from the event stream, and errored/timeout rows are counted separately.
 - Pricing: TokenUsage.input is treated as uncached input; cacheRead is billed separately, with a test using cacheRead > 0.
 - Superseded: the earlier synthetic-math runs and the uncapped hung run stay in `bench/` and are labelled in `BUILD_LOG.md`. The A-class full run was partially recorded (`real_mw0g7hvx`) before the Class B run; it is not used as the headline.
+## Review correction pass (current)
+
+- **Full run:** 12 tasks x arms A/C/D (F present as an extra cost-floor arm; treated as supplementary), 1 run, maxSteps 12, no max-token cap, hard 180 s task timeout, per-phase cascade, failure categories in raw rows. `--runs` and `GIDORAH_BENCH_RUNS` are supported and the manifest records runs/maxSteps/maxTokens/models.
+- **Tavily is an honest negative on pass rate.** Class B: arm C 6/6, arm D 5/6, so research did not improve correctness in this sample; it added one customer-visible citation per task at one credit each and lower per-row cost than arm A in places. Claims in README/FINAL_STATE are reframed to citations and cost avoidance, not a pass-rate win.
+- **Patch-first and repo-map are always-on and not ablated.** Arms no longer pretend otherwise; no savings claim is made for them.
+- **Real 402 budget is NOT demonstrated.** A tiny-budget virtual key was wired through governance budgets and model configs on a separate Bifrost instance; requests still returned 200. The captured attempts are in `evidence/real-budget-402-2026-11-03.json` and the claim is downgraded to "offline/402 tested with the mock gateway".
+- **Real provider fallback/takeover is NOT demonstrated** against a real primary provider; the mock gateway covers the fallback headers/banner and real chaos covers a Bifrost kill. Downgraded accordingly.
+- **Real confidential zero-egress** is partially real: local 3B inference through Bifrost and a real 403 for a cloud model with the local key; Tavily-disabled, network-shell-denied, and canary-egress checks remain offline/mock.
+- **Live gateway DLP** remains source-tested only (Windows cannot load native Go plugins); every claim says so.

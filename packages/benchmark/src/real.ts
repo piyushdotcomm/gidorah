@@ -68,7 +68,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     : armFilter.length > 0
       ? BENCH_ARMS.filter((arm) => armFilter.includes(arm.id))
       : BENCH_ARMS;
-  const runs = options.runs ?? 1;
+  const runs = options.runs ?? Number(process.env.GIDORAH_BENCH_RUNS ?? "1");
   const strong = options.strongModel ?? STRONG;
   const cheap = options.cheapModel ?? CHEAP;
   const runId = `real_${Date.now().toString(36)}`;
@@ -155,6 +155,15 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
           const wallMs = Date.now() - started;
           const test = await runProcess({ command: task.testCommand, args: [], cwd: workspace, shell: true });
           const passed = test.code === 0;
+          const failureCategory = passed
+            ? undefined
+            : session.all.some((event) => event.type === "step/end" && (event.data as { reason?: string }).reason === "tools executed") && session.all.filter((event) => event.type === "tool/call").length === 0
+              ? "no_tool_call"
+              : session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "edit").length === 0
+                ? "no_edit"
+                : result.receipt.summary.includes("step limit")
+                  ? "step_limit"
+                  : "test_failed";
           const modelResults = session.all.filter((event) => event.type === "assistant/message");
           const modelsUsed = modelResults.map((event) => (event.data as { model?: string }).model ?? "");
           const tokens = result.receipt.tokens;

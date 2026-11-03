@@ -1,0 +1,28 @@
+{
+  "capturedAt": "2026-11-03T09:43:23.317Z",
+  "gateway": "real Bifrost 2.4.0 on :8093",
+  "virtualKey": "sk-bf-<redacted>",
+  "budgetUsd": 0.000002,
+  "results": [
+    {
+      "attempt": 1,
+      "status": 200,
+      "body": "{\"id\":\"chatcmpl-ff1b49f0\",\"choices\":[{\"index\":0,\"finish_reason\":\"length\",\"logprobs\":null,\"message\":{\"role\":\"assistant\",\"content\":null,\"refusal\":null,\"reasoning\":\"The user said \\\"say hi\\\" - this is a v"
+    },
+    {
+      "attempt": 2,
+      "status": 200,
+      "body": "{\"id\":\"chatcmpl-9800adc0\",\"choices\":[{\"index\":0,\"finish_reason\":\"length\",\"logprobs\":null,\"message\":{\"role\":\"assistant\",\"content\":null,\"refusal\":null,\"reasoning\":\"The user just said \\\"say hi\\\". This is"
+    },
+    {
+      "attempt": 3,
+      "status": 200,
+      "body": "{\"id\":\"chatcmpl-74bbcc8d\",\"choices\":[{\"index\":0,\"finish_reason\":\"length\",\"logprobs\":null,\"message\":{\"role\":\"assistant\",\"content\":null,\"refusal\":null,\"reasoning\":\"Okay, the user just said \\\"hi\\\". This "
+    },
+    {
+      "attempt": 4,
+      "status": 200,
+      "body": "{\"id\":\"chatcmpl-c2a3ecdf\",\"choices\":[{\"index\":0,\"finish_reason\":\"length\",\"logprobs\":null,\"message\":{\"role\":\"assistant\",\"content\":null,\"refusal\":null,\"reasoning\":\"---\\n\\nThe user said \\\"say hi\\\" and I "
+    }
+  ]
+}
