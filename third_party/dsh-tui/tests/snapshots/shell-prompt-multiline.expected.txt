@@ -1,0 +1,37 @@
+terminal 44x18 buffer=normal length=18 base=0 viewport=0
+lifecycle started=1 stopped=0 progress=inactive
+title "DSH snapshot"
+cursor visible column=34 viewportRow=9 bufferRow=9
+viewport
+0| " DEEPSEEK HARNESS v0.1.0"
+  style 1-8 fg=bright-blue bold
+  style 10-16 bold
+  style 18-23 dim
+1-2| <blank>
+3| "                                            "
+  style 0-43 bg=ansi-236
+4| "   ↑ 1 more                                 "
+  style 0-0 bg=ansi-236
+  style 1-10 bg=ansi-236 dim
+  style 11-43 bg=ansi-236
+5| " enough detail to wrap across multiple      "
+  style 0-43 bg=ansi-236
+6| " full-width continuation rows without       "
+  style 0-43 bg=ansi-236
+7| " leaving a prompt-sized gap at the right    "
+  style 0-43 bg=ansi-236
+8| " edge.                                      "
+  style 0-43 bg=ansi-236
+9| "   Then suggest a simpler version.          "
+  style 0-33 bg=ansi-236
+  style 34-34 bg=ansi-236 inverse
+10| "                                            "
+  style 0-43 bg=ansi-236
+11| "  Enter send · Shift+Enter newline · / comma"
+  style 0-43 dim
+12| "▸   deepseek-v4-flash [alt+m]  ↑0 ↓0  0% con"
+  style 0-1 dim
+  style 4-28 dim
+  style 31-35 dim
+  style 38-43 dim
+13-17| <blank>

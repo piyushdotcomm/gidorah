@@ -136,6 +136,8 @@ export interface RuntimeDeps {
   research?: import("../../shared/src/types.ts").ResearchClient;
   tracePath?: string;
   maxSteps?: number;
+  /** Explicit provider-qualified model alias (real gateways, per-arm runs). */
+  modelAlias?: string;
 }
 
 export interface TaskReceiptResult {
@@ -179,7 +181,7 @@ export async function runTask(session: Session, task: string, deps: RuntimeDeps)
 
       const request: ModelRequest = {
         messages: context.messages,
-        modelAlias: process.env.GIDORAH_MODEL_ALIAS ?? (confidential ? "gidorah-local" : "gidorah-auto"),
+        modelAlias: deps.modelAlias ?? process.env.GIDORAH_MODEL_ALIAS ?? (confidential ? "gidorah-local" : "gidorah-auto"),
         phase,
         sessionId: session.header.sessionId,
         confidential,

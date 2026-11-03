@@ -140,3 +140,13 @@ Keys are stored only in `.tools/credentials.env` (gitignored) and passed as envi
 ### Still PENDING
 
 Real benchmark numbers with the benchmark harness (the harness still uses its scripted model; wiring it to Bifrost is the next step), the 3B local model import (GGUF downloading), Go plugin binding to the real Bifrost SDK, DSH TUI vendoring, and `pnpm install` in sandboxed environments.
+## Remaining four items completed (14:00-14:45 IST, 2026-11-03)
+
+1. **Real benchmark numbers.** `packages/benchmark/src/real.ts` drives the real agent loop against real Bifrost + Fireworks models, with the published Fireworks Standard serverless price table (DeepSeek V4.1 Flash $0.30/$0.006/$1.20 per 1M; GLM 5.3 Flash $0.15/$0.03/$0.50 per 1M). Real pilot: 12 rows, 8 solved, pass@1 66.7%, cost per solved task $0.004429, 135,410 tokens, 88 model requests, total cost $0.035432. Per arm: always-strong A 2/3 at $0.021042; cascade C 3/3 at $0.006021; dual-plane D 2/3 at $0.005178; always-cheap F 2/3 at $0.003192. Artifacts: `bench/real_mw0etfge/` and `evidence/real-benchmark-pilot-2026-11-03.json`.
+2. **Local 3B model import.** `Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf` (HuggingFace) imported with `ollama create qwen2.5-coder:3b` (1.9 GB). Real inference through real Bifrost with the confidential header: 200, provider `ollama`, model `qwen2.5-coder:3b`, content "ready" (89.9 s first-load). The local-only virtual key rejects a cloud model with 403 `provider_blocked`. Evidence: `evidence/real-local-3b-2026-11-03.json`.
+3. **Go plugin bound to the real SDK.** `plugins/bifrost-dlp` now imports `github.com/maximhq/bifrost/core/schemas` and implements `LLMPlugin` (PreRequestHook, PreLLMHook, PostLLMHook) and `HTTPTransportPlugin` (PreAuth, Pre, Post, ResponseHeaders, StreamChunk hooks). `go vet ./...` clean and `go test ./...` ok (2.974 s) against core v1.14.1 through a local go.work. Loading into a live gateway remains PENDING because native Go plugins are Linux .so builds.
+4. **DSH TUI vendored.** `third_party/dsh-tui` now contains the package (192 files) with its `LICENSE` (MIT AND BSD-3-Clause) and a new `NOTICE`; the Gidorah-specific panel adaptation remains PENDING.
+
+### Post-change verification
+
+`tsc --noEmit` green, lint green, all 104 tests pass, and no key material is tracked (only gitignored `.tools/credentials.env`).

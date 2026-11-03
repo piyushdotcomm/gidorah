@@ -1,0 +1,51 @@
+{
+  "capturedAt": "2026-11-03T08:19:42.933Z",
+  "mode": "real pilot",
+  "gateway": "real Bifrost 2.4.0",
+  "provider": "Fireworks AI",
+  "models": {
+    "strong": "accounts/fireworks/models/deepseek-v4p1-flash",
+    "cheap": "accounts/fireworks/models/glm-5p3-flash"
+  },
+  "priceSource": "https://fireworks.ai/pricing Standard serverless (captured 2026-11-03)",
+  "summary": {
+    "rows": 12,
+    "solved": 8,
+    "passAt1": 0.6666666666666666,
+    "totalCostUsd": 0.03543215,
+    "costPerSolvedUsd": 0.00442901875,
+    "totalTokens": 135410,
+    "modelRequests": 88
+  },
+  "byArm": {
+    "A": {
+      "rows": 3,
+      "solved": 2,
+      "cost": 0.0210417,
+      "tokens": 52076
+    },
+    "C": {
+      "rows": 3,
+      "solved": 3,
+      "cost": 0.0060213,
+      "tokens": 35298
+    },
+    "D": {
+      "rows": 3,
+      "solved": 1,
+      "cost": 0.005177500000000001,
+      "tokens": 29773
+    },
+    "F": {
+      "rows": 3,
+      "solved": 2,
+      "cost": 0.00319165,
+      "tokens": 18263
+    }
+  },
+  "artifacts": {
+    "raw": "bench/real_mw0etfge/raw.jsonl",
+    "report": "bench/real_mw0etfge/report.md",
+    "manifest": "bench/real_mw0etfge/manifest.json"
+  }
+}

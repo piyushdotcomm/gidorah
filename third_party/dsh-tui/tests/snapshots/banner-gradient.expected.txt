@@ -1,0 +1,36 @@
+terminal 96x36 buffer=normal length=36 base=0 viewport=0
+lifecycle started=1 stopped=0 progress=inactive
+title "DSH snapshot"
+cursor visible column=3 viewportRow=4 bufferRow=4
+viewport
+0| " DEEPSEEK HARNESS v0.1.0"
+  style 1-1 fg=#4d6bfe bold
+  style 2-2 fg=#4772fe bold
+  style 3-3 fg=#4278ff bold
+  style 4-4 fg=#3c7fff bold
+  style 5-5 fg=#3685ff bold
+  style 6-6 fg=#308bff bold
+  style 7-7 fg=#2a92ff bold
+  style 8-8 fg=#2498ff bold
+  style 10-16 bold
+  style 18-23 dim
+1-2| <blank>
+3| "                                                                                                "
+  style 0-95 bg=#2c2c2e
+4| " › │Describe a task, @ a file, or / for commands                                                "
+  style 0-0 bg=#2c2c2e
+  style 1-1 fg=bright-blue bg=#2c2c2e bold
+  style 2-2 bg=#2c2c2e dim
+  style 3-3 bg=#2c2c2e
+  style 4-47 bg=#2c2c2e dim
+  style 48-95 bg=#2c2c2e
+5| "                                                                                                "
+  style 0-95 bg=#2c2c2e
+6| "  Enter send · Shift+Enter newline · / commands"
+  style 0-46 dim
+7| "                                                ▸   deepseek-v4-flash [alt+m]  ↑0 ↓0  0% context"
+  style 48-49 dim
+  style 52-76 dim
+  style 79-83 dim
+  style 86-95 dim
+8-35| <blank>

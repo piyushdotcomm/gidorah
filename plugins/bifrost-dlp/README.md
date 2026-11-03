@@ -1,4 +1,4 @@
-﻿# bifrost-dlp
+# bifrost-dlp
 
 A small, Apache-2.0 Bifrost plugin that adds two security checks to the Gidorah model plane. Both checks run before a request can leave the machine.
 
@@ -109,7 +109,7 @@ The plugin is not a header decoration. It enforces two independent controls at t
 
 ## Pending
 
-Verified in this build: `go vet` and `go test` pass with Go 1.27.3 using the local hook stand-ins. Still pending: substitution of the real Bifrost plugin package, validation against a running gateway, and confirmation that body scanning does not break streaming (see MORNING_RUNBOOK.md).
+Verified against the real Bifrost plugin SDK: `go vet ./...` clean and `go test ./...` ok (2.974s) against `github.com/maximhq/bifrost/core v1.14.1`, using a go.work that points at the cloned core module; the plugin implements `schemas.LLMPlugin` and `schemas.HTTPTransportPlugin`. Still pending: loading the built plugin into a running Bifrost (native Go plugins are Linux .so; build them on Linux/CI) and a live gateway end-to-end check.
 
 ## License
 

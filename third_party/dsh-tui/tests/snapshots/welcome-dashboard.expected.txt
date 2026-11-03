@@ -1,0 +1,117 @@
+terminal 104x38 buffer=normal length=38 base=0 viewport=0
+lifecycle started=1 stopped=0 progress=inactive
+title "DSH snapshot"
+cursor visible column=3 viewportRow=21 bufferRow=21
+viewport
+0| "  ╭─ DeepSeek Harness CLI v0.1.0 ────────────────────────────────────────────────────────────────────╮"
+  style 2-3 dim
+  style 5-12 fg=bright-blue bold
+  style 14-24 bold
+  style 26-31 dim
+  style 33-101 dim
+1| "  │              Welcome back!               │ What's new                                            │"
+  style 2-2 dim
+  style 17-29 bold
+  style 45-45 dim
+  style 47-56 fg=bright-blue bold
+  style 101-101 dim
+2| "  │                  ⣀⣀⣀⣀⣤⡄  ⢠⡄              │ /skills browse and run agent skills                   │"
+  style 2-2 dim
+  style 16-30 bold
+  style 45-45 dim
+  style 47-53 fg=bright-blue
+  style 101-101 dim
+3| "  │            ⢀⣴⣾⣿⣿⣿⣿⣿⣿⣤⡀ ⢻⣿⣶⣠⣤⣶⡟           │ /permissions choose approval and sandbox mode         │"
+  style 2-2 dim
+  style 14-33 bold
+  style 45-45 dim
+  style 47-58 fg=bright-blue
+  style 101-101 dim
+4| "  │           ⢀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⡈⠻⣿⣿⡿⠟⠁           │ /model switch model and reasoning effort              │"
+  style 2-2 dim
+  style 14-33 bold
+  style 45-45 dim
+  style 47-52 fg=bright-blue
+  style 101-101 dim
+5| "  │            ⢸⣯  ⠉⠙⠻⣿⣿⣿⣯⡙⢿⣿⣾⣿⡇             │ /workspace start in another workspace                 │"
+  style 2-2 dim
+  style 15-31 bold
+  style 45-45 dim
+  style 47-56 fg=bright-blue
+  style 101-101 dim
+6| "  │            ⢸⣿⡄    ⠈⠻⣿⣿⣧⣤⣿⣿⣿⠁             │ /resume search previous sessions                      │"
+  style 2-2 dim
+  style 15-31 bold
+  style 45-45 dim
+  style 47-53 fg=bright-blue
+  style 101-101 dim
+7| "  │              ⢻⣿⣄  ⢀⣀ ⠙⣿⣿⣿⣿⡿⠃             │                                                       │"
+  style 2-2 dim
+  style 16-31 bold
+  style 45-45 dim
+  style 101-101 dim
+8| "  │               ⠙⢿⣷⣤⣤⣿⣷⣦⣈⣻⣿⣿⣦⡄             │ Recent sessions                                       │"
+  style 2-2 dim
+  style 16-31 bold
+  style 45-45 dim
+  style 47-61 bold
+  style 101-101 dim
+9| "  │                   ⠉⠛⠻⠿⠿⠟⠛⠉               │ • Refactor terminal welcome screen         2026-08-13 │"
+  style 2-2 dim
+  style 18-29 bold
+  style 45-45 dim
+  style 47-47 fg=bright-blue
+  style 90-99 dim
+  style 101-101 dim
+10| "  │                                          │ • Stabilize CLI release tests              2026-08-12 │"
+  style 2-2 dim
+  style 45-45 dim
+  style 47-47 fg=bright-blue
+  style 90-99 dim
+  style 101-101 dim
+11| "  │           preset: not composed           │                                                       │"
+  style 2-2 dim
+  style 14-20 dim
+  style 45-45 dim
+  style 101-101 dim
+12| "  │         model: deepseek-v4-flash         │ /help for commands · @ to attach a file               │"
+  style 2-2 dim
+  style 12-17 dim
+  style 45-45 dim
+  style 47-85 dim italic
+  style 101-101 dim
+13| "  │        permissions: approval ask         │                                                       │"
+  style 2-2 dim
+  style 11-22 dim
+  style 45-45 dim
+  style 101-101 dim
+14| "  │            /workspace/project            │                                                       │"
+  style 2-2 dim
+  style 15-32 dim
+  style 45-45 dim
+  style 101-101 dim
+15| "  ╰──────────────────────────────────────────┴───────────────────────────────────────────────────────╯"
+  style 2-101 dim
+16| "  "
+17| "                     Enter sends · Shift+Enter newline · Alt+M model · ? shortcuts"
+  style 21-81 dim
+18-19| <blank>
+20| "                                                                                                        "
+  style 0-103 bg=ansi-236
+21| " › │Describe a task, @ a file, or / for commands                                                        "
+  style 0-0 bg=ansi-236
+  style 1-1 fg=bright-blue bg=ansi-236 bold
+  style 2-2 bg=ansi-236 dim
+  style 3-3 bg=ansi-236
+  style 4-47 bg=ansi-236 dim
+  style 48-103 bg=ansi-236
+22| "                                                                                                        "
+  style 0-103 bg=ansi-236
+23| "  Enter send · Shift+Enter newline · / commands"
+  style 0-46 dim
+24| "                                                        ▸   deepseek-v4-flash [alt+m]  ↑0 ↓0  0% context"
+  style 56-57 dim
+  style 60-84 dim
+  style 87-91 dim
+  style 94-103 dim
+25-37| <blank>

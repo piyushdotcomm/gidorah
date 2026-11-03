@@ -28,3 +28,9 @@ This register lists third-party components that Gidorah uses, adapts, or deliber
 - Review Tavily terms for caching and for publishing benchmark excerpts.
 - Build and test the Go plugin when Go 1.22+ and the Bifrost plugin SDK are available. That step is PENDING, not verified.
 - Re-run a dependency license scan after any package is added from a registry.
+
+## Update 2026-11-03
+
+- DeepSeek Harness TUI package is now vendored at `third_party/dsh-tui` (192 files) with its LICENSE and a NOTICE; the Gidorah panel adaptation is still PENDING.
+- Bifrost DLP plugin now compiles and tests against the real Bifrost core SDK (v1.14.1).
+

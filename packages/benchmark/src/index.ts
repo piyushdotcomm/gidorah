@@ -384,3 +384,5 @@ export function listBenchFixtures(): string[] {
   const dir = join(resolve(import.meta.dirname, "..", "..", ".."), "tests", "fixtures");
   return existsSync(dir) ? readdirSync(dir) : [];
 }
+
+export * from "./real.ts";
