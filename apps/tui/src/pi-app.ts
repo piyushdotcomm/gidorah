@@ -500,11 +500,10 @@ export class PiTuiApp {
 
   private sync(): void {
     if (this.state.phase === "exited") return;
-    const mockBanner = this.opts.mode === "mock"
-      ? [paint(this.opts.color === true, C.bold + C.yellow, "MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real coding. Use `gidorah tui --demo` for the scripted demo.")]
-      : [];
+    this.shell.setBanner(this.opts.mode === "mock"
+      ? "MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real coding. Use `gidorah tui --demo` for the scripted demo."
+      : null);
     this.shell.setHeader([
-      ...mockBanner,
       paint(this.opts.color === true, C.bold + C.cyan, "Gidorah") + "  " + paint(this.opts.color === true, C.dim, "the governed coding agent"),
       paint(this.opts.color === true, C.dim, `cwd: ${this.opts.cwd}  ·  branch: ${this.opts.branch}  ·  session: ${this.session.header.sessionId}  ·  mode: ${this.opts.mode}  ·  model: ${this.state.modelAlias}`),
     ]);

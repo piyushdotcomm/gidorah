@@ -4,9 +4,10 @@ Deterministic frames rendered by pi-tui components with a fake terminal; no netw
 
 ### 0. Welcome + mock-mode banner
 ```text
-MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real cod…
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
+MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real     
+coding. Use `gidorah tui --demo` for the scripted demo.                                             
 mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 Welcome to Gidorah                                                                                  
 mode: mock · model: gidorah-auto                                                                    
@@ -17,9 +18,10 @@ Enter send · Shift+Enter newline · Tab complete · Ctrl+O tools · Ctrl+D quit
 
 ### 1. Header, status, Markdown assistant, tool card
 ```text
-MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real cod…
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
+MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real     
+coding. Use `gidorah tui --demo` for the scripted demo.                                             
 mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 Welcome to Gidorah                                                                                  
 mode: mock · model: gidorah-auto                                                                    
@@ -38,9 +40,10 @@ I'll patch greeting.txt and then check the runtime.
 
 ### 2. Edit approval overlay with numbered diff
 ```text
-MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real cod…
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
+MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real     
+coding. Use `gidorah tui --demo` for the scripted demo.                                             
 mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 Welcome to Gidorah                                                                                  
 mode: mock · model: gidorah-auto                                                                    
@@ -66,9 +69,10 @@ I'll patch greeting.txt and then check the runtime.
 
 ### 3. Denied shell card, research card, takeover, receipt
 ```text
-MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real cod…
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
+MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real     
+coding. Use `gidorah tui --demo` for the scripted demo.                                             
 mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 Welcome to Gidorah                                                                                  
 mode: mock · model: gidorah-auto                                                                    
@@ -93,9 +97,10 @@ I'll patch greeting.txt and then check the runtime.
 
 ### 4. /status, /trace, /receipt output
 ```text
-MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real cod…
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
+MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real     
+coding. Use `gidorah tui --demo` for the scripted demo.                                             
 mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 Welcome to Gidorah                                                                                  
 mode: mock · model: gidorah-auto                                                                    
@@ -123,9 +128,10 @@ I'll patch greeting.txt and then check the runtime.
 
 ### 5. Searchable /resume picker
 ```text
-MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real cod…
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
+MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real     
+coding. Use `gidorah tui --demo` for the scripted demo.                                             
 mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 Welcome to Gidorah                                                                                  
 mode: mock · model: gidorah-auto                                                                    
@@ -159,9 +165,10 @@ search: _
 
 ### 6. /model aliases
 ```text
-MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real cod…
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
+MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real     
+coding. Use `gidorah tui --demo` for the scripted demo.                                             
 mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 Welcome to Gidorah                                                                                  
 mode: mock · model: gidorah-auto                                                                    
