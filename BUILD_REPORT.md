@@ -153,3 +153,6 @@ Class A 24/24; Class B 24/24.
 
 Research: pre 6/6, tool 1/1, attempts 7, denied 0; cache 7/7.
 Manifest: mode real-full-targeted, runs 1, maxSteps 20, temperature 0, promptVersion edit-nudge-v1, editNudge true, timeouts 240000/120000, armFilter ["A","C","D","F"].
+### Nudge full run supersedes the 47/48 headline
+
+`bench/real_mw0or6tw` (promptVersion `edit-nudge-v1`, recorded in the manifest) is the current full run: 48/48 solved, 100%, $0.111062 total, $0.002314 per solved. Per arm: A 12/12 $0.003797, C 12/12 $0.001802, D 12/12 $0.002383, F 12/12 $0.001272 per solved. Research reconciled: pre 6/6, tool 1/1, attempts 7, denied 0, cache 7/7. The earlier 47/48 (`real_mw0nvfe6`) was pre-nudge and is superseded. The current full run is still a negative for Tavily as a pass-rate lever: C matches D at 12/12 and is ~25 percent cheaper; F is cheapest of all. Cascade also shows no pass-rate gain over F, only cost differences. Tavily value remains citations and cost avoidance, not accuracy.
