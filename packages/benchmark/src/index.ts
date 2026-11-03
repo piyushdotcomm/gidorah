@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Benchmark harness (benchmark-plan.md).
  *
  * OFFLINE MODE: this build has no provider keys, so the runner drives the real
@@ -78,10 +78,8 @@ function makeTask(index: number, cls: TaskClass, broken: number, fixed: number):
   };
 }
 
-export const BENCH_TASKS: BenchTask[] = [
-  ...Array.from({ length: 8 }, (_, i) => makeTask(i, "A", 100 + i, 200 + i)),
-  ...Array.from({ length: 8 }, (_, i) => makeTask(i, "B", 300 + i, 400 + i)),
-];
+import { BENCH_TASKS } from "./tasks.ts";
+export { BENCH_TASKS };
 
 export interface BenchArm {
   id: ArmId;
@@ -95,13 +93,10 @@ export interface BenchArm {
 }
 
 export const BENCH_ARMS: BenchArm[] = [
-  { id: "A", name: "always Pro", models: { explore: "deepseek-pro", verify: "deepseek-pro" }, research: false, patchFirst: false, repoMap: false, contextMode: "full", description: "quality/cost ceiling" },
-  { id: "B", name: "Bifrost complexity router", models: { explore: "deepseek-flash", verify: "deepseek-pro" }, research: false, patchFirst: false, repoMap: false, contextMode: "full", description: "gateway routing only" },
-  { id: "C", name: "Gidorah cascade", models: { explore: "deepseek-flash", verify: "deepseek-pro" }, research: false, patchFirst: false, repoMap: false, contextMode: "cap-clear", description: "phase cascade" },
-  { id: "D", name: "full dual-plane", models: { explore: "deepseek-flash", verify: "deepseek-pro" }, research: true, patchFirst: false, repoMap: false, contextMode: "cap-clear", description: "cascade plus Tavily Scout" },
-  { id: "F", name: "always Flash", models: { explore: "deepseek-flash", verify: "deepseek-flash" }, research: false, patchFirst: false, repoMap: false, contextMode: "cap", description: "cost floor" },
-  { id: "I", name: "patch-first edits", models: { explore: "deepseek-flash", verify: "deepseek-pro" }, research: false, patchFirst: true, repoMap: false, contextMode: "cap-clear", description: "find/replace only" },
-  { id: "J", name: "repo map reads", models: { explore: "deepseek-flash", verify: "deepseek-pro" }, research: false, patchFirst: false, repoMap: true, contextMode: "cap-clear", description: "symbol/range reads" },
+  { id: "A", name: "always strong", models: { explore: "accounts/fireworks/models/deepseek-v4p1-flash", verify: "accounts/fireworks/models/deepseek-v4p1-flash" }, research: false, patchFirst: true, repoMap: true, contextMode: "cap-clear", description: "quality/cost ceiling" },
+  { id: "C", name: "phase cascade", models: { explore: "accounts/fireworks/models/glm-5p3-flash", verify: "accounts/fireworks/models/deepseek-v4p1-flash" }, research: false, patchFirst: true, repoMap: true, contextMode: "cap-clear", description: "cheap explore/edit, strong verify" },
+  { id: "D", name: "cascade plus Tavily", models: { explore: "accounts/fireworks/models/glm-5p3-flash", verify: "accounts/fireworks/models/deepseek-v4p1-flash" }, research: true, patchFirst: true, repoMap: true, contextMode: "cap-clear", description: "cascade with research tool" },
+  { id: "F", name: "always cheap", models: { explore: "accounts/fireworks/models/glm-5p3-flash", verify: "accounts/fireworks/models/glm-5p3-flash" }, research: false, patchFirst: true, repoMap: true, contextMode: "cap", description: "cost floor" },
 ];
 
 export interface BenchRow {
@@ -110,7 +105,7 @@ export interface BenchRow {
   armId: ArmId;
   run: number;
   passed: boolean;
-  status: "evaluated";
+  status: "evaluated" | "missing" | "errored" | "skipped";
   tokens: TokenUsage;
   costUsd: number;
   researchCredits: number;
@@ -124,6 +119,7 @@ export interface BenchRow {
   approvalPrompts: number;
   cacheHit: boolean;
   wallMs: number;
+  failureCategory?: string;
 }
 
 export interface BenchResult {
@@ -289,6 +285,8 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<BenchR
 export function summarize(rows: BenchRow[]): {
   solved: number;
   evaluated: number;
+  errored: number;
+  missing: number;
   costPerSolvedTask: number;
   costPerSuccessfulTask: number;
   passAt1: number;
@@ -299,8 +297,10 @@ export function summarize(rows: BenchRow[]): {
   researchCalls: number;
   unnecessaryResearch: number;
 } {
-  const evaluated = rows.length;
-  const solved = rows.filter((row) => row.passed).length;
+  const evaluated = rows.filter((row) => row.status === "evaluated").length;
+  const errored = rows.filter((row) => row.status === "errored").length;
+  const missing = rows.filter((row) => row.status === "missing").length;
+  const solved = rows.filter((row) => row.status === "evaluated" && row.passed).length;
   const totalCost = rows.reduce((total, row) => total + row.costUsd, 0);
   const costs = rows.map((row) => row.costUsd).sort((a, b) => a - b);
   const quantile = (q: number): number => (costs.length === 0 ? 0 : costs[Math.min(costs.length - 1, Math.floor(q * costs.length))] ?? 0);
@@ -317,6 +317,8 @@ export function summarize(rows: BenchRow[]): {
   return {
     solved,
     evaluated,
+    errored,
+    missing,
     costPerSolvedTask: solved === 0 ? 0 : totalCost / solved,
     costPerSuccessfulTask: solved === 0 ? 0 : totalCost / solved,
     passAt1: evaluated === 0 ? 0 : solved / evaluated,

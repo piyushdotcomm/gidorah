@@ -465,3 +465,22 @@ Every automated guarantee is testable now; no claim about real providers, real m
 
 ### References
 BUILD_STATUS.md, MORNING_RUNBOOK.md, BUILD_REPORT.md
+
+---
+
+## Amendment (2026-11-03, after implementation)
+
+This ADR's context described a build where the DSH TUI package could not be
+fetched. That is no longer current: the package is vendored at
+`third_party/dsh-tui` with LICENSE and NOTICE, and `apps/tui/src/adapter.ts`
+implements the required panels. The decision to ship a plain renderer first
+stands; full DSH package integration behind `gidorah` remains in progress.
+
+---
+
+## Amendment (2026-11-03, after implementation)
+
+This ADR's context described a build with no provider keys. That is no longer
+current: real Fireworks, Tavily, Bifrost, and Ollama runs are recorded in
+`evidence/` and `BUILD_REPORT.md`. The mock-first policy and honest PENDING
+labelling still stand wherever evidence is mock-only or blocked.

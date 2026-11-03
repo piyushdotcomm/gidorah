@@ -171,3 +171,23 @@ Precedence: CLI flags > env > `~/.gidorah/config.yml` > repo defaults. Policy is
 - [ ] Decide Biome vs ESLint/Prettier.
 - [ ] Confirm pi-tui license and pin its version.
 - [ ] Confirm TUI package can build outside the DSH workspace (or vendor required internals).
+
+## Implementation reality (2026-11-03)
+
+Superseded assumptions above are kept as history. The actual runtime is:
+
+- **Language/runtime:** TypeScript executed directly by Node 26 type stripping.
+  No bundler in the loop; `tsc` is used for a strict no-emit typecheck only.
+- **Package manager:** npm with a committed `package-lock.json`; `pnpm` files were
+  removed after the sandbox could not complete a pnpm install (symlink denial).
+- **Tests:** `node:test` via `scripts/run-tests.ts`; Vitest is not installed.
+- **Storage:** `node:sqlite`; better-sqlite3 is not installed.
+- **Build/lint:** `scripts/build.ts` (module-graph check) and a custom
+  `scripts/lint.ts` enforcing the non-negotiables; Biome/ESLint are not installed.
+- **TUI:** plain renderer plus the TUI adapter panels; the DSH TUI package is
+  vendored, not yet wired behind the CLI.
+- **Bifrost plugin:** Go, bound to `github.com/maximhq/bifrost/core/schemas`.
+
+See ADR-0013 (dependency-free runtime), ADR-0014 (plain TUI first), ADR-0015
+(mock-first evidence). The original pnpm/Vitest/better-sqlite3/tsdown plan is
+historical.

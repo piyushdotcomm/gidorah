@@ -54,7 +54,9 @@ if (existsSync(BINARY)) {
     try {
       const up = await waitFor(`http://127.0.0.1:${PORT}/`, 90_000);
       assert.equal(up, true, "Bifrost did not start on the chaos port");
-      const client = createBifrostClient({ baseUrl: `http://127.0.0.1:${PORT}/openai`, virtualKey: "sk-bf-gidorah-cloud-dev", timeoutMs: 60_000 });
+      const virtualKey = process.env.GIDORAH_TEST_VK ?? credentials().BENCH_VK ?? "";
+      assert.notEqual(virtualKey, "", "set GIDORAH_TEST_VK or BENCH_VK in .tools/credentials.env");
+      const client = createBifrostClient({ baseUrl: `http://127.0.0.1:${PORT}/openai`, virtualKey, timeoutMs: 60_000 });
       const response = await client.complete({
         messages: [{ role: "user", content: "say hi" }],
         modelAlias: "fireworks/accounts/fireworks/models/deepseek-v4p1-flash",
