@@ -25,7 +25,10 @@
     "doctor": "node apps/cli/src/main.ts doctor"
   },
   "devDependencies": {
-    "typescript": "7.0.2",
-    "@types/node": "26.6.6"
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "@earendil-works/pi-tui": "0.80.7"
   }
 }
