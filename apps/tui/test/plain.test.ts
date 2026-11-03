@@ -100,7 +100,7 @@ test("CLI tui --plain uses the generic mock reply, not the demo script", async (
       env: { ...process.env, GIDORAH_MODE: "mock", GIDORAH_HOME: join(root, "home") },
     });
     assert.equal(result.code, 0);
-    assert.match(result.stdout, /mock mode: task acknowledged/);
+    assert.match(result.stdout, /MOCK MODE: no model call was made/);
     assert.equal(result.stdout.includes("I'll write a demo file"), false);
     assert.equal(result.stdout.includes("tui-demo.txt"), false);
   } finally {

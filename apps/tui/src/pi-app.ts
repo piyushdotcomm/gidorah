@@ -102,6 +102,10 @@ export class PiTuiApp {
   private cacheRead = 0;
   private inputTokens = 0;
   private contextCap = 128_000;
+  private activity = "thinking…";
+  private activityStarted = 0;
+  private activityTimer: NodeJS.Timeout | null = null;
+  private spinner = 0;
 
   constructor(options: PiTuiOptions) {
     this.opts = options;
@@ -179,6 +183,8 @@ export class PiTuiApp {
     this.unsubscribe?.();
     this.unsubscribe = null;
     if (this.syncTimer !== null) clearTimeout(this.syncTimer);
+    if (this.activityTimer !== null) clearInterval(this.activityTimer);
+    this.activityTimer = null;
     this.shell.stop();
     this.persistHistory();
     this.done?.(code);
@@ -233,6 +239,14 @@ export class PiTuiApp {
     this.shell.editor.addToHistory(task);
     this.addHistory(task);
     this.shell.editor.disableSubmit = true;
+    this.activity = "thinking…";
+    this.activityStarted = Date.now();
+    this.spinner = 0;
+    if (this.activityTimer !== null) clearInterval(this.activityTimer);
+    this.activityTimer = setInterval(() => {
+      this.spinner += 1;
+      this.sync();
+    }, 200);
     this.sync();
     try {
       const hooks: TuiHooks = {
@@ -248,7 +262,11 @@ export class PiTuiApp {
       this.state.transcript.push({ kind: "receipt", text: `${result.receipt.status} · ${result.receipt.tokens.total} tokens · $${result.receipt.llmCostUsd.toFixed(4)} · ${result.receipt.fallbacks} fallback(s) · ${result.receipt.summary}` });
       this.syncBudget();
     } catch (error) {
-      this.state.transcript.push({ kind: "error", text: error instanceof Error ? error.message : String(error) });
+      const message = error instanceof Error ? error.message : String(error);
+      const hint = this.opts.mode !== "mock" && /unreachable|fetch failed|ECONNREFUSED|timeout/i.test(message)
+        ? ` Bifrost is not reachable at the configured URL. Start it (scripts/dev-bifrost.sh or the built gateway) and set BIFROST_BASE_URL/GIDORAH_MODE=cloud, or use GIDORAH_MODE=mock for an offline stub.`
+        : "";
+      this.state.transcript.push({ kind: "error", text: `${message}${hint}` });
     } finally {
       this.state.phase = "idle";
       this.state.approval = null;
@@ -258,6 +276,9 @@ export class PiTuiApp {
       this.abort = null;
       this.streaming = null;
       this.shell.editor.disableSubmit = false;
+      if (this.activityTimer !== null) clearInterval(this.activityTimer);
+      this.activityTimer = null;
+      this.activityStarted = 0;
       this.shell.focusEditor();
       this.sync();
     }
@@ -353,6 +374,7 @@ export class PiTuiApp {
         this.state.transcript.push({ kind: "user", text: sanitize(String(data.content ?? "")) });
         break;
       case "assistant/message": {
+        this.activity = "verifying…";
         const content = sanitize(String(data.content ?? ""));
         if (this.streaming !== null) {
           this.streaming.text = content;
@@ -362,6 +384,7 @@ export class PiTuiApp {
         break;
       }
       case "tool/call": {
+        this.activity = "running tool…";
         const callId = String(data.callId ?? "");
         const name = String(data.name ?? "");
         const args = data.arguments !== null && typeof data.arguments === "object" ? (data.arguments as Record<string, unknown>) : {};
@@ -477,17 +500,30 @@ export class PiTuiApp {
 
   private sync(): void {
     if (this.state.phase === "exited") return;
+    const mockBanner = this.opts.mode === "mock"
+      ? [paint(this.opts.color === true, C.bold + C.yellow, "MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real coding. Use `gidorah tui --demo` for the scripted demo.")]
+      : [];
     this.shell.setHeader([
+      ...mockBanner,
       paint(this.opts.color === true, C.bold + C.cyan, "Gidorah") + "  " + paint(this.opts.color === true, C.dim, "the governed coding agent"),
       paint(this.opts.color === true, C.dim, `cwd: ${this.opts.cwd}  ·  branch: ${this.opts.branch}  ·  session: ${this.session.header.sessionId}  ·  mode: ${this.opts.mode}  ·  model: ${this.state.modelAlias}`),
     ]);
     this.shell.setStatus(compactStatus(this.state.status));
-    this.shell.setFooter([this.state.phase === "approval" ? "[y] allow  [n] deny  [Esc] deny" : this.state.phase === "running" ? "running…  Ctrl+C cancel  Ctrl+O expand  PgUp/PgDn scroll" : "Enter send  ↑↓ history  Tab complete  Ctrl+O tools  Ctrl+D quit  PgUp/PgDn scroll"]);
+    const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+    const elapsed = this.activityStarted === 0 ? "" : ` ${Math.round((Date.now() - this.activityStarted) / 1000)}s`;
+    this.shell.setFooter([this.state.phase === "approval" ? "[y] allow  [n] deny  [Esc] deny" : this.state.phase === "running" ? `${frames[this.spinner % frames.length]} ${this.activity}${elapsed}  Ctrl+C cancel  Ctrl+O expand` : "Enter send  ↑↓ history  Tab complete  Ctrl+O tools  Ctrl+D quit  PgUp/PgDn scroll"]);
     this.shell.setTranscriptComponents(this.components());
   }
 
   private components(): Component[] {
     const out: Component[] = [];
+    if (this.state.transcript.length === 0 && this.state.phase === "idle") {
+      out.push(new Text(paint(this.opts.color === true, C.bold, "Welcome to Gidorah"), 0, 0));
+      out.push(new Text(`mode: ${this.opts.mode} · model: ${this.state.modelAlias}`, 0, 0));
+      out.push(new Text("/help  /status  /model  /budget  /trace  /receipt  /new  /resume  /quit", 0, 0));
+      out.push(new Text("Enter send · Shift+Enter newline · Tab complete · Ctrl+O tools · Ctrl+D quit", 0, 0));
+      out.push(new Text("", 0, 0));
+    }
     for (const item of this.state.transcript) {
       switch (item.kind) {
         case "user":
