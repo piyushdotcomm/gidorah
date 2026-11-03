@@ -1,0 +1,98 @@
+{
+  "capturedAt": "2026-11-03T07:59:51.059Z",
+  "provider": "Tavily API (real, not mock)",
+  "first": {
+    "status": "card",
+    "card": {
+      "id": "card_c3cf064a5b25",
+      "question": "How do I verify a Stripe webhook signature with stripe-node?",
+      "answer": "IP allowlisting: Stripe sends webhook events from a set list of IP addresses. Configure your server or firewall to only accept webhook requests from these addresses. Signature verification: Stripe signs every webhook event by including a signature in the `Stripe-Signature` header.",
+      "facts": [
+        "IP allowlisting: Stripe sends webhook events from a set list of IP addresses.",
+        "Configure your server or firewall to only accept webhook requests from these addresses.",
+        "Signature verification: Stripe signs every webhook event by including a signature in the `Stripe-Signature` header.",
+        "Verify this signature using our official libraries or manually to confirm that the event wasn’t sent or modified by a third party.",
+        "The following section describes how to verify webhook signatures: [...] We recommend using our official libraries to verify signatures.",
+        "You perform the verification by providing the event payload, the `Stripe-Signature` header, and the endpoint’s secret."
+      ],
+      "sources": [
+        {
+          "title": "Receive Stripe events in your webhook endpoint | Stripe Documentation",
+          "url": "https://docs.stripe.com/webhooks",
+          "domain": "docs.stripe.com",
+          "retrievedAt": "2026-11-03T07:59:51.049Z"
+        },
+        {
+          "title": "stripe-node/examples/webhook-signing/README.md at master · stripe/stripe-node · GitHub",
+          "url": "https://github.com/stripe/stripe-node/blob/master/examples/webhook-signing/README.md",
+          "domain": "github.com",
+          "retrievedAt": "2026-11-03T07:59:51.049Z"
+        },
+        {
+          "title": "Manage webhook endpoints | Stripe Documentation",
+          "url": "https://docs.stripe.com/events/manage-webhook-endpoints",
+          "domain": "docs.stripe.com",
+          "retrievedAt": "2026-11-03T07:59:51.049Z"
+        }
+      ],
+      "confidence": "high",
+      "package": {
+        "name": "stripe",
+        "version": "18.2.0"
+      },
+      "tokenEstimate": 332,
+      "cached": false
+    },
+    "credits": 1,
+    "cached": false
+  },
+  "second": {
+    "status": "card",
+    "card": {
+      "id": "card_c3cf064a5b25",
+      "question": "How do I verify a Stripe webhook signature with stripe-node?",
+      "answer": "IP allowlisting: Stripe sends webhook events from a set list of IP addresses. Configure your server or firewall to only accept webhook requests from these addresses. Signature verification: Stripe signs every webhook event by including a signature in the `Stripe-Signature` header.",
+      "facts": [
+        "IP allowlisting: Stripe sends webhook events from a set list of IP addresses.",
+        "Configure your server or firewall to only accept webhook requests from these addresses.",
+        "Signature verification: Stripe signs every webhook event by including a signature in the `Stripe-Signature` header.",
+        "Verify this signature using our official libraries or manually to confirm that the event wasn’t sent or modified by a third party.",
+        "The following section describes how to verify webhook signatures: [...] We recommend using our official libraries to verify signatures.",
+        "You perform the verification by providing the event payload, the `Stripe-Signature` header, and the endpoint’s secret."
+      ],
+      "sources": [
+        {
+          "title": "Receive Stripe events in your webhook endpoint | Stripe Documentation",
+          "url": "https://docs.stripe.com/webhooks",
+          "domain": "docs.stripe.com",
+          "retrievedAt": "2026-11-03T07:59:51.049Z"
+        },
+        {
+          "title": "stripe-node/examples/webhook-signing/README.md at master · stripe/stripe-node · GitHub",
+          "url": "https://github.com/stripe/stripe-node/blob/master/examples/webhook-signing/README.md",
+          "domain": "github.com",
+          "retrievedAt": "2026-11-03T07:59:51.049Z"
+        },
+        {
+          "title": "Manage webhook endpoints | Stripe Documentation",
+          "url": "https://docs.stripe.com/events/manage-webhook-endpoints",
+          "domain": "docs.stripe.com",
+          "retrievedAt": "2026-11-03T07:59:51.049Z"
+        }
+      ],
+      "confidence": "high",
+      "package": {
+        "name": "stripe",
+        "version": "18.2.0"
+      },
+      "tokenEstimate": 332,
+      "cached": true
+    },
+    "credits": 0,
+    "cached": true
+  },
+  "usage": {
+    "credits": 1,
+    "calls": 1
+  }
+}

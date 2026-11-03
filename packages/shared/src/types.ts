@@ -44,6 +44,15 @@ export interface ModelMessage {
   toolCalls?: ToolCall[];
 }
 
+export interface ToolSchema {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
 export interface ModelRequest {
   messages: ModelMessage[];
   modelAlias: string;
@@ -52,6 +61,7 @@ export interface ModelRequest {
   confidential: boolean;
   cacheKey?: string;
   maxTokens?: number;
+  tools?: ToolSchema[];
 }
 
 export interface TokenUsage {

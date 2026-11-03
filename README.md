@@ -15,8 +15,8 @@ Built for HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both s
 | Area | State |
 |---|---|
 | Agent loop, tools, approvals, resume | Implemented and tested offline |
-| Bifrost integration | Mock gateway tested offline; real Bifrost 2.4.0 built from source, running on :8080, and verified routing a real virtual-key request to the real Ollama provider (model weights PENDING) |
-| Tavily Scout, cards, cache, credits, Docs Guard | Implemented and tested against a mock Tavily |
+| Bifrost integration | Mock gateway tested offline; real Bifrost 2.4.0 built from source and running on :8080, verified routing real virtual-key requests to real Fireworks models and real Ollama |
+| Tavily Scout, cards, cache, credits, Docs Guard | Implemented; real Tavily API verified through the new HTTP client (332-token card, 3 official sources, cache hit at 0 credits) |
 | Confidential mode | Implemented: local-only key path, research disabled, network shell denied, zero-egress tests |
 | Audit chain, red team, replay, chaos | Implemented and tested offline |
 | Conformance CT-01..CT-40 | 40/40 passing offline |

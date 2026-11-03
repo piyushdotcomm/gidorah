@@ -142,3 +142,27 @@ node apps/cli/src/main.ts audit verify --all
 Ollama model install note: if the weights CDN stalls near completion, finish the tail with an HTTP range request to
 `https://registry.ollama.ai/v2/library/<model>/blobs/sha256:<digest>`, move the completed file to
 `.tools/ollama-models/blobs/sha256-<digest>`, then re-run `ollama pull` so it verifies the digest.
+## Real cloud provider setup used (Fireworks AI, 2026-11-03)
+
+```bash
+# Bifrost config: providers.fireworks with key value env.FIREWORKS_API_KEY
+export FIREWORKS_API_KEY=fw_...
+# governance virtual key "gidorah-cloud" (value sk-bf-gidorah-cloud-dev) with provider_configs provider=fireworks
+
+# Gidorah shell
+export GIDORAH_MODE=cloud
+export BIFROST_BASE_URL=http://127.0.0.1:8080/openai
+export BIFROST_VK_CLOUD=sk-bf-gidorah-cloud-dev
+export GIDORAH_MODEL_ALIAS=fireworks/accounts/fireworks/models/deepseek-v4p1-flash
+export GIDORAH_MAX_TOKENS=1200
+node apps/cli/src/main.ts run "fix the failing test" --yes
+```
+
+Tavily:
+
+```bash
+export TAVILY_API_KEY=tvly-...
+# packages/tavily/src/client.ts is the real client; the Scout uses it when configured
+```
+
+Both keys are in `.tools/credentials.env` on this machine (gitignored). Rotate them after the demo because they were shared in chat.

@@ -133,6 +133,7 @@ function requestBody(request: ModelRequest, stream: boolean): string {
     messages,
     stream,
     ...(request.maxTokens === undefined ? {} : { max_tokens: request.maxTokens }),
+    ...(request.tools === undefined ? {} : { tools: request.tools, tool_choice: "auto" }),
   });
 }
 
