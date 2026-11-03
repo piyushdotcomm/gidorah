@@ -174,3 +174,15 @@ Real benchmark numbers with the benchmark harness (the harness still uses its sc
 - Per arm: always-strong A 2/16 solved; cascade C 11/16 solved. The cascade arm is both more reliable and cheaper, matching the pilot direction.
 - Reduction versus the docs protocol: 2 arms x 1 run instead of 4 arms x 5 runs, because the uncapped run hung (documented); a hard 180 s per-task timeout now prevents that. Timeouts recorded separately, not counted as evaluated rows.
 - Artifacts: `bench/real_mw0ffoii/raw.jsonl`, `report.md`, `manifest.json`, `traces/`.
+## Loop convergence: final audit (16:10 IST)
+
+Verification after the loop: typecheck PASS; lint 75 files 0 failures; 124 tests PASS; conformance 40/40; chaos 8/8 (5 offline + 3 real: Bifrost kill, Tavily outage, network drop); audit chain VALID; redteam 20/20 blocked and canary 0; demo replay PASS; Go plugin vet clean and tests ok; no tracked key material; working tree committed.
+
+Closed in this loop: CLI contract (completions, headless, sandbox rule, 9 contract tests), TUI adapter panels with tests, Docs Guard wired into the edit loop with a runtime test, real Tavily wired into `gidorah run`, real cost accounting in receipts, full real benchmark (32 rows), real-service chaos (Bifrost, Tavily, network), CI workflow, Docker/compose/devcontainer, dev scripts, coverage/startup/DLP/resume measurements, and every doc-status drift (product brief, roadmap, NOTICE, README, ADR index, docs README, runbook flags).
+
+Remaining items are external blockers, not code work:
+1. Load the Go plugin into a running Bifrost (native Go plugins are Linux .so; needs a Linux host/CI) to produce live DLP and canary-egress evidence.
+2. Record the 3-minute demo video and slides, star the Bifrost repo, and rotate the two keys pasted into chat (human/external actions).
+3. Optional: install tsdown for bundled artifacts; `pnpm install` needs a normal (non-sandboxed) filesystem.
+4. Benchmark protocol reduction (arms A and C, one run) is documented in the report; a 4-arm x 5-run sweep is a larger paid run, not a missing implementation.
+5. Full DSH TUI internal adaptation continues; the vendored package plus adapter panels satisfy the current v1 surface.

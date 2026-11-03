@@ -20,7 +20,7 @@ Built for HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both s
 | Confidential mode | Implemented: local-only key path, research disabled, network shell denied, zero-egress tests |
 | Audit chain, red team, replay, chaos | Implemented and tested offline |
 | Conformance CT-01..CT-40 | 40/40 passing offline |
-| Benchmark | Real pilot on Fireworks via Bifrost: 12 rows, 8 solved (pass@1 66.7%), cost per solved task $0.004429; cascade arm C solved 3/3 at $0.006021 vs always-strong 2/3 at $0.021042 |
+| Benchmark | Real full run on Fireworks via Bifrost: 32 rows, 13 solved (pass@1 40.6%), cost per solved task $0.007097; cascade arm C solved 11/16 vs always-strong 2/16 (documented reduction: 2 arms x 1 run) |
 | Go DLP plugin | Compiles and tests against the real Bifrost SDK (core v1.14.1): go vet clean, go test ok; loading into a live gateway PENDING (Linux .so) |
 | Local model runtime | Ollama 0.40.13 with qwen2.5-coder:3b imported from GGUF; real confidential-path inference through Bifrost returned 200 (provider ollama, content "ready"); the local-only key rejects cloud models with 403 |
 | TypeScript build/typecheck | Real strict `tsc --noEmit` passes; bundler artifacts PENDING |
