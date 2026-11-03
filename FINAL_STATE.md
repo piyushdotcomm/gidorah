@@ -37,7 +37,7 @@ node apps/cli/src/main.ts bench --real --full
 ## Review correction pass (latest)
 
 - Full 12-task run recorded under `bench/` (12 tasks x A/C/D/F, 1 run). A 3-run pilot measures variance. Current evidence: `bench/real_mw0nvfe6` (post-fix full run, 48 rows, 47 solved, 97.9%) and `bench/real_mw0ksdno` (post-fix 3-run pilot, 27 rows, 24 solved). Post-fix runs carry failure fields, split research accounting, and retained failure logs.
-- Tavily is reported as an honest negative for pass rate (C 6/6 vs D 5/6) and reframed as citations plus cost avoidance.
+- Tavily evidence is mixed; the current full run is a negative. Current full `real_mw0nvfe6`: C 12/12, D 12/12, D costs ~35% more per solved. Class B-only: D 5/6 vs C 6/6. Post-fix pilot: D 9/9 vs C 8/9 vs A 7/9. No reliable pass-rate claim is made.
 - Real 402, real primary-provider fallback, and live gateway DLP are explicitly NOT demonstrated; see `BUILD_REPORT.md` and evidence files.
 - Patch-first/repo-map are always-on and not ablated; no savings claim.
 
@@ -55,11 +55,11 @@ Total cost $0.200050, cost per solved task $0.004446, tokens 628361, model reque
 
 Class A: 24/24 solved. Class B: 21/24 solved. Class B by arm: A 4/6, C 5/6, D 6/6, F 6/6.
 This run predates failure fields: no categories, and its failed rows are not evidence for failure classification.
-Tavily honesty: full run arm D 12/12 vs C 11/12 (one task), Class B-only run arm D 5/6 vs C 6/6. The two samples disagree and n=12; no reliable pass-rate win is claimed. Tavily value reported as citations plus cost avoidance.
+Tavily honesty: current full run C 12/12 vs D 12/12 with D ~35 percent more expensive per solved; Class B-only D 5/6 vs C 6/6; post-fix pilot D 9/9 vs C 8/9 vs A 7/9. The three samples disagree at small n; no reliable pass-rate claim is made.
 
 ## Strategic honesty
 
-Arm F (always cheap) is 12/12 at $0.001756 per solved task in the full run; D is 12/12 at $0.003906, C 11/12 at $0.004230, A 10/12 at $0.008558. The cheapest arm wins on this task set. Cascade and Tavily are not proven to save money or raise pass rate here; they are framed as insurance for harder repositories, and no pass-rate claim is made.
+The current full run is F $0.001689 per solved, C $0.002972, D $0.004003, A $0.009667. F ties C and D at 1.76-2.37x lower cost; C is cheaper than D. Cascade and Tavily are insurance for harder repositories, not measured savings here.
 
 ## Post-fix 3-run pilot (current evidence)
 
@@ -74,7 +74,7 @@ Rows 27, evaluated 27, solved 24, errored 0, pass@1 88.9 percent, cost $0.165836
 Errored rows: none. Provider-error classification exists but was not triggered in this pilot.
 
 Research accounting totals: preResearchCalls 3, preResearchCredits 1, toolResearchCalls 3, toolResearchCredits 3, attempts 12, denied 6.
-Research cache reconciliation: research_usage 4 calls / 4 credits, 4 cache rows; raw rows sum to 6 calls / 4 credits. Any gap is tool-initiated calls whose credits were not observable; this is stated, not hidden.
+Research cache reconciliation: research_usage 4 calls / 4 credits, 4 cache rows; raw rows sum to 6 calls / 4 credits. The pilot gap is two pre-research cache hits; the full run reconciles exactly at 12 calls / 12 credits.
 
 Manifest truth: mode real-pilot, runs 3, maxSteps 20, temperature 0, taskTimeoutMs 240000, clientTimeoutMs 120000, taskFilter [], armFilter [].
 
@@ -103,3 +103,20 @@ Manifest: mode real-full-targeted, runs 1, maxSteps 20, temperature 0, taskTimeo
 ## B1-A fix result
 
 After the edit-nudge prompt ("after at most two exploratory reads or probes, apply the edit and run the test"), A rerun B1 three times (`bench/real_mw0olcgu`): 3/3 passed, 0 errors, $0.004962 per solved task. The earlier 20-step A loop no longer reproduces on B1. The other arms already solved B1 without research, so this confirms the failure was an A-arm loop, not a docs gap. A full 48/48 run is now expected but not yet re-run as a whole; the full-run headline remains 47/48.
+
+
+## Full run with edit-nudge (current evidence)
+
+Rows 48, evaluated 48, solved 48, errored 0, pass@1 100.0 percent, cost $0.111062, cost/solved $0.002314.
+
+| Arm | Solved | Cost | Cost/solved |
+|---|---|---|---|
+| A | 12/12 | $0.045566 | $0.003797 |
+| C | 12/12 | $0.021627 | $0.001802 |
+| D | 12/12 | $0.028600 | $0.002383 |
+| F | 12/12 | $0.015268 | $0.001272 |
+
+Class A 24/24; Class B 24/24.
+
+Research: pre 6/6, tool 1/1, attempts 7, denied 0; cache 7/7.
+Manifest: mode real-full-targeted, runs 1, maxSteps 20, temperature 0, promptVersion edit-nudge-v1, editNudge true, timeouts 240000/120000, armFilter ["A","C","D","F"].

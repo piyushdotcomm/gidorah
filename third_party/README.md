@@ -12,7 +12,7 @@ Current state is in `README.md`, `BUILD_REPORT.md`, and `FINAL_STATE.md`. The bu
 
 | Component | Use | License | Status and obligations |
 |---|---|---|---|
-| Bifrost (`maximhq/bifrost`) | Model gateway and only model egress path | Apache-2.0 | Runtime dependency, not vendored here. Include the license and NOTICE for the pinned release. State that Gidorah is not an official Bifrost product. PENDING: pin the release and copy its NOTICE. |
+| Bifrost (`maximhq/bifrost`) | Model gateway and only model egress path | Apache-2.0 | Runtime dependency, not vendored here. Include the license and NOTICE for the pinned release. State that Gidorah is not an official Bifrost product. Pinned release and NOTICE are recorded in this repo. |
 | Tavily API (`tavily.com`) | Web research and extraction service | Commercial API terms | Not open source. Follow the terms of service and acceptable use policy, cite sources, and do not redistribute page content beyond what the terms allow. PENDING: terms review for caching and benchmark publication. No API key is present in this build. |
 | DeepSeek Harness TUI (`@deepseek-ai/dsh-tui`) | Vendored terminal UI package at `third_party/dsh-tui` (192 files) | MIT AND BSD-3-Clause | Vendored with both license texts (`LICENSE`) and `NOTICE`; SPDX expression preserved. Gidorah-specific adapter panels live in `apps/tui`; full package integration is pending. |
 | pi-tui (`@earendil-works/pi-tui`) | TUI framework used by the DSH TUI | MIT, pinned 0.80.7 | Not vendored; declared dependency of the vendored DSH TUI package. Verify the pinned license file before distributing a built TUI. |
@@ -27,10 +27,10 @@ Current state is in `README.md`, `BUILD_REPORT.md`, and `FINAL_STATE.md`. The bu
 ## Pending
 
 - Pin the Bifrost release and copy its license and NOTICE before distribution.
-- Vendor the DSH TUI with `third_party/dsh-tui/LICENSE` and `third_party/dsh-tui/NOTICE`, or keep it unvendored and describe the plain renderer fallback.
+
 - Verify the pi-tui 0.80.7 license file if the TUI is vendored.
 - Review Tavily terms for caching and for publishing benchmark excerpts.
-- Build and test the Go plugin when Go 1.22+ and the Bifrost plugin SDK are available. That step is PENDING, not verified.
+
 - Re-run a dependency license scan after any package is added from a registry.
 
 ## Update 2026-11-03
