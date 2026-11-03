@@ -1,4 +1,4 @@
-﻿# Gidorah
+# Gidorah
 
 **The governed coding agent.** Less spend. Fewer guesses.
 
@@ -15,13 +15,14 @@ Built for HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both s
 | Area | State |
 |---|---|
 | Agent loop, tools, approvals, resume | Implemented and tested offline |
-| Bifrost integration | Implemented against a mock gateway (budgets, 402, routing, fallbacks, DLP, logs); real Bifrost PENDING |
+| Bifrost integration | Mock gateway tested offline; real Bifrost 2.4.0 built from source, running on :8080, and verified routing a real virtual-key request to the real Ollama provider (model weights PENDING) |
 | Tavily Scout, cards, cache, credits, Docs Guard | Implemented and tested against a mock Tavily |
 | Confidential mode | Implemented: local-only key path, research disabled, network shell denied, zero-egress tests |
 | Audit chain, red team, replay, chaos | Implemented and tested offline |
 | Conformance CT-01..CT-40 | 40/40 passing offline |
 | Benchmark | Harness implemented; pilot runs with a scripted mock model (real-provider numbers PENDING) |
 | Go DLP plugin | `go vet` clean and `go test` passing (Go 1.27.3); real Bifrost SDK binding PENDING |
+| Local model runtime | Ollama 0.40.13 installed and running on :11434; model-weight pull blocked at 379/398 MB by the CDN (PENDING) |
 | TypeScript build/typecheck | Real strict `tsc --noEmit` passes; bundler artifacts PENDING |
 
 No provider keys were available for this build. Every real-provider result is marked PENDING in [BUILD_REPORT.md](BUILD_REPORT.md); nothing was fabricated. See [MORNING_RUNBOOK.md](MORNING_RUNBOOK.md) for the exact steps to turn the mock evidence into real evidence.

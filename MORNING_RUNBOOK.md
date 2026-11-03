@@ -87,3 +87,40 @@ Rules that do not relax with keys:
 - Confidential sessions still make zero cloud and zero Tavily calls.
 - No benchmark number is estimated; every number comes from Bifrost/Tavily usage.
 - If a lever loses (Tavily, compaction, Code Mode), report the negative result.
+
+## Appendix: what was actually installed and how (2026-11-03)
+
+### Bifrost 2.4.0 from source (npm CDN was throttled)
+
+```bash
+# Go is installed under .tools/go; sparse clone avoids the docs-heavy tarball
+git -c http.sslBackend=openssl clone --depth 1 --filter=blob:none --sparse https://github.com/maximhq/bifrost .tools/bifrost-git
+cd .tools/bifrost-git && git -c http.sslBackend=openssl sparse-checkout set cmd core framework transports plugins cli
+go work init && go work use -r .
+mkdir -p transports/bifrost-http/ui && echo '<!doctype html><html><body>placeholder</body></html>' > transports/bifrost-http/ui/index.html
+cd transports/bifrost-http && go build -trimpath -o ../../../bifrost-bin/bifrost-http.exe .
+```
+
+Start it (PowerShell BOM pitfall: config.json must have no BOM):
+
+```bash
+node .tools/datasheet-server.mjs            # serves {} for pricing / model-parameters on :8099
+bifrost-http.exe --app-dir .tools/bifrost-app --port 8080
+```
+
+`config.json` needs `framework.pricing.pricing_url` and `model_parameters_url` pointing at the local datasheet server, otherwise Bifrost fatals on startup. Read the generated virtual key from `.tools/bifrost-app/config.db` table `governance_virtual_keys` column `value`.
+
+### Ollama 0.40.13
+
+Download `ollama-windows-amd64.zip` from the Ollama releases, extract, then run with a workspace home so the sandbox does not block `~/.ollama`:
+
+```bash
+USERPROFILE=.tools/home HOME=.tools/home OLLAMA_MODELS=.tools/ollama-models .tools/ollama/ollama.exe serve
+curl -X POST http://127.0.0.1:11434/api/pull -d '{"model":"qwen2.5-coder:0.5b","stream":true}'
+```
+
+The model blob CDN (Cloudflare R2) failed at 379/398 MB in this environment; retry on a normal network.
+
+### pnpm
+
+pnpm 12.16.1 is installed as a standalone binary under `.tools/pnpm`. `pnpm run ...` works. `pnpm install` cannot complete in this sandbox because pnpm needs symlinks and a store lock outside the workspace; use `npm install` here.
