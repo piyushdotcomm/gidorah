@@ -159,3 +159,11 @@ Real benchmark numbers with the benchmark harness (the harness still uses its sc
 - Repro deliverables: `.github/workflows/ci.yml`, `Dockerfile`, `docker-compose.yml`, `.devcontainer/devcontainer.json`, `scripts/dev-bifrost.sh`, `scripts/dev-ollama.sh`, `scripts/bench.sh`.
 - Measurements: CLI cold start average 144 ms (target <150 ms); DLP TS scan 7.6 microseconds per 4 KB request (target <20 ms p95); test coverage 118 tests, 77.4 percent overall and 80.0 percent for core+policy (target >=80 percent for core policy/approval/budget).
 - Docs drift fixed: product brief and roadmap status, root NOTICE, README TUI limitation, ADR index rows 0013-0015, docs README status note, and runbook `--yes --sandbox` examples.
+## Loop iteration 3 (15:40-16:10 IST)
+
+- Real cost accounting: shared price table (`packages/shared/src/pricing.ts`) is now used by the real benchmark and by `gidorah run` receipts, so flight-recorder cost is a real number for Fireworks models.
+- `--user` now selects the policy/budget profile; `--config` remains a documented env-driven override.
+- Real chaos extends beyond Bifrost: Tavily outage degrades to "unavailable" without blocking, and a network drop yields a structured provider error.
+- Measurements recorded: session resume load of a 101-event session 2 ms (target <2 s); CLI cold start 144 ms average (target <150 ms); DLP scan 7.6 microseconds per 4 KB request (target <20 ms p95).
+- CI workflow no longer requires a frozen pnpm lockfile (the offline sandbox could not generate a matching one).
+- Full real benchmark re-run in progress with a hard 180 s per-task timeout and arms A and C (documented reduction from four arms because the uncapped run hung).

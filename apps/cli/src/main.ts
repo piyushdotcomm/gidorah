@@ -21,6 +21,7 @@ import { DEFAULT_POLICY, loadPolicy } from "../../../packages/policy/src/schema.
 import { createScout, MockTavilyClient, ResearchCache } from "../../../packages/tavily/src/scout.ts";
 import { createTavilyClient } from "../../../packages/tavily/src/index.ts";
 import { ensureDirs, gidorahPaths, loadConfig } from "../../../packages/shared/src/config.ts";
+import { priceOf } from "../../../packages/shared/src/pricing.ts";
 import type { Policy, Receipt, TuiEvent } from "../../../packages/shared/src/types.ts";
 import { buildContext } from "../../../packages/core/src/context.ts";
 import { renderEvents, statusLine } from "../../../apps/tui/src/index.ts";
@@ -368,6 +369,7 @@ function runNodeTests(path: string, parsed: Parsed): number {
 async function main(): Promise<number> {
   const parsed = parseArgs(process.argv.slice(2));
   const config = loadConfig();
+  if (parsed.values.has("--user")) config.user = parsed.values.get("--user") ?? config.user;
   // Sandboxed or restricted machines cannot write ~/.gidorah; keep runtime data
   // inside the workspace when no explicit GIDORAH_HOME is set (documented in
   // BUILD_STATUS.md and ADR-0015).
@@ -584,7 +586,7 @@ async function commandRun(config: ReturnType<typeof loadConfig>, task: string, p
       repoClass: classification.mode,
       workspaceRoot: process.cwd(),
       run: runProcess,
-      estimateCost: (usage, servedModel) => costFor(servedModel, { input: usage.input, output: usage.output }),
+      estimateCost: (usage, servedModel) => priceOf(servedModel, usage) ?? costFor(servedModel, { input: usage.input, output: usage.output }),
       classifyTool: (tool, args) => classifyToolCall(tool, args, { policy, classification, cwd: process.cwd(), workspaceRoot: process.cwd() }),
       tracePath: join(paths.tracesDir, `${session.header.sessionId}.jsonl`),
     });

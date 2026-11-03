@@ -24,6 +24,7 @@ import { classifyRepo } from "../../policy/src/classify.ts";
 import { classifyToolCall } from "../../policy/src/approval.ts";
 import { DEFAULT_POLICY } from "../../policy/src/schema.ts";
 import { appendJsonl } from "../../shared/src/jsonl.ts";
+
 import { sha256Hex } from "../../shared/src/canonical.ts";
 import { createScout, ResearchCache } from "../../tavily/src/scout.ts";
 import { createTavilyClient } from "../../tavily/src/client.ts";
@@ -31,19 +32,10 @@ import { BENCH_ARMS, BENCH_TASKS, summarize, renderReport } from "./index.ts";
 import type { BenchRow } from "./index.ts";
 import type { ArmId, TokenUsage } from "../../shared/src/types.ts";
 
-/** USD per token, Standard serverless rates, Fireworks pricing page (2026-11-03). */
-export const FIREWORKS_PRICES: Record<string, { input: number; cachedInput: number; output: number }> = {
-  "accounts/fireworks/models/deepseek-v4p1-flash": { input: 0.30e-6, cachedInput: 0.006e-6, output: 1.20e-6 },
-  "accounts/fireworks/models/glm-5p3-flash": { input: 0.15e-6, cachedInput: 0.03e-6, output: 0.50e-6 },
-  "accounts/fireworks/models/qwen3p8-max": { input: 2.0e-6, cachedInput: 0.25e-6, output: 6.0e-6 },
-};
+import { MODEL_PRICES, priceOf } from "../../shared/src/pricing.ts";
 
 export function costOf(model: string, usage: TokenUsage): number {
-  const price = FIREWORKS_PRICES[model];
-  if (price === undefined) return 0;
-  const cached = Math.min(usage.cacheRead, usage.input);
-  const uncachedInput = Math.max(0, usage.input - cached);
-  return uncachedInput * price.input + cached * price.cachedInput + usage.output * price.output;
+  return priceOf(model, { input: usage.input, cacheRead: usage.cacheRead, output: usage.output }) ?? 0;
 }
 
 export interface RealBenchOptions {
@@ -68,7 +60,12 @@ function armModels(armId: ArmId, strong: string, cheap: string): { explore: stri
 
 export async function runRealBenchmark(options: RealBenchOptions): Promise<{ rows: BenchRow[]; rawPath: string; reportPath: string; manifestPath: string }> {
   const tasks = options.mode === "pilot" ? BENCH_TASKS.slice(0, 3) : BENCH_TASKS;
-  const arms = options.mode === "pilot" ? BENCH_ARMS.filter((arm) => ["A", "C", "D", "F"].includes(arm.id)) : BENCH_ARMS;
+  const armFilter = (process.env.GIDORAH_BENCH_ARMS ?? "").split(",").map((value) => value.trim()).filter((value) => value !== "");
+  const arms = options.mode === "pilot"
+    ? BENCH_ARMS.filter((arm) => ["A", "C", "D", "F"].includes(arm.id))
+    : armFilter.length > 0
+      ? BENCH_ARMS.filter((arm) => armFilter.includes(arm.id))
+      : BENCH_ARMS;
   const runs = options.runs ?? 1;
   const strong = options.strongModel ?? STRONG;
   const cheap = options.cheapModel ?? CHEAP;
@@ -78,7 +75,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
   const rawPath = join(runDir, "raw.jsonl");
   const rows: BenchRow[] = [];
   const tempRoot = mkdtempSync(join(tmpdir(), "gidorah-realbench-"));
-  const priceTable = FIREWORKS_PRICES;
+  const priceTable = MODEL_PRICES;
   let researchCache: ResearchCache | null = null;
   let researchClient: import("../../shared/src/types.ts").ResearchClient | undefined;
   if (options.tavilyApiKey !== undefined && options.tavilyApiKey !== "") {
@@ -100,7 +97,9 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
           const models = armModels(arm.id, strong, cheap);
           const useResearch = arm.id === "D" && researchClient !== undefined;
           const started = Date.now();
-          const result = await runTask(session, `${task.goal}. Run the test command (${task.testCommand}) when done.`, {
+          const timeoutMs = Number(process.env.GIDORAH_BENCH_TIMEOUT_MS ?? "180000");
+          const raced = await Promise.race([
+            runTask(session, `${task.goal}. Run the test command (${task.testCommand}) when done.`, {
             model: createBifrostClient({ baseUrl: options.baseUrl, virtualKey: options.virtualKey, timeoutMs: 120_000 }),
             tools: createDefaultTools(),
             approval: new AutoApprovalService(),
@@ -113,8 +112,15 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             classifyTool: (tool, args) => classifyToolCall(tool, args, { policy, classification: repoClass, cwd: workspace, workspaceRoot: workspace }),
             modelAlias: `fireworks/${models.explore}`,
             ...(useResearch && researchClient !== undefined ? { research: researchClient } : {}),
-            maxSteps: 10,
-          });
+            maxSteps: 6,
+            }),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+          ]);
+          if (raced === null) {
+            appendJsonl(rawPath, { taskId: task.id, armId: arm.id, run, passed: false, status: "errored", failureCategory: "timeout", wallMs: Date.now() - started });
+            continue;
+          }
+          const result = raced;
           const wallMs = Date.now() - started;
           const test = await runProcess({ command: task.testCommand, args: [], cwd: workspace, shell: true });
           const passed = test.code === 0;
