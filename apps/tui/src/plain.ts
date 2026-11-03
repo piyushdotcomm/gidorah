@@ -7,9 +7,11 @@
 import readline from "node:readline";
 import { DenyApprovalService, runTask, type BudgetSnapshot, type RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 import { Session } from "../../../packages/core/src/session.ts";
-import type { SessionEvent } from "../../../packages/shared/src/types.ts";
+import type { Receipt, SessionEvent, TraceRecord } from "../../../packages/shared/src/types.ts";
 import { sanitizeUntrusted } from "./index.ts";
 import type { TuiHooks, TuiSessionEntry } from "./app.ts";
+
+export const PLAIN_COMMANDS = ["/help", "/status", "/model", "/budget", "/trace", "/receipt", "/new", "/resume", "/quit"] as const;
 
 export interface PlainTuiOptions {
   session: Session;
@@ -21,6 +23,7 @@ export interface PlainTuiOptions {
   cwd: string;
   mode: string;
   modelAlias: string;
+  availableAliases?: string[];
   stdin?: NodeJS.ReadStream;
   stdout?: NodeJS.WriteStream;
 }
@@ -61,29 +64,52 @@ export async function runPlainTui(options: PlainTuiOptions): Promise<number> {
     stdout.write(`${line}\n`);
   };
   let session = options.session;
+  let lastReceipt: Receipt | null = null;
+  let lastTrace: TraceRecord[] = [];
   write("Gidorah (plain mode) - the governed coding agent");
   write(`cwd: ${options.cwd} · session: ${session.header.sessionId} · mode: ${options.mode} · model: ${options.modelAlias}`);
-  write("Type a task, /help for commands, /quit to exit. Approvals are denied in plain mode.");
+  write(`Type a task. Commands: ${PLAIN_COMMANDS.join(" ")}. Approvals are denied in plain mode.`);
 
   const rl = readline.createInterface({ input: stdin, output: stdout, terminal: false });
-  let quitting = false;
   try {
     for await (const raw of rl) {
       const text = raw.trim();
       if (text === "") continue;
       if (text === "/quit" || text === "/exit") break;
       if (text === "/help") {
-        write("/help /status /model /budget /receipt /new /resume /quit");
+        write(PLAIN_COMMANDS.join(" "));
         continue;
       }
       if (text === "/status") {
         const snapshot = options.budgetSnapshot();
-        write(`session ${session.header.sessionId} · mode ${options.mode} · model ${options.modelAlias} · budget $${snapshot.usedUsd.toFixed(4)}/$${snapshot.limitUsd.toFixed(2)}`);
+        write(`session ${session.header.sessionId} · mode ${options.mode} · model ${options.modelAlias} · budget $${snapshot.usedUsd.toFixed(4)}/$${snapshot.limitUsd.toFixed(2)} · receipts ${lastReceipt === null ? 0 : 1}`);
+        continue;
+      }
+      if (text === "/model") {
+        write(`model alias: ${options.modelAlias} · available: ${(options.availableAliases ?? [options.modelAlias]).join(", ")}`);
         continue;
       }
       if (text === "/budget") {
         const snapshot = options.budgetSnapshot();
         write(`llm used $${snapshot.usedUsd.toFixed(4)} of $${snapshot.limitUsd.toFixed(2)} · remaining $${snapshot.remainingUsd.toFixed(4)}`);
+        continue;
+      }
+      if (text === "/receipt") {
+        write(
+          lastReceipt === null
+            ? "no receipt yet; run a task first"
+            : `${lastReceipt.status} · ${lastReceipt.tokens.total} tokens · $${lastReceipt.llmCostUsd.toFixed(4)} · ${lastReceipt.fallbacks} fallback(s) · ${lastReceipt.summary}`,
+        );
+        continue;
+      }
+      if (text === "/trace") {
+        if (lastTrace.length === 0) {
+          write("no trace yet; run a task first");
+        } else {
+          for (const record of lastTrace) {
+            write(`${record.phase}: ${record.served.provider}/${record.served.model} · ${record.tokens.total} tokens · $${record.costUsd.toFixed(6)} · fallback ${record.fallback ? "yes" : "no"}`);
+          }
+        }
         continue;
       }
       if (text === "/new") {
@@ -118,6 +144,8 @@ export async function runPlainTui(options: PlainTuiOptions): Promise<number> {
       try {
         const deps = options.createDeps(session, { approval: new DenyApprovalService() });
         const result = await runTask(session, text, deps);
+        lastReceipt = result.receipt;
+        lastTrace = result.trace;
         write(`receipt: ${result.receipt.status} · ${result.receipt.tokens.total} tokens · $${result.receipt.llmCostUsd.toFixed(4)} · ${result.receipt.summary}`);
       } catch (error) {
         write(`error: ${error instanceof Error ? error.message : String(error)}`);
@@ -126,9 +154,7 @@ export async function runPlainTui(options: PlainTuiOptions): Promise<number> {
       }
     }
   } finally {
-    quitting = true;
     rl.close();
   }
-  void quitting;
   return 0;
 }

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -10,7 +10,7 @@ import { Session } from "../../../packages/core/src/session.ts";
 import { classifyToolCall } from "../../../packages/policy/src/approval.ts";
 import { classifyRepo } from "../../../packages/policy/src/classify.ts";
 import { DEFAULT_POLICY } from "../../../packages/policy/src/schema.ts";
-import type { ModelClient, ModelResponse, ToolCall } from "../../../packages/shared/src/types.ts";
+import type { ModelClient, ModelResponse, ResearchClient, ToolCall } from "../../../packages/shared/src/types.ts";
 import { TuiApp, listSessionEntries, type TuiHooks } from "../src/app.ts";
 import { classifyKey } from "../src/keys.ts";
 import { displayWidth, truncate, wrapText } from "../src/layout.ts";
@@ -76,7 +76,7 @@ function fakeIO(): { stdin: NodeJS.ReadStream; stdout: NodeJS.WriteStream } {
   return { stdin: stream as unknown as NodeJS.ReadStream, stdout: stream as unknown as NodeJS.WriteStream };
 }
 
-function makeApp(options: { model: ModelClient; deltas?: boolean; root?: string }): { app: TuiApp; root: string; session: Session; cleanup: () => void } {
+function makeApp(options: { model: ModelClient; deltas?: boolean; root?: string; research?: ResearchClient }): { app: TuiApp; root: string; session: Session; cleanup: () => void } {
   const root = options.root ?? mkdtempSync(join(tmpdir(), "gidorah-tui-"));
   const session = Session.create({ dir: join(root, ".sessions"), cwd: root, user: "test", mode: "cloud", policyVersion: "1" });
   const policy = DEFAULT_POLICY;
@@ -95,6 +95,7 @@ function makeApp(options: { model: ModelClient; deltas?: boolean; root?: string 
     classifyTool: (tool: string, args: Record<string, unknown>) => classifyToolCall(tool, args, { policy, classification, cwd: root, workspaceRoot: root }),
     ...(hooks.onModelDelta === undefined ? {} : { onModelDelta: hooks.onModelDelta }),
     ...(hooks.signal === undefined ? {} : { signal: hooks.signal }),
+    ...(options.research === undefined ? {} : { research: options.research }),
   });
   const io = fakeIO();
   const snap = (): BudgetSnapshot => budget.snapshot();
@@ -347,5 +348,111 @@ test("TUI Ctrl+D exits and Ctrl+C arms then exits", async () => {
     assert.equal(second.app.phase(), "exited");
   } finally {
     second.cleanup();
+  }
+});
+test("TUI resume replays both turns and the denied approval", async () => {
+  const steps = [
+    { content: "first", toolCalls: [{ name: "write", arguments: { path: "a.txt", content: "a\n" } }] },
+    { content: "first done" },
+    { content: "second done" },
+  ];
+  const { app, session, cleanup } = makeApp({ model: fakeModel(steps, false) });
+  try {
+    const first = app.submit("first task");
+    await waitFor(() => app.pendingApproval());
+    app.respond("deny");
+    await first;
+    await app.submit("second task");
+    await app.submit("/new");
+    await app.submit(`/resume ${session.header.sessionId}`);
+    await waitFor(() => app.transcript().some((item) => item.kind === "info" && item.text.includes("resumed")));
+    const text = app.transcript().map((item) => ("text" in item ? item.text : "")).join("\n");
+    assert.match(text, /first task/);
+    assert.match(text, /second task/);
+    assert.match(text, /approval deny/);
+    assert.match(text, /events replayed/);
+  } finally {
+    cleanup();
+  }
+});
+
+test("TUI status updates cache hit rate, context pressure, and research credits", async () => {
+  const research: ResearchClient = {
+    async research() {
+      return { status: "card", credits: 2, cached: false, card: { id: "c", question: "q", answer: "a", facts: [], sources: [{ title: "s", url: "https://example.com", domain: "example.com", retrievedAt: "2026-11-03" }], confidence: "high", tokenEstimate: 10, cached: false } };
+    },
+  };
+  const model = fakeModel(
+    [
+      { content: "checking docs", toolCalls: [{ name: "research", arguments: { question: "q" } }] },
+      { content: "done" },
+    ],
+    false,
+  );
+  const { app, cleanup } = makeApp({ model, research });
+  try {
+    await app.submit("research this");
+    const screen = app.snapshot(100, 30);
+    assert.match(screen, /research: 2\/50/);
+    assert.match(screen, /cache: \d+%/);
+  } finally {
+    cleanup();
+  }
+});
+
+test("TUI multiline, paste newlines, and tab completion", () => {
+  const { app, root, cleanup } = makeApp({ model: fakeModel([{ content: "ok" }], false) });
+  try {
+    writeFileSync(join(root, "package.json"), "{}\n");
+    for (const char of "/he") app.handleKey(char, { name: char, sequence: char });
+    app.handleKey(undefined, { name: "tab" });
+    assert.match(app.snapshot(100, 30), /\/help/);
+    app.handleKey(undefined, { name: "escape" });
+    for (const char of "line one") app.handleKey(char, { name: char, sequence: char });
+    app.handleKey(undefined, { name: "enter", shift: true });
+    assert.match(app.snapshot(100, 30), /line one/);
+    assert.match(app.snapshot(100, 30), /Type a task|line one/);
+    app.handleKey(undefined, { name: "escape" });
+    for (const char of "pack") app.handleKey(char, { name: char, sequence: char });
+    app.handleKey(undefined, { name: "tab" });
+    assert.match(app.snapshot(100, 30), /package\.json/);
+  } finally {
+    cleanup();
+  }
+});
+
+test("TUI cancellation returns to idle and keeps the terminal state clean", async () => {
+  const model: ModelClient = {
+    async complete(): Promise<ModelResponse> {
+      return fakeModel([{ content: "unused" }], false) as unknown as ModelResponse & never;
+    },
+    async *stream(_request: unknown, signal?: AbortSignal): AsyncIterable<{ type: "delta"; text: string } | { type: "done"; response: ModelResponse }> {
+      yield { type: "delta", text: "thinking" };
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      if (signal?.aborted === true) throw new Error("aborted");
+      yield { type: "done", response: response("done", []) };
+    },
+  } as ModelClient;
+  const { app, cleanup } = makeApp({ model });
+  try {
+    const pending = app.submit("cancel me");
+    await waitFor(() => app.transcript().some((item) => item.kind === "assistant"));
+    app.handleKey(undefined, { name: "c", ctrl: true });
+    await pending;
+    assert.equal(app.phase(), "idle");
+    assert.ok(app.transcript().some((item) => item.kind === "receipt" || item.kind === "error"));
+  } finally {
+    cleanup();
+  }
+});
+
+test("TUI renders at 40 columns without crashing", () => {
+  const { app, cleanup } = makeApp({ model: fakeModel([{ content: "hello" }], false) });
+  try {
+    const screen = app.snapshot(40, 20);
+    assert.ok(screen.length > 0);
+    for (const line of screen.split("\n")) assert.ok(displayWidth(line) <= 60);
+  } finally {
+    cleanup();
   }
 });

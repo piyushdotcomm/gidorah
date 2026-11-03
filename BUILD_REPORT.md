@@ -4,6 +4,7 @@ Evidence-first. Chronology and superseded runs: `BUILD_LOG.md`. One-page state:
 `FINAL_STATE.md`. Commands are reproducible from this repository.
 
 ## Verified with real services
+- Native TUI: `gidorah tui` drives the same runtime with live session events, streaming deltas, serialized approvals (allow/deny) with numbered diffs, tool cards, slash commands, resume replay, cancellation, and plain/non-TTY fallback. Demo: `apps/tui/DEMO.md`.
 
 - Real Bifrost 2.4.0 (built from source) on `:8080`; real Fireworks AI models
   (30 available, e.g. deepseek-v4p1-flash) and real Ollama 0.40.13 with a 3B
@@ -57,8 +58,8 @@ CLI cold start 144 ms average (target <150 ms); DLP scan 7.6 microseconds per
    (native Go plugins are Linux `.so`; Windows cannot).
 2. Record the 3-minute demo, slides, star the Bifrost repo.
 3. Rotate the keys pasted into chat and the local `sk-bf-` dev key.
-4. Full DSH TUI package integration behind `gidorah` (plain renderer plus
-   adapter panels ship today).
+4. DSH package integration remains optional: the package is vendored with
+   LICENSE/NOTICE but not wired; the native TUI ships.
 
 ## Licenses
 

@@ -19,6 +19,7 @@ export type KeyAction =
   | { type: "ctrl-d" }
   | { type: "ctrl-l" }
   | { type: "ctrl-o" }
+  | { type: "ctrl-e" }
   | { type: "escape" }
   | { type: "tab" }
   | { type: "ignore" };
@@ -43,6 +44,8 @@ export function classifyKey(str: string | undefined, key: KeyInfo | undefined): 
         return { type: "ctrl-l" };
       case "o":
         return { type: "ctrl-o" };
+      case "e":
+        return { type: "ctrl-e" };
       default:
         return { type: "ignore" };
     }

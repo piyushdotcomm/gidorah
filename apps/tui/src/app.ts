@@ -6,9 +6,8 @@
  * streams deltas through RuntimeDeps.onModelDelta. Input is raw-mode keypress;
  * plain/non-TTY operation is handled by plain.ts.
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import readline from "node:readline";
 import { runTask, type ApprovalService, type BudgetSnapshot, type RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 import { Session } from "../../../packages/core/src/session.ts";
@@ -16,11 +15,12 @@ import type { Receipt, SessionEvent, TraceRecord } from "../../../packages/share
 import { TuiAdapter } from "./adapter.ts";
 import { InteractiveApprovalService } from "./approval.ts";
 import { classifyKey, type KeyInfo } from "./keys.ts";
-import { renderScreen, type ApprovalView, type TranscriptItem, type TuiView } from "./layout.ts";
+import { renderScreen, type ApprovalView, type ToolView, type TranscriptItem, type TuiView } from "./layout.ts";
 import { sanitizeUntrusted, type StatusState } from "./index.ts";
 
 export interface TuiHooks {
   approval: ApprovalService;
+  modelAlias?: string;
   onModelDelta?: (text: string) => void;
   signal?: AbortSignal;
   maxSteps?: number;
@@ -43,6 +43,7 @@ export interface TuiAppOptions {
   branch: string;
   mode: string;
   modelAlias: string;
+  availableAliases?: string[];
   researchLimit?: number;
   maxSteps?: number;
   color?: boolean;
@@ -60,6 +61,9 @@ interface State {
   phase: "idle" | "running" | "approval" | "exited";
   approval: ApprovalView | null;
   resumeOptions: TuiSessionEntry[] | null;
+  resumeIndex: number;
+  modelAlias: string;
+  modelOptions: string[];
   receipts: Receipt[];
   lastTrace: TraceRecord[];
   status: StatusState;
@@ -104,12 +108,15 @@ function diffFor(tool: string, args: Record<string, unknown>): Partial<ApprovalV
     };
   }
   if (tool === "bash" && typeof args.command === "string") {
-    return { diff: [{ kind: "path", text: "shell" }, { kind: "context", text: args.command }] };
+    const readOnly = /(^|\\s)(ls|cat|pwd|rg|grep|git\\s+(status|log|diff)|node\\s+--test|npm\\s+test)(\\s|$)/.test(args.command);
+    const risky = /(npm\\s+(install|ci)|pnpm|git\\s+(push|commit|reset)|curl|wget|ssh|scp)/.test(args.command);
+    return { diff: [{ kind: "path", text: "shell" }, { kind: "context", text: args.command }], hint: readOnly ? "read-only command" : risky ? "network or mutating command" : "shell command" };
   }
   if (tool === "write" && typeof args.path === "string") {
     const body = typeof args.content === "string" ? args.content : "";
     return {
       diff: [{ kind: "path", text: args.path }, ...body.split("\n").slice(0, 10).map((line) => ({ kind: "add" as const, text: line }))],
+      hint: "new or overwritten file",
     };
   }
   return {};
@@ -130,7 +137,12 @@ export class TuiApp {
   private startTimes = new Map<string, number>();
   private callArgs = new Map<string, { name: string; args: Record<string, unknown> }>();
   private renderScheduled = false;
+  private renderTimer: NodeJS.Timeout | null = null;
   private done: ((code: number) => void) | null = null;
+  private signalHandlers: Array<{ signal: NodeJS.Signals; handler: () => void }> = [];
+  private cacheReadTotal = 0;
+  private inputTokenTotal = 0;
+  private contextCapTokens = 128_000;
 
   constructor(options: TuiAppOptions) {
     this.opts = options;
@@ -149,6 +161,9 @@ export class TuiApp {
       phase: "idle",
       approval: null,
       resumeOptions: null,
+      resumeIndex: 0,
+      modelAlias: options.modelAlias,
+      modelOptions: options.availableAliases ?? [options.modelAlias],
       receipts: [],
       lastTrace: [],
       status: {
@@ -202,23 +217,64 @@ export class TuiApp {
 
   async start(): Promise<number> {
     if (!this.interactive) return 0;
-    this.io.stdout.write("\u001b[?1049h\u001b[?25l");
-    readline.emitKeypressEvents(this.io.stdin);
-    this.io.stdin.setRawMode(true);
-    this.io.stdin.resume();
-    this.keyListener = (str, key) => this.handleKey(str, key);
-    this.io.stdin.on("keypress", this.keyListener);
-    this.resizeListener = () => {
-      this.state.status;
+    try {
+      this.io.stdout.write("\u001b[?1049h\u001b[?25l");
+      readline.emitKeypressEvents(this.io.stdin);
+      this.io.stdin.setRawMode(true);
+      this.io.stdin.resume();
+      this.keyListener = (str, key) => this.handleKey(str, key);
+      this.io.stdin.on("keypress", this.keyListener);
+      this.resizeListener = () => {
+        this.paint(true);
+      };
+      this.io.stdout.on("resize", this.resizeListener);
+      this.installSignalHandlers();
       this.paint(true);
-    };
-    this.io.stdout.on("resize", this.resizeListener);
-    this.paint(true);
+    } catch (error) {
+      this.cleanupTerminal();
+      throw error;
+    }
     return new Promise((resolve) => {
       this.done = resolve;
     });
   }
 
+  private installSignalHandlers(): void {
+    const handle = (): void => this.stop(130);
+    for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
+      const handler = (): void => handle();
+      try {
+        process.on(signal, handler);
+        this.signalHandlers.push({ signal, handler });
+      } catch {
+        // signal not available on this platform
+      }
+    }
+  }
+
+  private cleanupTerminal(): void {
+    if (this.renderTimer !== null) {
+      clearTimeout(this.renderTimer);
+      this.renderTimer = null;
+    }
+    if (this.keyListener !== null) this.io.stdin.off("keypress", this.keyListener);
+    if (this.resizeListener !== null) this.io.stdout.off("resize", this.resizeListener);
+    for (const { signal, handler } of this.signalHandlers) {
+      try {
+        process.off(signal, handler);
+      } catch {
+        // already removed
+      }
+    }
+    this.signalHandlers = [];
+    try {
+      this.io.stdin.setRawMode(false);
+    } catch {
+      // not in raw mode
+    }
+    this.io.stdin.pause();
+    this.io.stdout.write("\u001b[?25h\u001b[?1049l");
+  }
   handleKey(str: string | undefined, key: KeyInfo | undefined): void {
     if (this.state.phase === "exited") return;
     const action = classifyKey(str, key);
@@ -240,6 +296,34 @@ export class TuiApp {
       }
       return;
     }
+    if (this.state.resumeOptions !== null) {
+      if (action.type === "up") {
+        this.state.resumeIndex = Math.max(0, this.state.resumeIndex - 1);
+        this.render();
+        return;
+      }
+      if (action.type === "down") {
+        this.state.resumeIndex = Math.min(this.state.resumeOptions.length - 1, this.state.resumeIndex + 1);
+        this.render();
+        return;
+      }
+      if (action.type === "escape") {
+        this.state.resumeOptions = null;
+        this.render();
+        return;
+      }
+      if (action.type === "enter") {
+        const chosen = this.state.resumeOptions[this.state.resumeIndex];
+        if (chosen !== undefined) this.resumeSession(chosen.id);
+        return;
+      }
+      if (action.type === "char" && /^[0-9]$/.test(action.text)) {
+        const chosen = this.state.resumeOptions[Number(action.text) - 1];
+        if (chosen !== undefined) this.resumeSession(chosen.id);
+        return;
+      }
+      return;
+    }
     switch (action.type) {
       case "ctrl-d":
         this.stop(0);
@@ -253,16 +337,19 @@ export class TuiApp {
       case "ctrl-o":
         this.toggleLastTool();
         return;
+      case "ctrl-e":
+        this.toggleAllTools();
+        return;
+      case "tab":
+        this.complete();
+        return;
       case "escape":
-        if (this.state.resumeOptions !== null) this.state.resumeOptions = null;
-        else {
-          this.state.input = "";
-          this.state.cursor = 0;
-        }
+        this.state.input = "";
+        this.state.cursor = 0;
         this.render();
         return;
       case "enter":
-        void this.handleEnter();
+        void this.handleEnter(key);
         return;
       case "up":
         this.historyMove(-1);
@@ -271,11 +358,11 @@ export class TuiApp {
         this.historyMove(1);
         return;
       case "left":
-        this.state.cursor = Math.max(0, this.state.cursor - 1);
+        this.moveLeft();
         this.render();
         return;
       case "right":
-        this.state.cursor = Math.min(this.state.input.length, this.state.cursor + 1);
+        this.moveRight();
         this.render();
         return;
       case "home":
@@ -287,18 +374,12 @@ export class TuiApp {
         this.render();
         return;
       case "backspace":
-        if (this.state.cursor > 0) {
-          this.state.input = this.state.input.slice(0, this.state.cursor - 1) + this.state.input.slice(this.state.cursor);
-          this.state.cursor -= 1;
-          this.state.exitArmed = false;
-          this.render();
-        }
+        this.backspace();
+        this.render();
         return;
       case "delete":
-        if (this.state.cursor < this.state.input.length) {
-          this.state.input = this.state.input.slice(0, this.state.cursor) + this.state.input.slice(this.state.cursor + 1);
-          this.render();
-        }
+        this.deleteForward();
+        this.render();
         return;
       case "char":
         this.insert(action.text);
@@ -307,7 +388,6 @@ export class TuiApp {
         return;
     }
   }
-
   async submit(raw: string): Promise<void> {
     const task = raw.trim();
     if (task === "") return;
@@ -331,6 +411,7 @@ export class TuiApp {
     try {
       const hooks: TuiHooks = {
         approval: this.approvalService,
+        modelAlias: this.state.modelAlias,
         onModelDelta: (delta) => this.onDelta(delta),
         signal: this.abort.signal,
         ...(this.opts.maxSteps === undefined ? {} : { maxSteps: this.opts.maxSteps }),
@@ -357,26 +438,22 @@ export class TuiApp {
 
   stop(code = 0): void {
     if (this.state.phase === "exited") return;
+    if (this.state.phase === "running") {
+      try {
+        this.session.closeOpenBoundaries();
+      } catch {
+        // session may already be closed
+      }
+    }
     this.state.phase = "exited";
     this.approvalService.denyAll();
     this.unsubscribe?.();
     this.unsubscribe = null;
-    if (this.interactive) {
-      if (this.keyListener !== null) this.io.stdin.off("keypress", this.keyListener);
-      if (this.resizeListener !== null) this.io.stdout.off("resize", this.resizeListener);
-      try {
-        this.io.stdin.setRawMode(false);
-      } catch {
-        // already restored
-      }
-      this.io.stdin.pause();
-      this.io.stdout.write("\u001b[?25h\u001b[?1049l");
-    }
+    if (this.interactive) this.cleanupTerminal();
     this.persistHistory();
     this.done?.(code);
     this.done = null;
   }
-
   renderToString(): string {
     return this.snapshot();
   }
@@ -391,7 +468,8 @@ export class TuiApp {
       branch: this.opts.branch,
       sessionId: this.session.header.sessionId,
       mode: this.opts.mode,
-      modelAlias: this.opts.modelAlias,
+      modelAlias: this.state.modelAlias,
+      ...(this.state.resumeOptions === null ? {} : { resumeSelected: this.state.resumeIndex }),
       status: this.state.status,
       transcript: this.state.transcript,
       input: this.state.input,
@@ -406,31 +484,34 @@ export class TuiApp {
   }
 
   private render(): void {
-    if (!this.interactive) return;
+    if (!this.interactive || this.state.phase === "exited") return;
     if (this.renderScheduled) return;
     this.renderScheduled = true;
-    setTimeout(() => {
+    this.renderTimer = setTimeout(() => {
       this.renderScheduled = false;
+      this.renderTimer = null;
       this.paint(false);
     }, 16);
   }
 
   private paint(clear: boolean): void {
+    if (!this.interactive || this.state.phase === "exited") return;
     const screen = this.view();
-    const width = this.io.stdout.columns ?? screen.width;
-    const height = this.io.stdout.rows ?? screen.height;
-    this.io.stdout.write(`${clear ? "\u001b[2J\u001b[1;1H" : "\u001b[1;1H"}${renderScreen({ ...screen, width, height })}`);
+    const width = Math.max(40, this.io.stdout.columns ?? screen.width);
+    const height = Math.max(12, this.io.stdout.rows ?? screen.height);
+    try {
+      this.io.stdout.write(`${clear ? "\u001b[2J\u001b[1;1H" : "\u001b[1;1H"}${renderScreen({ ...screen, width, height })}`);
+    } catch {
+      // a broken pipe must not take down the session
+    }
   }
 
-  private async handleEnter(): Promise<void> {
-    if (this.state.resumeOptions !== null) {
-      const index = Number.parseInt(this.state.input.trim(), 10);
-      const chosen = Number.isFinite(index) ? this.state.resumeOptions[index - 1] : undefined;
-      if (chosen !== undefined) {
-        this.resumeSession(chosen.id);
-        return;
-      }
-      this.notice("enter a listed number, or Esc to cancel");
+  private async handleEnter(key: KeyInfo | undefined): Promise<void> {
+    if (key?.shift === true || this.state.input.endsWith("\\")) {
+      const continued = key?.shift === true ? this.state.input : this.state.input.slice(0, -1);
+      this.state.input = `${continued}\n`;
+      this.state.cursor = this.state.input.length;
+      this.render();
       return;
     }
     const text = this.state.input;
@@ -443,6 +524,80 @@ export class TuiApp {
     await this.submit(text);
   }
 
+  private moveLeft(): void {
+    if (this.state.cursor === 0) return;
+    const chars = [...this.state.input.slice(0, this.state.cursor)];
+    chars.pop();
+    this.state.cursor = chars.join("").length;
+  }
+
+  private moveRight(): void {
+    const next = [...this.state.input.slice(this.state.cursor)][0];
+    if (next !== undefined) this.state.cursor += next.length;
+  }
+
+  private backspace(): void {
+    if (this.state.cursor === 0) return;
+    const chars = [...this.state.input.slice(0, this.state.cursor)];
+    chars.pop();
+    const kept = chars.join("");
+    this.state.input = kept + this.state.input.slice(this.state.cursor);
+    this.state.cursor = kept.length;
+    this.state.exitArmed = false;
+  }
+
+  private deleteForward(): void {
+    const rest = [...this.state.input.slice(this.state.cursor)];
+    if (rest.length === 0) return;
+    const first = rest[0]!;
+    this.state.input = this.state.input.slice(0, this.state.cursor) + this.state.input.slice(this.state.cursor + first.length);
+  }
+
+  private complete(): void {
+    const value = this.state.input;
+    const commands = ["/help", "/status", "/model", "/budget", "/trace", "/receipt", "/new", "/resume", "/quit"];
+    if (value.startsWith("/")) {
+      const matches = commands.filter((command) => command.startsWith(value));
+      if (matches.length === 1) {
+        this.state.input = matches[0]!;
+        this.state.cursor = this.state.input.length;
+      } else if (matches.length > 1) {
+        this.info(`completions: ${matches.join("  ")}`);
+      }
+      this.render();
+      return;
+    }
+    const token = /\S*$/.exec(value)?.[0] ?? "";
+    if (token === "") return;
+    const slash = token.lastIndexOf("/");
+    const dirPart = slash >= 0 ? token.slice(0, slash) : ".";
+    const base = slash >= 0 ? token.slice(slash + 1) : token;
+    try {
+      const entries = readdirSync(resolve(this.opts.cwd, dirPart)).filter((entry) => entry.startsWith(base)).slice(0, 20);
+      if (entries.length === 1) {
+        const replacement = `${slash >= 0 ? token.slice(0, slash + 1) : ""}${entries[0]}`;
+        this.state.input = `${value.slice(0, value.length - token.length)}${replacement}`;
+        this.state.cursor = this.state.input.length;
+        this.render();
+        return;
+      }
+      if (entries.length > 1) {
+        this.info(`paths: ${entries.join("  ")}`);
+        return;
+      }
+    } catch {
+      // no completions in this directory
+    }
+    this.notice("no completion");
+  }
+
+  private toggleAllTools(): void {
+    const anyCollapsed = this.state.transcript.some((item) => item.kind === "tool" && item.tool.expanded !== true);
+    for (const item of this.state.transcript) {
+      if (item.kind === "tool") item.tool.expanded = anyCollapsed;
+    }
+    this.render();
+  }
   private handleCtrlC(): void {
     if (this.state.phase === "running") {
       if (this.abort !== null && !this.abort.signal.aborted) {
@@ -518,6 +673,7 @@ export class TuiApp {
 
   private onSessionEvent(event: SessionEvent): void {
     const data = event.data as Record<string, unknown>;
+    this.trackMetrics(event);
     switch (event.type) {
       case "user/message":
         this.state.transcript.push({ kind: "user", text: sanitize(String(data.content ?? "")) });
@@ -553,9 +709,14 @@ export class TuiApp {
           const started = this.startTimes.get(callId);
           if (started !== undefined) item.tool.elapsedMs = event.time - started;
           if (this.callArgs.get(callId)?.name === "research" && data.ok === true) {
-            const meta = data.meta as { sources?: unknown } | undefined;
+            const meta = data.meta as { sources?: unknown; credits?: unknown; cached?: unknown; cardTokens?: unknown; confidence?: unknown } | undefined;
             const sources = Array.isArray(meta?.sources) ? meta?.sources.map(String) : [];
-            this.state.transcript.push({ kind: "research", text: text.slice(0, 300), ...(sources.length === 0 ? {} : { sources }) });
+            this.state.status.researchCredits += Number(meta?.credits ?? 0);
+            this.state.transcript.push({
+              kind: "research",
+              text: `${String(meta?.confidence ?? "unknown")} confidence · ${Number(meta?.cardTokens ?? 0)} tokens${meta?.cached === true ? " · cached" : ""} · ${text.slice(0, 220).replace(/\n+/g, " ")}`,
+              ...(sources.length === 0 ? {} : { sources }),
+            });
           }
         }
         break;
@@ -608,6 +769,31 @@ export class TuiApp {
     this.render();
   }
 
+  private trackMetrics(event: SessionEvent): void {
+    const data = event.data as Record<string, unknown>;
+    if (event.type === "assistant/message") {
+      const usage = data.usage as { input?: number; cacheRead?: number } | undefined;
+      if (usage !== undefined) {
+        const input = Number(usage.input ?? 0);
+        const cached = Number(usage.cacheRead ?? 0);
+        this.inputTokenTotal += input;
+        this.cacheReadTotal += cached;
+        this.state.status.cacheHitRate = this.cacheReadTotal / Math.max(1, this.inputTokenTotal + this.cacheReadTotal);
+        this.state.status.contextPressure = Math.min(1, input / Math.max(1, this.contextCapTokens));
+      }
+      const provider = typeof data.provider === "string" ? data.provider : undefined;
+      const model = typeof data.model === "string" ? data.model : undefined;
+      if (provider !== undefined && model !== undefined) this.state.status.route = `${provider}/${model}`;
+    }
+    if (event.type === "context/metrics") {
+      if (typeof data.capTokens === "number") this.contextCapTokens = Math.max(1, data.capTokens);
+      const cleared = Number(data.cleared ?? 0);
+      if (cleared > 0) this.state.status.compaction = "cleared";
+      else if (data.compactionNetCostUsd !== undefined) this.state.status.compaction = "compacted";
+    }
+    if (event.type === "dlp/blocked") this.state.status.dlp = String(data.action ?? "blocked");
+  }
+
   private approvalView(): ApprovalView | null {
     const request = this.approvalService.current();
     if (request === null) return null;
@@ -644,9 +830,17 @@ export class TuiApp {
           `session ${this.session.header.sessionId} · cwd ${this.opts.cwd} · mode ${this.opts.mode} · model ${this.opts.modelAlias} · budget $${this.state.status.llmUsd.toFixed(4)}/$${this.state.status.llmLimit.toFixed(2)} · receipts ${this.state.receipts.length}`,
         );
         return;
-      case "/model":
-        this.info(`model alias: ${this.opts.modelAlias} (phase routing resolved by Bifrost; the TUI never calls providers directly)`);
+      case "/model": {
+        if (arg !== "") {
+          const chosen = this.state.modelOptions.find((alias) => alias === arg) ?? arg;
+          this.state.modelAlias = chosen;
+          this.state.status.route = chosen;
+          this.info(`model alias set to ${chosen} (next turn)`);
+          return;
+        }
+        this.info(`model alias: ${this.state.modelAlias} · available: ${this.state.modelOptions.join(", ")} · phase routing resolved by Bifrost; the TUI never calls providers directly`);
         return;
+      }
       case "/budget": {
         const snapshot = this.opts.budgetSnapshot();
         this.info(`llm used $${snapshot.usedUsd.toFixed(4)} of $${snapshot.limitUsd.toFixed(2)} · remaining $${snapshot.remainingUsd.toFixed(4)} · task $${snapshot.taskUsedUsd.toFixed(4)}/$${snapshot.taskCapUsd.toFixed(2)}`);
@@ -724,12 +918,12 @@ export class TuiApp {
       const loaded = this.opts.loadSession(id);
       this.attach(loaded);
       this.session = loaded;
-      this.state.transcript = [];
+      this.state.transcript = replaySessionTranscript(loaded);
       this.state.receipts = [];
       this.state.lastTrace = [];
       this.state.approval = null;
       this.state.resumeOptions = null;
-      this.info(`resumed ${loaded.header.sessionId}`);
+      this.info(`resumed ${loaded.header.sessionId} · ${loaded.all.length} events replayed`);
     } catch (error) {
       this.notice(`resume failed: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -765,6 +959,64 @@ export class TuiApp {
       // history is best-effort
     }
   }
+}
+
+/** Replays a loaded session into transcript items (resume must not show an empty screen). */
+export function replaySessionTranscript(session: Session, limit = 200): TranscriptItem[] {
+  const items: TranscriptItem[] = [];
+  const tools = new Map<string, ToolView>();
+  for (const event of session.all.slice(-limit)) {
+    const data = event.data as Record<string, unknown>;
+    switch (event.type) {
+      case "user/message":
+        items.push({ kind: "user", text: sanitize(String(data.content ?? "")) });
+        break;
+      case "assistant/message": {
+        const content = sanitize(String(data.content ?? ""));
+        if (content.trim() !== "") items.push({ kind: "assistant", text: content });
+        break;
+      }
+      case "tool/call": {
+        const callId = String(data.callId ?? "");
+        const name = String(data.name ?? "");
+        const args = JSON.stringify(data.arguments ?? {});
+        const tool: ToolView = { callId, name, args, status: "ok" };
+        tools.set(callId, tool);
+        items.push({ kind: "tool", tool });
+        break;
+      }
+      case "tool/result": {
+        const tool = tools.get(String(data.callId ?? ""));
+        if (tool !== undefined) {
+          const error = data.error as { code?: string } | undefined;
+          tool.status = data.ok === true ? "ok" : error?.code === "POLICY_DENIED" ? "denied" : "error";
+          tool.result = sanitize(firstText(data)).slice(0, 4000);
+        }
+        break;
+      }
+      case "approval/request":
+        items.push({ kind: "notice", level: "warn", text: `approval requested: ${String(data.tool ?? "tool")} (${String(data.risk ?? "")})` });
+        break;
+      case "approval/decision":
+        items.push({ kind: "notice", level: "warn", text: `approval ${String(data.decision ?? "deny")}` });
+        break;
+      case "route/changed":
+        items.push({ kind: "takeover", text: `${formatRef(data.from)} → ${formatRef(data.to)} (${String(data.reason ?? "")})` });
+        break;
+      case "docs/check":
+        items.push({ kind: "docs", text: String(data.result ?? "unknown") });
+        break;
+      case "dlp/blocked":
+        items.push({ kind: "dlp", text: `${String(data.class ?? "secret")} ${String(data.action ?? "blocked")}` });
+        break;
+      case "session/error":
+        items.push({ kind: "error", text: sanitize(String(data.message ?? "session error")) });
+        break;
+      default:
+        break;
+    }
+  }
+  return items;
 }
 
 /** Lists sessions for /resume, newest first, reading only the first user message. */
