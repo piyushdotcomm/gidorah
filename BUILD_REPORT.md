@@ -41,7 +41,7 @@ superseded, and are not used as evidence.
 
 ## Verification
 
-typecheck PASS; lint 75 files 0 failures; 140 tests PASS; conformance 40/40;
+typecheck PASS; lint 79 files 0 failures; 140 tests PASS; conformance 40/40;
 chaos 8/8; audit chain VALID; redteam 20/20 blocked, canary 0; demo replay PASS;
 Go plugin vet clean and tests ok; no tracked key material; clean working tree.
 
@@ -72,13 +72,13 @@ LICENSE/NOTICE in `third_party/dsh-tui`. Full register: `third_party/README.md`.
 - Corrected pilot: 9 rows, 7 solved, cost per solved task $0.006454.
 - Class B full set (B1..B6, arms A/C/D): 18 rows, 16 solved, pass@1 88.9%, cost per solved task $0.006792, 313,088 tokens, 157 model requests.
   - arm A (always strong): 5/6 solved; arm C (cascade): 6/6; arm D (cascade plus deterministic docs-first Tavily research): 5/6.
-  - arm D made one Tavily call and spent one credit per Class B task, and was cheaper per row than arm A (for example B5: $0.002534 vs $0.003140; B6: $0.002049 vs $0.011093).
+  - Arm D research accounting is split into pre-research and tool research. The earlier claim of "one call and one credit per task" was an undercount: the pre-research card is one call, and B3-D made a second tool call. Rows now record `preResearchCalls/Credits`, `toolResearchCalls/Credits`, sources, and card tokens. Credits for tool-initiated calls cannot be read because no `research/result` event is emitted; that residual undercount is stated, not hidden.
 - Metrics are derived from session events: research calls count `research/result` only, research credits sum real Tavily usage, patch tokens/full-file reads/approval prompts/cache hits come from the event stream, and errored/timeout rows are counted separately.
 - Pricing: TokenUsage.input is treated as uncached input; cacheRead is billed separately, with a test using cacheRead > 0.
-- Superseded: the earlier synthetic-math runs and the uncapped hung run stay in `bench/` and are labelled in `BUILD_LOG.md`. The A-class full run was partially recorded (`real_mw0g7hvx`) before the Class B run; it is not used as the headline.
+- Superseded: the earlier synthetic-math runs, the uncapped hung run, the partial A-class run (`real_mw0g7hvx`), and the 1-run full run (`real_mw0i03nt`) stay in `bench/` and are labelled in `BUILD_LOG.md`. The 1-run full run is superseded for step-limit and failure-field reasons; the 3-run pilot and any later full run are the current evidence.
 ## Review correction pass (current)
 
-- **Full run:** 12 tasks x arms A/C/D (F present as an extra cost-floor arm; treated as supplementary), 1 run, maxSteps 12, no max-token cap, hard 180 s task timeout, per-phase cascade, failure categories in raw rows. `--runs` and `GIDORAH_BENCH_RUNS` are supported and the manifest records runs/maxSteps/maxTokens/models.
+- **Full run:** 12 tasks x arms A/C/D/F, 1 run, maxSteps 20 (was 12 in the prior run), no max-token cap, temperature pinned to 0, hard 240 s task timeout, per-phase cascade. `--runs` and `GIDORAH_BENCH_RUNS` are supported and recorded in the manifest. Failures carry `failureCategory`, `failureDetail`, and a retained event log under `bench/<run>/failures/`.
 - **Tavily is an honest negative on pass rate.** Class B: arm C 6/6, arm D 5/6, so research did not improve correctness in this sample; it added one customer-visible citation per task at one credit each and lower per-row cost than arm A in places. Claims in README/FINAL_STATE are reframed to citations and cost avoidance, not a pass-rate win.
 - **Patch-first and repo-map are always-on and not ablated.** Arms no longer pretend otherwise; no savings claim is made for them.
 - **Real 402 budget is NOT demonstrated.** A tiny-budget virtual key was wired through governance budgets and model configs on a separate Bifrost instance; requests still returned 200. The captured attempts are in `evidence/real-budget-402-2026-11-03.json` and the claim is downgraded to "offline/402 tested with the mock gateway".
@@ -101,3 +101,15 @@ Total cost $0.200050, cost per solved task $0.004446, tokens 628361, model reque
 Class A: 24/24 solved. Class B: 21/24 solved. Class B by arm: A 4/6, C 5/6, D 6/6, F 6/6.
 Failure categories present in raw rows where a task failed; no errored/timeout rows in this run.
 Tavily honesty: full run arm D 12/12 vs C 11/12 (one task), Class B-only run arm D 5/6 vs C 6/6. The two samples disagree and n=12; no reliable pass-rate win is claimed. Tavily value reported as citations plus cost avoidance.
+## Evidence-integrity fix (final)
+
+- `failureCategory`, `failureDetail`, `stepLimitReached`, and the research split (`preResearchCalls/Credits`, `toolResearchCalls/Credits`, `researchSources`, `researchCardTokens`) now reach `BenchRow` and raw JSONL. Verified on `bench/real_mw0k7ayt`: B1-A failed with `failureCategory: no_edit`, `stepLimitReached: false`, and a retained event log under `bench/real_mw0k7ayt/failures/`.
+- Research accounting is split and reconciled: B1-D recorded `preResearchCalls 1`, `preResearchCredits 1`, `toolResearchCalls 1`, card 329 tokens. The earlier "one call per task" claim is corrected: B3-D made two calls (pre-research plus a tool research call). Credits for tool-initiated calls remain unobservable because no `research/result` event is emitted; that residual undercount is stated, not hidden.
+- Step limit is configurable (`GIDORAH_BENCH_MAX_STEPS`, default 20) and recorded; temperature is pinned to 0 and recorded in the manifest.
+- Variance pilot (pre-field-fix run `real_mw0jtdu3`): 27 rows (A1/B1/A2 x A/C/D x 3 runs), 26 solved (96.3%), $0.005471 per solved task; arm A 8/9, C 9/9, D 9/9. Its one failure (B1-A run 2) predates the field fix and therefore has no category recorded; the post-fix B1 run supplies a category.
+- **Arm F dominates this task set.** Full run: F 12/12 at $0.001756 per solved, D 12/12 at $0.003906, C 11/12 at $0.004230, A 10/12 at $0.008558. The honest comparison is D vs F and C vs F: the always-cheap arm is cheaper and at least as reliable. This task set does **not** demonstrate cascade or Tavily value; they are framed as insurance for harder, larger repos, not as measured wins here. No pass-rate claim is made.
+- `costPerSuccessfulTask` is no longer reported; it is undefined until retries are tracked, and the duplicate label was removed from the generated report.
+
+### Superseded artifacts (kept, labelled)
+
+`bench/real_mw0etfge` (synthetic pilot), `bench/real_mw0f94jv` (hung), `bench/real_mw0ffoii` (synthetic tasks, fake cascade), `bench/real_mw0g3w0s` (corrected pilot, pre research trigger), `bench/real_mw0g7hvx` (partial A run), `bench/real_mw0gj157` (Class B only), `bench/real_mw0i03nt` (full 1-run, pre field fix), `bench/real_mw0jtdu3` (variance pilot, pre field fix). Current verified evidence: `bench/real_mw0k7ayt` (post-fix fields) plus the full-run economics table above.

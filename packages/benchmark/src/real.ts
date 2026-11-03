@@ -102,6 +102,8 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
           const timeoutMs = Number(process.env.GIDORAH_BENCH_TIMEOUT_MS ?? "180000");
           let usedResearchCalls = 0;
           let usedResearchCredits = 0;
+          let preResearchSources: string[] = [];
+          let preResearchCardTokens = 0;
           let prompt = `${task.goal}. Run the test command (${task.testCommand}) when done.`;
           if (useResearch && task.class === "B" && researchClient !== undefined) {
             const outcome = await researchClient.research(
@@ -111,6 +113,8 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             if (outcome.status === "card") {
               usedResearchCalls = 1;
               usedResearchCredits = outcome.credits;
+              preResearchSources = outcome.card.sources.map((source) => source.url);
+              preResearchCardTokens = outcome.card.tokenEstimate;
               prompt += `\n\nRESEARCH CARD (${outcome.card.tokenEstimate} tokens, ${outcome.card.confidence} confidence):\n${outcome.card.answer}\nFacts:\n${outcome.card.facts.join("\n")}\nSources: ${outcome.card.sources.map((source) => source.url).join(", ")}`;
             }
           }
@@ -134,7 +138,8 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
               other: `fireworks/${models.explore}`,
             },
             ...(useResearch && researchClient !== undefined ? { research: researchClient } : {}),
-            maxSteps: 12,
+            maxSteps: Number(process.env.GIDORAH_BENCH_MAX_STEPS ?? "20"),
+            temperature: 0,
             }),
             new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
           ]);
@@ -155,15 +160,16 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
           const wallMs = Date.now() - started;
           const test = await runProcess({ command: task.testCommand, args: [], cwd: workspace, shell: true });
           const passed = test.code === 0;
-          const failureCategory = passed
-            ? undefined
-            : session.all.some((event) => event.type === "step/end" && (event.data as { reason?: string }).reason === "tools executed") && session.all.filter((event) => event.type === "tool/call").length === 0
-              ? "no_tool_call"
-              : session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "edit").length === 0
-                ? "no_edit"
-                : result.receipt.summary.includes("step limit")
-                  ? "step_limit"
-                  : "test_failed";
+          const maxSteps = Number(process.env.GIDORAH_BENCH_MAX_STEPS ?? "20");
+          const stepCount = session.all.filter((event) => event.type === "step/start").length;
+          const stepLimitReached = stepCount >= maxSteps;
+          const editCallCount = session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "edit").length;
+          const failureCategory = passed ? undefined : stepLimitReached ? "step_limit" : editCallCount === 0 ? "no_edit" : "test_failed";
+          const failureDetail = passed ? undefined : `${test.code}: ${(test.stderr || test.stdout).replace(/\s+/g, " ").slice(0, 300)}`;
+          if (!passed) {
+            mkdirSync(join(runDir, "failures"), { recursive: true });
+            writeFileSync(join(runDir, "failures", `${task.id}-${arm.id}-${run}.json`), JSON.stringify({ taskId: task.id, armId: arm.id, run, failureCategory, failureDetail, stepLimitReached, events: session.all.slice(-40) }, null, 2));
+          }
           const modelResults = session.all.filter((event) => event.type === "assistant/message");
           const modelsUsed = modelResults.map((event) => (event.data as { model?: string }).model ?? "");
           const tokens = result.receipt.tokens;
@@ -187,7 +193,8 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             const args = (event.data as { arguments?: { start?: number; end?: number } }).arguments;
             return args?.start === undefined && args?.end === undefined;
           }).length;
-          const researchCalls = Math.max(usedResearchCalls, researchResults.length);
+          const toolResearchCalls = session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "research").length;
+          const researchCalls = usedResearchCalls + toolResearchCalls;
           const researchCredits = usedResearchCredits + researchResults.reduce((total, event) => total + Number((event.data as { credits?: number }).credits ?? 0), 0);
           const row: BenchRow = {
             taskId: task.id,
@@ -209,6 +216,15 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             approvalPrompts,
             cacheHit,
             wallMs,
+            ...(failureCategory === undefined ? {} : { failureCategory }),
+            ...(failureDetail === undefined ? {} : { failureDetail }),
+            stepLimitReached,
+            preResearchCalls: usedResearchCalls,
+            preResearchCredits: usedResearchCredits,
+            toolResearchCalls,
+            toolResearchCredits: 0,
+            ...(preResearchSources.length === 0 ? {} : { researchSources: preResearchSources }),
+            ...(preResearchCardTokens === 0 ? {} : { researchCardTokens: preResearchCardTokens }),
           };
           rows.push(row);
           appendJsonl(rawPath, row);
@@ -251,8 +267,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     `- Cheap model: ${cheap}`,
     `- Price source: ${manifest.priceTableSource}`,
     `- Rows: ${summary.evaluated} evaluated, ${summary.solved} solved, ${summary.errored} errored/timeout, ${summary.missing} missing, pass@1: ${(summary.passAt1 * 100).toFixed(1)}%`,
-    `- Cost per solved task: $${summary.costPerSolvedTask.toFixed(6)}`,
-    `- Cost per successful task: $${summary.costPerSuccessfulTask.toFixed(6)}`,
+    `- Cost per solved task: $${summary.costPerSolvedTask.toFixed(6)} (cost per successful task is undefined until retries are tracked)`,
     `- Total tokens: ${summary.tokens.total}, model requests: ${summary.modelRequests}`,
     `- p50 row cost: $${summary.p50Cost.toFixed(6)}, p95 row cost: $${summary.p95Cost.toFixed(6)}`,
     "",
@@ -266,7 +281,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     "",
     "- Pricing: DeepSeek V4.1 Flash $0.30 in / $0.006 cached / $1.20 out per 1M; GLM 5.3 Flash $0.15 / $0.03 / $0.50 per 1M.",
     "- Missing/errored/skipped rows: 0 for evaluated rows; a task that fails its test is a real failure, not missing data.",
-    "- Small sample: pilot is 3 tasks x 4 arms x 1 run. Full mode is 16 tasks x arms x runs.",
+    "- Sample: pilot is 3 tasks x 3 arms; full is 12 tasks x 4 arms. Runs are controlled by --runs or GIDORAH_BENCH_RUNS; temperature is pinned to 0 and recorded in the manifest.",
     "",
   ];
   writeFileSync(reportPath, lines.join("\n"));

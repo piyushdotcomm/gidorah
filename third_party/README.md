@@ -6,7 +6,7 @@
 
 This register lists third-party components that Gidorah uses, adapts, or deliberately does not use in this offline build. It is an engineering summary, not legal advice. Verify each license against the exact pinned version and consult counsel before commercial distribution.
 
-`BUILD_STATUS.md` records the current PENDING state: the build is mock-first, no registry access, no Go toolchain, and no real provider keys.
+Current state is in `README.md`, `BUILD_REPORT.md`, and `FINAL_STATE.md`. The build has real provider runs, a Go toolchain, and the plugin compiles against the real Bifrost SDK; the old PENDING note is historical.
 
 ## Register
 
@@ -14,8 +14,8 @@ This register lists third-party components that Gidorah uses, adapts, or deliber
 |---|---|---|---|
 | Bifrost (`maximhq/bifrost`) | Model gateway and only model egress path | Apache-2.0 | Runtime dependency, not vendored here. Include the license and NOTICE for the pinned release. State that Gidorah is not an official Bifrost product. PENDING: pin the release and copy its NOTICE. |
 | Tavily API (`tavily.com`) | Web research and extraction service | Commercial API terms | Not open source. Follow the terms of service and acceptable use policy, cite sources, and do not redistribute page content beyond what the terms allow. PENDING: terms review for caching and benchmark publication. No API key is present in this build. |
-| DeepSeek Harness TUI (`@deepseek-ai/dsh-tui`) | Adapted terminal UI shell | MIT AND BSD-3-Clause | NOT vendored in this offline build, PENDING. When vendored, include both license texts and the copyright notice, mark changes, and keep the SPDX expression. See `docs/06-legal/licensing-and-attribution.md`. |
-| pi-tui (`@earendil-works/pi-tui`) | TUI framework used by the DSH TUI | MIT, pinned 0.80.7 | NOT vendored, PENDING. The DSH TUI pins 0.80.7; verify that version's license file before distribution. |
+| DeepSeek Harness TUI (`@deepseek-ai/dsh-tui`) | Vendored terminal UI package at `third_party/dsh-tui` (192 files) | MIT AND BSD-3-Clause | Vendored with both license texts (`LICENSE`) and `NOTICE`; SPDX expression preserved. Gidorah-specific adapter panels live in `apps/tui`; full package integration is pending. |
+| pi-tui (`@earendil-works/pi-tui`) | TUI framework used by the DSH TUI | MIT, pinned 0.80.7 | Not vendored; declared dependency of the vendored DSH TUI package. Verify the pinned license file before distributing a built TUI. |
 | Node.js | Runtime | MIT | Not vendored. Include the Node.js license in a distribution that bundles the binary. Standard attribution. |
 | better-sqlite3 | Replaced by the built-in `node:sqlite` module | MIT (original library) | No dependency is installed, so no attribution is required for it. The replacement avoids a native build in the offline environment. |
 | `openai` JavaScript SDK | Not installed | Apache-2.0 (if added) | NOT installed in this offline build. Gidorah talks to Bifrost over HTTP and must not import a provider SDK, so this should stay out unless a reviewed Bifrost client requires it. |

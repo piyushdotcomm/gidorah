@@ -7,7 +7,9 @@
 
 ---
 
-## 1. Language and runtime
+## 1. Language and runtime (historical plan; superseded below)
+
+The runtime now uses npm, `node:test`, `node:sqlite`, and custom scripts; see the implementation-reality section at the end and ADR-0013. The commands and packages in this document are the original plan.
 
 | Choice | Value | Rationale |
 |---|---|---|

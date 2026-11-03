@@ -142,6 +142,7 @@ export interface RuntimeDeps {
   maxSteps?: number;
   /** Explicit provider-qualified model alias (real gateways, per-arm runs). */
   modelAlias?: string;
+  temperature?: number;
   /** Per-phase model aliases; overrides modelAlias for that phase (cascade arms). */
   modelAliasByPhase?: Partial<Record<"explore" | "edit" | "verify" | "research" | "other", string>>;
   /** Docs Guard fact sheets and optional research client. */
@@ -195,6 +196,7 @@ export async function runTask(session: Session, task: string, deps: RuntimeDeps)
         confidential,
         ...(process.env.GIDORAH_MAX_TOKENS === undefined ? {} : { maxTokens: Number(process.env.GIDORAH_MAX_TOKENS) }),
         tools: deps.tools.schemas(),
+        ...(deps.temperature === undefined ? {} : { temperature: deps.temperature }),
       };
 
       let response;

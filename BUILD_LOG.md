@@ -39,4 +39,6 @@ labelled so.
 | `bench/real_mw0ffoii` | 16 synthetic math tasks; arm C was always-cheap, not a cascade |
 | `bench/real_mw0g3w0s` | corrected pilot before the docs-first research trigger |
 
-- **Correction pass (current).** Real cascade wired and tested; synthetic math tasks replaced with 6 Class A + 6 runtime-docs Class B tasks; arms reduced to A/C/D; metrics derived from events; deterministic docs-first Tavily in arm D; Class B run 18 rows / 16 solved. Partial A-class run real_mw0g7hvx is superseded and not used as the headline.
+- **Correction pass (current).** Real cascade wired and tested; synthetic math tasks replaced with 6 Class A + 6 runtime-docs Class B tasks; arms reduced to A/C/D/F; metrics derived from events; deterministic docs-first Tavily in arm D; Class B run 18 rows / 16 solved. Partial A-class run real_mw0g7hvx is superseded and not used as the headline.
+
+- **Evidence-integrity fix.** failureCategory/failureDetail/step-limit and split Tavily accounting now reach raw rows (verified in eal_mw0k7ayt); full runs before this are superseded for those fields. Arm F is reported as the best arm on the current task set; cascade/Tavily savings are not claimed.
