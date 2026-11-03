@@ -147,6 +147,10 @@ export interface RuntimeDeps {
   modelAliasByPhase?: Partial<Record<"explore" | "edit" | "verify" | "research" | "other", string>>;
   /** Docs Guard fact sheets and optional research client. */
   docsGuard?: { factSheets: Map<string, ApiFactSheet> };
+  /** When set, the runtime streams the model and emits text deltas. */
+  onModelDelta?: (text: string) => void;
+  /** Cancellation for the current turn (model calls and callers). */
+  signal?: AbortSignal;
 }
 
 export interface TaskReceiptResult {
@@ -201,7 +205,7 @@ export async function runTask(session: Session, task: string, deps: RuntimeDeps)
 
       let response;
       try {
-        response = await deps.model.complete(request);
+        response = await callModel(deps, request);
       } catch (error) {
         if (error instanceof BudgetExceededError) {
           status = "budget_exhausted";
@@ -330,6 +334,25 @@ export async function runTask(session: Session, task: string, deps: RuntimeDeps)
     ...(deps.tracePath === undefined ? {} : { tracePath: deps.tracePath }),
   };
   return { receipt, trace, ok: status === "success", events: session.all.slice(startIndex) };
+}
+
+/** Calls complete() unchanged unless the caller asked for streaming deltas. */
+async function callModel(deps: RuntimeDeps, request: ModelRequest): Promise<import("../../shared/src/types.ts").ModelResponse> {
+  if (deps.onModelDelta === undefined) return deps.model.complete(request, deps.signal);
+  let final: import("../../shared/src/types.ts").ModelResponse | null = null;
+  for await (const chunk of deps.model.stream(request, deps.signal)) {
+    if (chunk.type === "delta") {
+      deps.onModelDelta(chunk.text);
+      continue;
+    }
+    if (chunk.type === "error") {
+      if (chunk.error.code.includes("budget")) throw new BudgetExceededError(chunk.error.message, { code: chunk.error.code });
+      throw new ProviderError(chunk.error.message, { status: 0, retryable: chunk.error.retryable, details: { code: chunk.error.code } });
+    }
+    final = chunk.response;
+  }
+  if (final === null) throw new ProviderError("stream ended without a final response", { status: 0 });
+  return final;
 }
 
 async function executeToolCall(

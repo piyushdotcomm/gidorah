@@ -89,6 +89,19 @@ test("CLI-08 headless run emits one JSON object and never prompts", async () => 
   assert.ok(parsed.receipt.tokens.total > 0);
 });
 
+test("CLI-10 bare gidorah without a TTY prints help", async () => {
+  const result = await cli([]);
+  assert.equal(result.code, 0);
+  assert.match(result.stdout, /Usage: gidorah/);
+});
+
+test("CLI-11 tui --plain works without a TTY and emits no ANSI", async () => {
+  const result = await cli(["tui", "--plain"]);
+  assert.equal(result.code, 0);
+  assert.match(result.stdout, /Gidorah \(plain mode\)/);
+  assert.equal(result.stdout.includes("\u001b["), false);
+});
+
 test("CLI-09 non-TTY invocation does not hang on prompts", async () => {
   const result = await cli(["doctor", "--plain"], { GIDORAH_MODE: "mock" });
   assert.equal(result.code, 0);
