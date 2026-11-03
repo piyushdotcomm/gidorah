@@ -137,6 +137,7 @@ test("pi TUI streams, shows one approval, and records one receipt", async () => 
     await waitFor(() => app.pendingApproval(), "approval");
     assert.equal(app.shellForTest().hasApproval(), true);
     assert.ok(terminal.writes.join("").includes("approval required"));
+    assert.ok(terminal.writes.join("").includes("MOCK MODE"));
     app.respond("allow");
     await turn;
     assert.equal(app.phase(), "idle");

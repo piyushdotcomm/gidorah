@@ -599,7 +599,7 @@ async function createHarness(
   const closers: Array<() => Promise<void>> = [];
   let model;
   if (config.mode === "mock") {
-    const deepseek = await startMockProvider({ script: options.mockScript ?? [{ content: "mock mode: task acknowledged. Use gidorah demo for the scripted scenes." }] });
+    const deepseek = await startMockProvider({ script: options.mockScript ?? [{ content: "MOCK MODE: no model call was made. This is an offline stub. Start Bifrost and set GIDORAH_MODE=cloud to run a real model." }] });
     const gateway = await startMockGateway({
       upstreams: { deepseek: deepseek.url, ollama: deepseek.url },
       virtualKeys: [{ name: "run-cloud", kind: "cloud", providers: ["deepseek"], budgetUsd: 0.5, usedUsd: 0 }],

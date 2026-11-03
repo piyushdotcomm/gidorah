@@ -30,10 +30,16 @@ export function renderPiDemo(): string {
     out.push("", `### ${title}`, "```text", shell.snapshot(100, 34), "```");
   };
   shell.setHeader([
+    "MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real coding. Use `gidorah tui --demo` for the scripted demo.",
     "Gidorah  the governed coding agent",
     "cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto",
   ]);
   shell.setStatus("mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off");
+  shell.addText("Welcome to Gidorah");
+  shell.addText("mode: mock · model: gidorah-auto");
+  shell.addText("/help  /status  /model  /budget  /trace  /receipt  /new  /resume  /quit");
+  shell.addText("Enter send · Shift+Enter newline · Tab complete · Ctrl+O tools · Ctrl+D quit");
+  frame("0. Welcome + mock-mode banner");
   shell.addText("› patch greeting.txt and verify the runtime");
   shell.addMarkdown("I'll patch `greeting.txt` and then check the runtime.\n\n- read the file\n- apply the edit\n- run the test");
   shell.addToolCard({ name: "edit", args: "greeting.txt  hello -> hello, world", status: "ok", elapsedMs: 19, result: "patched greeting.txt (5 -> 12 chars)" });
