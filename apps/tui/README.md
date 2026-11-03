@@ -20,6 +20,19 @@ The interactive surface needs a TTY on both stdin and stdout. In non-TTY shells
 Plain mode denies write/shell approvals explicitly because there is no approval
 channel.
 
+## Two renderers
+
+The interactive TTY path is `pi-app.ts` + `pi-shell.ts` on pi-tui. The legacy
+`app.ts`/`layout.ts` text renderer still serves `--plain`, the deterministic
+`--demo` transcript, and the legacy tests; it is not the interactive surface.
+`DEMO-pi.md` is generated from pi-tui components; `DEMO.md` is the legacy demo.
+
+Keys on the pi path: Ctrl+O expands the latest tool card, Ctrl+E expands all
+cards, Tab completes slash commands and workspace paths, Enter submits,
+Shift+Enter inserts a newline (pi-tui Editor), arrows/history and paste are
+handled by the Editor, PgUp/PgDn scroll the transcript, Ctrl+C cancels/exits,
+Ctrl+D quits.
+
 ## Keys
 
 | Key | Action |
@@ -95,7 +108,7 @@ card; no network). It shows streaming, edit approval with a numbered diff, shell
 approval + denial, research card, takeover banner, receipt, `/status`, `/trace`,
 `/receipt`, the `/resume` picker, and `/model`.
 
-## Terminal acceptance (manual)
+## Native modules\n\npi-tui ships native helpers only for win32 and darwin (keyboard modifiers and\nWindows console VT input); the Linux path uses the JS fallback and does not\nrequire a native prebuild. `npm ci` and all gates pass in a clean worktree on\nWindows; Ubuntu was not executed in this environment.\n\n## Terminal acceptance (manual)
 
 The agent shell used to build this repository is non-TTY, so raw-mode operation was
 **not** verified in a real terminal. Manual acceptance checklist:

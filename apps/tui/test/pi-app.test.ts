@@ -20,8 +20,16 @@ class FakeTerminal implements Terminal {
   rows = 32;
   kittyProtocolActive = false;
   writes: string[] = [];
-  start(): void {}
-  stop(): void {}
+  private inputHandler: ((data: string) => void) | null = null;
+  start(onInput?: (data: string) => void): void {
+    this.inputHandler = onInput ?? null;
+  }
+  send(data: string): void {
+    this.inputHandler?.(data);
+  }
+  stop(): void {
+    this.inputHandler = null;
+  }
   async drainInput(): Promise<void> {}
   write(data: string): void {
     this.writes.push(data);
@@ -196,5 +204,31 @@ test("pi shell repaints across three frames and two approval modal cycles", asyn
     assert.ok(terminal.writes.join("").includes("task 2"));
   } finally {
     shell.stop();
+  }
+});
+test("pi TUI handles Ctrl+O tool expansion and Tab slash completion", async () => {
+  const { app, terminal, cleanup } = makeApp([
+    { content: "writing", toolCalls: [{ name: "write", arguments: { path: "a.txt", content: "hello\n" } }] },
+    { content: "done" },
+  ]);
+  try {
+    const started = app.start();
+    const turn = app.submit("write");
+    await waitFor(() => app.pendingApproval(), "approval");
+    app.respond("allow");
+    await turn;
+    const tool = app.transcript().find((item) => item.kind === "tool");
+    assert.ok(tool !== undefined && tool.kind === "tool");
+    assert.equal(tool.tool.expanded ?? false, false);
+    terminal.send("\u000f");
+    assert.equal(tool.tool.expanded, true);
+    app.shellForTest().editor.setText("/he");
+    terminal.send("\t");
+    assert.equal(app.shellForTest().getEditorText(), "/help");
+    app.stop(0);
+    await started;
+  } finally {
+    app.stop(0);
+    cleanup();
   }
 });

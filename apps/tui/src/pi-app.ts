@@ -5,7 +5,8 @@
  * module owns session/event projection, runtime wiring, approvals and slash
  * commands. The legacy non-TTY app remains for plain mode/demo/tests.
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { Markdown, ProcessTerminal, Text, type Component, type Terminal } from "@earendil-works/pi-tui";
 import { runTask, type BudgetSnapshot, type RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 import { Session } from "../../../packages/core/src/session.ts";
@@ -127,6 +128,21 @@ export class PiTuiApp {
       modelOptions: options.availableAliases ?? [options.modelAlias],
       exitArmed: false,
     };
+    this.shell.tui.addInputListener((data) => {
+      if (data === "\u000f") {
+        this.toggleLastTool();
+        return { consume: true };
+      }
+      if (data === "\u0005") {
+        this.toggleAllTools();
+        return { consume: true };
+      }
+      if (data === "\t") {
+        this.complete();
+        return { consume: true };
+      }
+      return undefined;
+    });
     this.attach(this.session);
     this.sync();
   }
@@ -234,6 +250,52 @@ export class PiTuiApp {
       this.shell.editor.disableSubmit = false;
       this.shell.focusEditor();
       this.sync();
+    }
+  }
+
+  private toggleLastTool(): void {
+    for (let index = this.state.transcript.length - 1; index >= 0; index -= 1) {
+      const item = this.state.transcript[index];
+      if (item !== undefined && item.kind === "tool") {
+        item.tool.expanded = item.tool.expanded !== true;
+        this.sync();
+        return;
+      }
+    }
+  }
+
+  private toggleAllTools(): void {
+    const anyCollapsed = this.state.transcript.some((item) => item.kind === "tool" && item.tool.expanded !== true);
+    for (const item of this.state.transcript) if (item.kind === "tool") item.tool.expanded = anyCollapsed;
+    this.sync();
+  }
+
+  private complete(): void {
+    const value = this.shell.getEditorText();
+    const commands = ["/help", "/status", "/model", "/budget", "/trace", "/receipt", "/new", "/resume", "/quit"];
+    if (value.startsWith("/")) {
+      const matches = commands.filter((command) => command.startsWith(value));
+      if (matches.length === 1) this.shell.setEditorText(matches[0]!);
+      else if (matches.length > 1) this.info(`completions: ${matches.join("  ")}`);
+      return;
+    }
+    const token = /\S*$/.exec(value)?.[0] ?? "";
+    if (token === "") return;
+    const slash = token.lastIndexOf("/");
+    const dirPart = slash >= 0 ? token.slice(0, slash) : ".";
+    const base = slash >= 0 ? token.slice(slash + 1) : token;
+    try {
+      const entries = readdirSync(resolve(this.opts.cwd, dirPart)).filter((entry) => entry.startsWith(base)).slice(0, 20);
+      if (entries.length === 1) {
+        this.shell.setEditorText(`${value.slice(0, value.length - token.length)}${slash >= 0 ? token.slice(0, slash + 1) : ""}${entries[0]}`);
+        return;
+      }
+      if (entries.length > 1) {
+        this.info(`paths: ${entries.join("  ")}`);
+        return;
+      }
+    } catch {
+      // no completions
     }
   }
 
@@ -410,7 +472,7 @@ export class PiTuiApp {
       `cwd: ${this.opts.cwd}  ·  branch: ${this.opts.branch}  ·  session: ${this.session.header.sessionId}  ·  mode: ${this.opts.mode}  ·  model: ${this.state.modelAlias}`,
     ]);
     this.shell.setStatus(statusLine(this.state.status, this.opts.color === true));
-    this.shell.setFooter([this.state.phase === "approval" ? "[y] allow  [n] deny  [Esc] deny" : this.state.phase === "running" ? "running…  Ctrl+C cancel  Ctrl+O expand  PgUp/PgDn scroll" : "Enter send  ↑↓ history  /help  Ctrl+D quit  PgUp/PgDn scroll"]);
+    this.shell.setFooter([this.state.phase === "approval" ? "[y] allow  [n] deny  [Esc] deny" : this.state.phase === "running" ? "running…  Ctrl+C cancel  Ctrl+O expand  PgUp/PgDn scroll" : "Enter send  ↑↓ history  Tab complete  Ctrl+O tools  Ctrl+D quit  PgUp/PgDn scroll"]);
     this.shell.setTranscriptComponents(this.components());
   }
 

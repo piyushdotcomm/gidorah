@@ -42,7 +42,7 @@ superseded, and are not used as evidence.
 
 ## Verification
 
-typecheck PASS; lint 94 files 0 failures; 165 tests PASS; conformance 40/40;
+typecheck PASS; lint 97 files 0 failures; 167 tests PASS; conformance 40/40;
 chaos 8/8; audit chain VALID; redteam 20/20 blocked, canary 0; demo replay PASS;
 Go plugin vet clean and tests ok; no tracked key material; clean working tree.
 
