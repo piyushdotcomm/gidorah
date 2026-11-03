@@ -27,6 +27,7 @@ import { buildContext } from "../../../packages/core/src/context.ts";
 import { renderEvents, statusLine } from "../../../apps/tui/src/index.ts";
 import { TuiApp, listSessionEntries } from "../../tui/src/app.ts";
 import { runPlainTui } from "../../tui/src/plain.ts";
+import { PiTuiApp } from "../../tui/src/pi-app.ts";
 import { renderTuiDemo, runTuiDemo } from "../../tui/src/demo.ts";
 import type { ApprovalService, RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 
@@ -688,7 +689,7 @@ async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed)
     process.stdout.write(`${text}\n`);
     return EXIT.ok;
   }
-  const harness = await createHarness(config, parsed, { mockScript: TUI_DEMO_SCRIPT });
+  const harness = await createHarness(config, parsed);
   const modelAlias = config.mode === "mock" ? "gidorah-auto" : process.env.GIDORAH_MODEL_ALIAS ?? "gidorah-auto";
   try {
     const interactive = process.stdin.isTTY === true && process.stdout.isTTY === true && !parsed.plain;
@@ -709,7 +710,7 @@ async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed)
       });
     }
     const branch = await runProcess({ command: "git", args: ["rev-parse", "--abbrev-ref", "HEAD"], cwd: process.cwd() });
-    const app = new TuiApp({
+    const app = new PiTuiApp({
       session: harness.session,
       createDeps: harness.makeDeps,
       createSession: harness.createSession,

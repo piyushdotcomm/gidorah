@@ -430,6 +430,7 @@ export class TuiApp {
     } finally {
       this.state.phase = "idle";
       this.state.approval = null;
+      this.approvalService.denyAll();
       this.abort = null;
       this.streamingItem = null;
       this.render();

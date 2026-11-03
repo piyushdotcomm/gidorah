@@ -4,7 +4,7 @@ Evidence-first. Chronology and superseded runs: `BUILD_LOG.md`. One-page state:
 `FINAL_STATE.md`. Commands are reproducible from this repository.
 
 ## Verified with real services
-- Native TUI: `gidorah tui` drives the same runtime with live session events, streaming deltas, serialized approvals (allow/deny) with numbered diffs, tool cards, slash commands, resume replay, cancellation, and plain/non-TTY fallback. Demo: `apps/tui/DEMO.md`.
+- Native TUI: `gidorah tui` drives the same runtime inside a pi-tui 0.80.7 (MIT) shell: framework differential rendering, scrollable transcript with Markdown/tool/diff/research cards, pi-tui Editor composer, focus-capturing approval overlay, searchable session picker, cancellation, and plain/non-TTY fallback. Demo: `apps/tui/DEMO.md` (legacy text frames); manual terminal acceptance pending.
 
 - Real Bifrost 2.4.0 (built from source) on `:8080`; real Fireworks AI models
   (30 available, e.g. deepseek-v4p1-flash) and real Ollama 0.40.13 with a 3B
@@ -42,7 +42,7 @@ superseded, and are not used as evidence.
 
 ## Verification
 
-typecheck PASS; lint 91 files 0 failures; 161 tests PASS; conformance 40/40;
+typecheck PASS; lint 94 files 0 failures; 165 tests PASS; conformance 40/40;
 chaos 8/8; audit chain VALID; redteam 20/20 blocked, canary 0; demo replay PASS;
 Go plugin vet clean and tests ok; no tracked key material; clean working tree.
 
