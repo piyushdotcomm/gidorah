@@ -1,0 +1,30 @@
+{
+  "runId": "real_mw0nvfe6",
+  "mode": "real-full-targeted",
+  "model": "Fireworks AI via real Bifrost",
+  "strongModel": "accounts/fireworks/models/deepseek-v4p1-flash",
+  "cheapModel": "accounts/fireworks/models/glm-5p3-flash",
+  "priceTableSource": "https://fireworks.ai/pricing (Standard serverless, captured 2026-11-03)",
+  "node": "v26.13.0",
+  "taskSetHash": "6add3b97da2a4df754e1fa1d730d68946686e2f21d22c288d99a0112fbcc3989",
+  "arms": [
+    "A",
+    "C",
+    "D",
+    "F"
+  ],
+  "runs": 1,
+  "maxSteps": 20,
+  "temperature": 0,
+  "taskTimeoutMs": 240000,
+  "clientTimeoutMs": 120000,
+  "taskFilter": [],
+  "armFilter": [
+    "A",
+    "C",
+    "D",
+    "F"
+  ],
+  "maxTokens": "unset",
+  "generatedAt": "2026-11-03T12:38:29.066Z"
+}

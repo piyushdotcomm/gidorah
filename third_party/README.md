@@ -22,7 +22,7 @@ Current state is in `README.md`, `BUILD_REPORT.md`, and `FINAL_STATE.md`. The bu
 | `commander` | Not installed | MIT | NOT installed in this offline build. CLI parsing is hand-written. |
 | `zod` | Not installed | MIT | NOT installed in this offline build. Validation is hand-written and fail-closed. |
 | `vitest` | Not installed | MIT | NOT installed in this offline build. Tests use `node:test` through `scripts/run-tests.ts`. |
-| Go plugin `plugins/bifrost-dlp` | Confidential guard, DLP scan, policy headers, decision events | Apache-2.0, original Gidorah code | Written for this repo. NOT compiled or tested: Go toolchain unavailable offline. See `plugins/bifrost-dlp/README.md` and `BUILD_STATUS.md`. |
+| Go plugin `plugins/bifrost-dlp` | Confidential guard, DLP scan, policy headers, decision events | Apache-2.0, original Gidorah code | Written for this repo. Compiles and passes `go test` against the real Bifrost core SDK (v1.14.1); loading requires a Linux host because Go plugins are Linux .so files. See `plugins/bifrost-dlp/README.md`. |
 
 ## Pending
 
