@@ -83,3 +83,31 @@ if (existsSync(BINARY)) {
     }
   });
 }
+
+test("real chaos: Tavily outage degrades without blocking the task", async () => {
+  const fs = await import("node:fs");
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const { createTavilyClient } = await import("../../packages/tavily/src/client.ts");
+  const { createScout, ResearchCache } = await import("../../packages/tavily/src/scout.ts");
+  const { DEFAULT_POLICY } = await import("../../packages/policy/src/schema.ts");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gidorah-real-tavily-"));
+  const cache = new ResearchCache({ dbPath: path.join(dir, "r.db") });
+  try {
+    const scout = createScout({ client: createTavilyClient({ apiKey: "invalid", baseUrl: "http://127.0.0.1:1", timeoutMs: 2000 }), cache, policy: DEFAULT_POLICY, userId: "chaos" });
+    const outcome = await scout.research({ question: "stripe webhook", taskId: "chaos" }, { confidential: false });
+    assert.equal(outcome.status, "unavailable");
+  } finally {
+    cache.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("real chaos: network drop yields a structured provider error", async () => {
+  const { createBifrostClient } = await import("../../packages/bifrost/src/client.ts");
+  const client = createBifrostClient({ baseUrl: "http://127.0.0.1:1", virtualKey: "none", timeoutMs: 5000 });
+  await assert.rejects(
+    () => client.complete({ messages: [{ role: "user", content: "hi" }], modelAlias: "fireworks/accounts/fireworks/models/deepseek-v4p1-flash", phase: "explore", sessionId: "chaos", confidential: false, maxTokens: 8 }),
+    /Bifrost unreachable|ProviderError/,
+  );
+});
