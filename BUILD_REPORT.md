@@ -85,3 +85,19 @@ LICENSE/NOTICE in `third_party/dsh-tui`. Full register: `third_party/README.md`.
 - **Real provider fallback/takeover is NOT demonstrated** against a real primary provider; the mock gateway covers the fallback headers/banner and real chaos covers a Bifrost kill. Downgraded accordingly.
 - **Real confidential zero-egress** is partially real: local 3B inference through Bifrost and a real 403 for a cloud model with the local key; Tavily-disabled, network-shell-denied, and canary-egress checks remain offline/mock.
 - **Live gateway DLP** remains source-tested only (Windows cannot load native Go plugins); every claim says so.
+
+### Full corrected run (12 tasks x arms A/C/D/F, 1 run)
+
+Rows 48, evaluated 48, solved 45, pass@1 93.8 percent, errored 0.
+Total cost $0.200050, cost per solved task $0.004446, tokens 628361, model requests 360.
+
+| Arm | Solved | Cost USD | Cost per solved |
+|---|---|---|---|
+| A | 10/12 | $0.085578 | $0.008558 |
+| C | 11/12 | $0.046530 | $0.004230 |
+| D | 12/12 | $0.046872 | $0.003906 |
+| F | 12/12 | $0.021069 | $0.001756 |
+
+Class A: 24/24 solved. Class B: 21/24 solved. Class B by arm: A 4/6, C 5/6, D 6/6, F 6/6.
+Failure categories present in raw rows where a task failed; no errored/timeout rows in this run.
+Tavily honesty: full run arm D 12/12 vs C 11/12 (one task), Class B-only run arm D 5/6 vs C 6/6. The two samples disagree and n=12; no reliable pass-rate win is claimed. Tavily value reported as citations plus cost avoidance.
