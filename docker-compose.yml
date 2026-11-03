@@ -1,0 +1,31 @@
+# Reproducible local stack: Bifrost gateway, Ollama, and the Gidorah CLI image.
+# The demo can also run fully offline with `node apps/cli/src/main.ts demo --replay`.
+services:
+  bifrost:
+    image: maximhq/bifrost:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config/bifrost:/app/config:ro
+      - bifrost-data:/app/data
+    environment:
+      - FIREWORKS_API_KEY=${FIREWORKS_API_KEY:-}
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+  gidorah:
+    build: .
+    depends_on:
+      - bifrost
+    environment:
+      - GIDORAH_MODE=cloud
+      - BIFROST_BASE_URL=http://bifrost:8080/openai
+      - BIFROST_VK_CLOUD=${BIFROST_VK_CLOUD:-}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+    command: ["doctor"]
+volumes:
+  bifrost-data:
+  ollama-models:

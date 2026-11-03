@@ -150,3 +150,12 @@ Real benchmark numbers with the benchmark harness (the harness still uses its sc
 ### Post-change verification
 
 `tsc --noEmit` green, lint green, all 104 tests pass, and no key material is tracked (only gitignored `.tools/credentials.env`).
+## Loop iteration 2: docs audit gaps closed (15:00-15:40 IST)
+
+- CLI contract: `completion bash|zsh|fish`, `run --headless`, and the `--yes requires --sandbox` rule are implemented, with 9 contract tests (version, help, JSON-only stdout, plain no ANSI, completions, usage exit 2, headless JSON, non-TTY no hang).
+- Runtime wiring: real Tavily is constructed for `gidorah run` when `TAVILY_API_KEY` is set (not in confidential mode), and Docs Guard now runs after every successful edit or write, emitting a `docs/check` event from a fact sheet or one advisory lookup. Runtime test added.
+- TUI adapter: `apps/tui/src/adapter.ts` implements the required panels (status, transcript, approval modal, takeover banner, research card, DLP notice, Docs Guard badge, receipt, flight-recorder table) and is unit tested.
+- Real-service chaos: a real Bifrost instance is started on a private port, verified, killed, and the client must fail with a clear provider error (test passes in 4.2 s).
+- Repro deliverables: `.github/workflows/ci.yml`, `Dockerfile`, `docker-compose.yml`, `.devcontainer/devcontainer.json`, `scripts/dev-bifrost.sh`, `scripts/dev-ollama.sh`, `scripts/bench.sh`.
+- Measurements: CLI cold start average 144 ms (target <150 ms); DLP TS scan 7.6 microseconds per 4 KB request (target <20 ms p95); test coverage 118 tests, 77.4 percent overall and 80.0 percent for core+policy (target >=80 percent for core policy/approval/budget).
+- Docs drift fixed: product brief and roadmap status, root NOTICE, README TUI limitation, ADR index rows 0013-0015, docs README status note, and runbook `--yes --sandbox` examples.

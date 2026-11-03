@@ -132,4 +132,4 @@ Any decision that changes the architecture, a public contract, a security bounda
 
 ## Implementation status (2026-11-03)
 
-The docs above remain the design source of truth. A working offline implementation now exists: see the repository root `README.md`, `BUILD_REPORT.md`, `BUILD_STATUS.md`, and `MORNING_RUNBOOK.md`. Deviations from the planned toolchain are recorded in ADR-0013 (dependency-free runtime), ADR-0014 (plain TUI first), and ADR-0015 (mock-first evidence and honest PENDING). Real-provider, Go-plugin, DSH-TUI, and bundler items remain PENDING with explicit unblock steps.
+The docs above remain the design source of truth. A working offline implementation now exists: see the repository root `README.md`, `BUILD_REPORT.md`, `BUILD_STATUS.md`, and `MORNING_RUNBOOK.md`. Deviations from the planned toolchain are recorded in ADR-0013 (dependency-free runtime), ADR-0014 (plain TUI first), and ADR-0015 (mock-first evidence and honest PENDING). Real-provider (Fireworks and Tavily) and Go-plugin SDK binding are verified; the DSH TUI is vendored with adapter panels; only live plugin loading on Linux, bundler artifacts, and the recorded demo remain external.

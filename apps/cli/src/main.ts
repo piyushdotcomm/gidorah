@@ -19,6 +19,7 @@ import { classifyRepo } from "../../../packages/policy/src/classify.ts";
 import { classifyToolCall } from "../../../packages/policy/src/approval.ts";
 import { DEFAULT_POLICY, loadPolicy } from "../../../packages/policy/src/schema.ts";
 import { createScout, MockTavilyClient, ResearchCache } from "../../../packages/tavily/src/scout.ts";
+import { createTavilyClient } from "../../../packages/tavily/src/index.ts";
 import { ensureDirs, gidorahPaths, loadConfig } from "../../../packages/shared/src/config.ts";
 import type { Policy, Receipt, TuiEvent } from "../../../packages/shared/src/types.ts";
 import { buildContext } from "../../../packages/core/src/context.ts";
@@ -397,6 +398,8 @@ async function main(): Promise<number> {
       return runNodeTests(join(repoRoot(), "tests", "chaos"), parsed);
     case "audit":
       return commandAudit(config, parsed);
+    case "completion":
+      return commandCompletion(parsed);
     case "policy": {
       if (parsed.subcommand !== "validate") return EXIT.usage;
       const file = parsed.positionals[0] ?? paths.policyFile;
@@ -532,6 +535,11 @@ async function commandAudit(config: ReturnType<typeof loadConfig>, parsed: Parse
 }
 
 async function commandRun(config: ReturnType<typeof loadConfig>, task: string, parsed: Parsed): Promise<number> {
+  if (parsed.flags.has("--yes") && !parsed.flags.has("--sandbox")) {
+    err("--yes is only valid with --sandbox (or the benchmark policy)");
+    return EXIT.usage;
+  }
+  const headless = parsed.flags.has("--headless");
   const paths = gidorahPaths(config.home);
   ensureDirs(paths);
   const policyResult = policyFor(config, parsed.values.get("--policy"));
@@ -558,11 +566,19 @@ async function commandRun(config: ReturnType<typeof loadConfig>, task: string, p
     model = createBifrostClient({ baseUrl: config.bifrost.baseUrl, virtualKey: config.bifrost.vkCloud });
   }
 
+  let researchCache: ResearchCache | null = null;
+  let researchClient: import("../../../packages/shared/src/types.ts").ResearchClient | undefined;
+  if (config.tavily.apiKey !== "" && classification.mode !== "confidential" && policy.research.enabled) {
+    researchCache = new ResearchCache({ dbPath: paths.researchDb });
+    researchClient = createScout({ client: createTavilyClient({ apiKey: config.tavily.apiKey }), cache: researchCache, policy, userId: config.user });
+  }
   try {
     const result = await runTask(session, task, {
       model,
       tools: createDefaultTools(),
-      approval: parsed.flags.has("--yes") ? new AutoApprovalService() : new DenyApprovalService(),
+      approval: parsed.flags.has("--yes") && parsed.flags.has("--sandbox") ? new AutoApprovalService() : new DenyApprovalService(),
+      ...(researchClient === undefined ? {} : { research: researchClient }),
+      docsGuard: { factSheets: new Map() },
       budget,
       policy,
       repoClass: classification.mode,
@@ -572,10 +588,11 @@ async function commandRun(config: ReturnType<typeof loadConfig>, task: string, p
       classifyTool: (tool, args) => classifyToolCall(tool, args, { policy, classification, cwd: process.cwd(), workspaceRoot: process.cwd() }),
       tracePath: join(paths.tracesDir, `${session.header.sessionId}.jsonl`),
     });
-    if (parsed.json) jsonOut({ status: result.receipt.status, receipt: result.receipt });
+    if (parsed.json || headless) jsonOut({ sessionId: result.receipt.sessionId, status: result.receipt.status, receipt: result.receipt });
     else out(`${result.receipt.status}: ${result.receipt.summary} (${result.receipt.tokens.total} tokens)`);
     return result.receipt.status === "success" ? EXIT.ok : EXIT.failed;
   } finally {
+    researchCache?.close();
     if (close !== null) await close();
   }
 }
@@ -587,7 +604,7 @@ function helpText(): string {
     "Usage: gidorah <command> [options]",
     "",
     "Commands:",
-    "  run <task>              Run one task (mock or Bifrost mode)",
+    "  run <task>              Run one task (mock or Bifrost mode); --headless emits JSON",
     "  resume [session]        Resume or inspect a session",
     "  doctor                  Check runtime, policy, gateway, and keys",
     "  budget                  Show LLM and research budgets",
@@ -596,15 +613,51 @@ function helpText(): string {
     "  audit verify|export     Verify the hash chain / redacted export",
     "  redteam                 Injection and canary corpus",
     "  demo [--record|--replay] Deterministic demo, offline replay",
-    "  bench [--pilot|--full]  Benchmark (mock model offline; real PENDING)",
+    "  bench [--pilot|--full] [--real]  Benchmark (mock model or real Bifrost+Fireworks)",
     "  conformance             CT-01..CT-40 conformance suite",
     "  chaos                   Dependency-kill suite",
     "  policy validate <file>  Validate policy YAML",
     "  config show|path        Redacted config",
+    "  completion bash|zsh|fish  Shell completion script",
     "  version                 Print version",
     "",
-    "Global flags: --json --plain --no-color --yes --task-budget <usd> --session <id> --policy <path>",
+    "Global flags: --json --plain --no-color --yes --sandbox --headless --task-budget <usd> --session <id> --policy <path>",
   ].join("\n");
+}
+
+const COMMANDS = [
+  "run", "resume", "doctor", "budget", "trace", "receipt", "audit", "redteam",
+  "demo", "bench", "conformance", "chaos", "policy", "config", "completion", "version", "help",
+];
+
+function completionScript(shell: string): string {
+  const words = COMMANDS.join(" ");
+  if (shell === "bash") {
+    return [
+      "_gidorah_complete() {",
+      `  COMPREPLY=( $(compgen -W "${words}" -- "\${COMP_WORDS[COMP_CWORD]}") )`,
+      "}",
+      "complete -F _gidorah_complete gidorah",
+      "",
+    ].join("\n");
+  }
+  if (shell === "zsh") {
+    return [`#compdef gidorah`, `_arguments '1:command:(${words})'`, ""].join("\n");
+  }
+  if (shell === "fish") {
+    return `complete -c gidorah -f -a "${words}"\n`;
+  }
+  throw new Error(`unsupported shell: ${shell}`);
+}
+
+function commandCompletion(parsed: Parsed): number {
+  const shell = parsed.subcommand ?? parsed.positionals[0] ?? "";
+  if (!["bash", "zsh", "fish"].includes(shell)) {
+    err("usage: gidorah completion bash|zsh|fish");
+    return EXIT.usage;
+  }
+  out(completionScript(shell));
+  return EXIT.ok;
 }
 
 process.on("SIGINT", () => {

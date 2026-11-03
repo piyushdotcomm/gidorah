@@ -22,6 +22,9 @@ An ADR records a significant decision, its context, and its consequences. Add a 
 | [ADR-0010](#adr-0010--bifrost-code-mode-for-read-only-tools-only) | Bifrost Code Mode for read-only tools only | Proposed |
 | [ADR-0011](#adr-0011--tamper-evident-audit-chain) | Tamper-evident audit chain | Accepted |
 | [ADR-0012](#adr-0012--patch-first-edits-and-symbol-indexed-reads) | Patch-first edits and symbol-indexed reads | Accepted |
+| [ADR-0013](#adr-0013--dependency-free-offline-runtime) | Dependency-free offline runtime | Accepted |
+| [ADR-0014](#adr-0014--plain-tui-adapter-before-dsh-vendoring) | Plain TUI adapter before DSH vendoring | Accepted |
+| [ADR-0015](#adr-0015--mock-first-evidence-and-honest-pending) | Mock-first evidence and honest PENDING labels | Accepted |
 
 ---
 
@@ -406,7 +409,7 @@ Full-file rewrites and full-file reads are the largest avoidable token costs in 
 ---
 
 <a id="adr-0013--dependency-free-offline-runtime"></a>
-## ADR-0013 — Dependency-free offline runtime
+## ADR-0013 ï¿½ Dependency-free offline runtime
 
 - **Status:** Accepted
 - **Date:** 2026-11-03
@@ -427,7 +430,7 @@ The repository runs with zero runtime dependencies and still passes a strict `ts
 ---
 
 <a id="adr-0014--plain-tui-adapter-before-dsh-vendoring"></a>
-## ADR-0014 — Plain TUI adapter before DSH vendoring
+## ADR-0014 ï¿½ Plain TUI adapter before DSH vendoring
 
 - **Status:** Accepted
 - **Date:** 2026-11-03
@@ -445,7 +448,7 @@ Ship a line-based renderer behind the full `TuiEvent` contract (status line, tra
 ---
 
 <a id="adr-0015--mock-first-evidence-and-honest-pending"></a>
-## ADR-0015 — Mock-first evidence and honest PENDING labels
+## ADR-0015 ï¿½ Mock-first evidence and honest PENDING labels
 
 - **Status:** Accepted
 - **Date:** 2026-11-03

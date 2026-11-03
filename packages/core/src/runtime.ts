@@ -7,6 +7,10 @@
  */
 import { BudgetExceededError, ProviderError } from "../../shared/src/errors.ts";
 import { appendJsonl } from "../../shared/src/jsonl.ts";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { checkDocsGuard } from "./docsguard.ts";
+import type { ApiFactSheet } from "./docsguard.ts";
 import { redactSecrets } from "../../shared/src/redaction.ts";
 import type {
   ApprovalVerdict,
@@ -138,6 +142,8 @@ export interface RuntimeDeps {
   maxSteps?: number;
   /** Explicit provider-qualified model alias (real gateways, per-arm runs). */
   modelAlias?: string;
+  /** Docs Guard fact sheets and optional research client. */
+  docsGuard?: { factSheets: Map<string, ApiFactSheet> };
 }
 
 export interface TaskReceiptResult {
@@ -377,10 +383,42 @@ async function executeToolCall(
     ...(result.meta === undefined ? {} : { meta: result.meta }),
   });
   if (result.ok) {
-    if (call.name === "write" || call.name === "edit") onPhase("edit");
+    if (call.name === "write" || call.name === "edit") {
+      onPhase("edit");
+      await runDocsGuard(session, call, deps);
+    }
     if (call.name === "bash" || call.name === "git") onPhase("verify");
   }
   return result;
+}
+
+/** Docs Guard runs once per edit when the change touches a documented SDK. */
+async function runDocsGuard(session: Session, call: ToolCall, deps: RuntimeDeps): Promise<void> {
+  if (!deps.policy.docsGuard.enabled || deps.repoClass === "confidential") return;
+  const path = typeof call.arguments.path === "string" ? call.arguments.path : "";
+  if (path === "") return;
+  let content = "";
+  try {
+    content = readFileSync(resolve(deps.workspaceRoot, path), "utf8");
+  } catch {
+    return;
+  }
+  const packages = [...content.matchAll(/from\s+["']([^"'.][^"']*)["']/g)].map((match) => match[1] ?? "").filter((pkg) => !pkg.startsWith("node:"));
+  const packageName = packages[0];
+  if (packageName === undefined) return;
+  const sheets = deps.docsGuard?.factSheets ?? new Map<string, ApiFactSheet>();
+  const key = [...sheets.keys()].find((entry) => entry.startsWith(`${packageName}@`));
+  if (key === undefined) return;
+  const packageVersion = key.slice(packageName.length + 1);
+  const replacement = String(call.arguments.replace ?? call.arguments.content ?? "");
+  const memberCalls = [...replacement.matchAll(/\.\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/g)].map((match) => match[1] ?? "");
+  const allCalls = [...replacement.matchAll(/\b([A-Za-z_][A-Za-z0-9_]{2,})\s*\(/g)].map((match) => match[1] ?? "");
+  const symbols = (memberCalls.length > 0 ? memberCalls : allCalls).slice(0, 5);
+  const outcome = await checkDocsGuard(
+    { file: path, packageName, packageVersion, changedSymbols: symbols, repoLocalOnly: false },
+    { factSheets: sheets, ...(deps.research === undefined ? {} : { research: deps.research }), maxLookupsPerEdit: deps.policy.docsGuard.max_lookups_per_edit },
+  );
+  session.append("docs/check", { package: packageName, version: packageVersion, symbols, result: outcome.result, advisory: outcome.advisory, lookups: outcome.lookups });
 }
 
 export function writeTrace(file: string, records: TraceRecord[]): void {

@@ -135,7 +135,7 @@ export BIFROST_VK_CLOUD=<the sk-bf key from config.db>
 export GIDORAH_HOME=./.gidorah-real
 export GIDORAH_MODEL_ALIAS=ollama/qwen2.5-coder:0.5b   # provider-qualified model for a real gateway
 export GIDORAH_MAX_TOKENS=48                            # required with the tiny model
-node apps/cli/src/main.ts run "Say hi" --yes
+node apps/cli/src/main.ts run "Say hi" --yes --sandbox
 node apps/cli/src/main.ts audit verify --all
 ```
 
@@ -155,7 +155,7 @@ export BIFROST_BASE_URL=http://127.0.0.1:8080/openai
 export BIFROST_VK_CLOUD=sk-bf-gidorah-cloud-dev
 export GIDORAH_MODEL_ALIAS=fireworks/accounts/fireworks/models/deepseek-v4p1-flash
 export GIDORAH_MAX_TOKENS=1200
-node apps/cli/src/main.ts run "fix the failing test" --yes
+node apps/cli/src/main.ts run "fix the failing test" --yes --sandbox
 ```
 
 Tavily:
