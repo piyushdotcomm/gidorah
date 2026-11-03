@@ -33,7 +33,7 @@ export function renderPiDemo(): string {
     "Gidorah  the governed coding agent",
     "cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto",
   ]);
-  shell.setStatus("mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cache: 12%  context: 8%  compaction: off");
+  shell.setStatus("mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off");
   shell.addText("› patch greeting.txt and verify the runtime");
   shell.addMarkdown("I'll patch `greeting.txt` and then check the runtime.\n\n- read the file\n- apply the edit\n- run the test");
   shell.addToolCard({ name: "edit", args: "greeting.txt  hello -> hello, world", status: "ok", elapsedMs: 19, result: "patched greeting.txt (5 -> 12 chars)" });
