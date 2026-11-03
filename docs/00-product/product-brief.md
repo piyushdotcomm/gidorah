@@ -120,4 +120,4 @@ See [Why Gidorah wins](why-gidorah-wins.md) and [Productization](../04-delivery/
 
 ## Status
 
-Planning complete (docs v0.6). Implementation not started. Next: M0 gates — license review, Bifrost/Tavily spikes, DLP body-access spike, benchmark repo selection.
+Implementation complete for the offline and real-provider paths: see the root README, BUILD_REPORT.md, and BUILD_STATUS.md for verified commands and evidence. Next: M0 gates — license review, Bifrost/Tavily spikes, DLP body-access spike, benchmark repo selection.

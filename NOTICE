@@ -12,9 +12,9 @@ this distribution are recorded in third_party/README.md. Summary:
   and acceptable-use policy. Research results are cited in agent answers; the
   benchmark stores metadata, sources, and aggregate metrics, not full pages.
 - DeepSeek Harness TUI (@deepseek-ai/dsh-tui), MIT AND BSD-3-Clause, Copyright
-  (c) 2026 DeepSeek. NOT vendored in this offline build (adaptation PENDING).
-  When vendored, third_party/dsh-tui/LICENSE and NOTICE must be added and the
-  SPDX expression preserved.
+  (c) 2026 DeepSeek. Vendored at third_party/dsh-tui with its LICENSE and a
+  NOTICE; Gidorah-specific adapter panels are implemented in apps/tui and the
+  full package adaptation remains in progress. SPDX expression preserved.
 - pi-tui (@earendil-works/pi-tui), MIT, pinned 0.80.7 when the TUI is vendored.
   NOT vendored in this build.
 - Node.js, MIT-style license, runtime.

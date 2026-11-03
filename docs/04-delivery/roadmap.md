@@ -27,7 +27,7 @@ A solo developer wears all hats; the gates still apply.
 
 ### M0 — Planning and groundwork
 **Deliverables**
-- Docs v0.4 (this set), including implementation plan and CLI contract.
+- Docs v0.6 (this set), including implementation plan and CLI contract.
 - Stack and repo decisions (ADR-0005).
 - License review for DSH TUI, Bifrost, Tavily, pi-tui.
 - Benchmark task list and repository chosen.

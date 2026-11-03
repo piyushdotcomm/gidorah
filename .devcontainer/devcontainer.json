@@ -1,0 +1,12 @@
+{
+  "name": "gidorah",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": { "version": "1.27.3" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "corepack enable && pnpm install --frozen-lockfile && node scripts/build.ts",
+  "customizations": {
+    "vscode": { "extensions": ["biomejs.biome", "ms-azuretools.vscode-docker"] }
+  }
+}

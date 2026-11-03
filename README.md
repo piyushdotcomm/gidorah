@@ -24,7 +24,7 @@ Built for HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both s
 | Go DLP plugin | Compiles and tests against the real Bifrost SDK (core v1.14.1): go vet clean, go test ok; loading into a live gateway PENDING (Linux .so) |
 | Local model runtime | Ollama 0.40.13 with qwen2.5-coder:3b imported from GGUF; real confidential-path inference through Bifrost returned 200 (provider ollama, content "ready"); the local-only key rejects cloud models with 403 |
 | TypeScript build/typecheck | Real strict `tsc --noEmit` passes; bundler artifacts PENDING |
-| TUI | DSH TUI package vendored with LICENSE and NOTICE; Gidorah panel adaptation PENDING (plain renderer is the v1 surface) |
+| TUI | DSH TUI vendored with LICENSE/NOTICE; adapter implements status, transcript, approval, takeover, research, DLP, Docs Guard, trace and receipt panels; full package adaptation in progress |
 
 No provider keys were available for this build. Every real-provider result is marked PENDING in [BUILD_REPORT.md](BUILD_REPORT.md); nothing was fabricated. See [MORNING_RUNBOOK.md](MORNING_RUNBOOK.md) for the exact steps to turn the mock evidence into real evidence.
 
@@ -97,7 +97,7 @@ The included benchmark run uses a scripted mock model because no provider keys e
 
 - Real Bifrost, Ollama, DeepSeek, and Tavily were unavailable in this environment; their claims are tested against mocks and marked PENDING.
 - No Go toolchain: the Bifrost plugin is not compiled or tested here.
-- The DSH TUI is not vendored (cannot be fetched offline); v1 ships the mandated plain renderer.
+- The DSH TUI is vendored at `third_party/dsh-tui`; the plain renderer and the TUI adapter panels are the working surfaces, full DSH package adaptation is in progress.
 - Benchmark sample is small (pilot: 3 tasks x 4 arms x 1 run) and mock-model only.
 
 ## Licensing and attribution

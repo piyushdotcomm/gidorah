@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  node:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: node apps/cli/src/main.ts conformance
+      - run: node apps/cli/src/main.ts chaos
+      - run: node apps/cli/src/main.ts demo --record --plain
+      - run: node apps/cli/src/main.ts demo --replay --plain
+      - run: node apps/cli/src/main.ts audit verify --all
+      - run: node apps/cli/src/main.ts redteam
+
+  go-plugin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/bifrost-dlp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.3"
+      - run: go vet ./...
+      - run: go test ./...
+      - run: GOOS=linux GOARCH=amd64 go build -buildmode=plugin -o gidorah-dlp.so .

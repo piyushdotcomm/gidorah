@@ -29,6 +29,7 @@ export interface RunOptions {
   shell?: boolean;
   timeoutMs?: number;
   signal?: AbortSignal;
+  env?: NodeJS.ProcessEnv;
 }
 
 /**
@@ -72,6 +73,7 @@ export async function runProcess(options: RunOptions): Promise<CommandResult> {
       shell: options.shell ?? false,
       stdio: ["ignore", outFd, errFd],
       windowsHide: true,
+      ...(options.env === undefined ? {} : { env: options.env }),
       ...(options.signal === undefined ? {} : { signal: options.signal }),
     });
     const timer = setTimeout(() => {
