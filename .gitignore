@@ -30,3 +30,6 @@ worktrees/
 
 # Local npm cache used to install the dev toolchain offline-friendly
 .npm-cache/
+
+# Locally downloaded toolchains (pnpm standalone, Go, Ollama)
+.tools/

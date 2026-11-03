@@ -45,7 +45,7 @@
 |---|---|---|
 | Real Bifrost / DeepSeek / Ollama / Tavily results | no keys, no services | MORNING_RUNBOOK.md |
 | Real benchmark (model quality, real spend) | above | `bench --pilot`, inspect rows, then `bench --full` |
-| Go plugin compile/vet/test | no Go toolchain | Go 1.22+ |
+| Go plugin compile/vet/test | DONE: Go 1.27.3, vet clean, tests pass | real SDK binding |
 | DSH TUI vendoring | package not fetchable offline | network + license copy |
 | Bundled dist artifacts | tsdown not installed | registry install |
 
@@ -57,4 +57,16 @@ ADR-0013 (dependency-free runtime, node:test, node:sqlite, custom scripts), ADR-
 
 1. Run MORNING_RUNBOOK.md sections 2-4 with keys.
 2. Replace PENDING rows here and in BUILD_REPORT.md with real command output.
-3. Run `go test ./...` in plugins/bifrost-dlp and vendor the DSH TUI.
+3. Bind the plugin to the real Bifrost SDK and vendor the DSH TUI.
+
+## Toolchain installed during this session (2026-11-03, post-build)
+
+| Tool | Version | State |
+|---|---|---|
+| Go | 1.27.3 windows/amd64 | Installed in `.tools/go`; `go vet ./...` and `go test ./...` pass for `plugins/bifrost-dlp` |
+| pnpm | 12.16.1 standalone | Installed in `.tools/pnpm`; `pnpm run build/lint/typecheck/test` all pass. `pnpm install` is blocked by the sandbox (store operation lock outside the workspace), so dependencies were installed with `npm install` and are present in `node_modules` |
+| Bifrost gateway | npm 1.6.3 wrapper, http binary 2.4.0 | Installed; binary download/resume and gateway startup being finalized |
+| Ollama | 0.40.13 | Download in progress (1.5 GB Windows zip); model pull next |
+| TypeScript | 7.0.2 + @types/node 26.6.6 | Installed; strict typecheck green |
+
+All toolchains are in `.tools/` (gitignored) except the npm-installed `node_modules`. Nothing in this table changes a PENDING claim about real provider calls: those still need `DEEPSEEK_API_KEY` and `TAVILY_API_KEY`.

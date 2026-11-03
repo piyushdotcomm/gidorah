@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Build check.
  *
  * The offline environment has no bundler and no TypeScript compiler (no
@@ -7,7 +7,7 @@
  * graph: every package entrypoint and the CLI entrypoint must load cleanly.
  * A real tsc/tsdown build is PENDING: requires registry access (ADR-0013).
  */
-import { execFileSync } from "node:child_process";
+
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -36,12 +36,24 @@ for (const dir of [...packageDirs, ...appDirs]) {
   modules += 1;
 }
 
-let commit = "uncommitted";
-try {
-  commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
-} catch {
-  // first commit not yet created
+function readCommit(): string {
+  try {
+    const head = readFileSync(join(ROOT, ".git", "HEAD"), "utf8").trim();
+    if (!head.startsWith("ref: ")) return head.slice(0, 7);
+    const ref = head.slice(5).trim();
+    const direct = join(ROOT, ".git", ref);
+    if (existsSync(direct)) return readFileSync(direct, "utf8").trim().slice(0, 7);
+    const packed = join(ROOT, ".git", "packed-refs");
+    if (existsSync(packed)) {
+      const line = readFileSync(packed, "utf8").split("\n").find((entry) => entry.endsWith(` ${ref}`));
+      if (line !== undefined) return line.slice(0, 7);
+    }
+    return "uncommitted";
+  } catch {
+    return "uncommitted";
+  }
 }
+const commit = readCommit();
 
 console.log(`build: ${modules} package/app entrypoints load (node ${process.version}, type stripping)`);
 console.log(`build: commit ${commit}`);

@@ -1,4 +1,4 @@
-# Gidorah build report
+﻿# Gidorah build report
 
 **Date:** 2026-11-03 (Asia/Calcutta). **Mode:** offline mock-first build, no provider keys.
 **Draft:** v0.6 docs implemented as a working repository.
@@ -15,7 +15,7 @@ A dependency-light TypeScript/Node monorepo that implements the dual-plane contr
 - `packages/tavily` - Scout with local-first short-circuit, version-aware query builder, 700-token cited evidence cards, SQLite cache (node:sqlite), credit budget, task call cap, graceful outage handling, mock Tavily.
 - `packages/benchmark` - 16 task specs (8 Class A, 8 Class B), 7 arms, real loop/tools/context execution with a scripted mock model, metrics, raw JSONL, manifest, report.
 - `packages/shared` - types, canonical JSON/hashing, redaction and canary scanning, YAML subset parser, config/paths, JSONL.
-- `plugins/bifrost-dlp` - Go plugin source and tests for the confidential guard, 10-class DLP scanner (block/redact, fail closed, class+hash logging) and policy headers. Build/test PENDING (no Go toolchain).
+- `plugins/bifrost-dlp` - Go plugin source and tests for the confidential guard, 10-class DLP scanner (block/redact, fail closed, class+hash logging) and policy headers. Verified with Go 1.27.3: `go vet` clean and `go test ./...` passes; real Bifrost SDK binding PENDING.
 - `config/` - policy, Bifrost providers/keys/routing examples, cloud and confidential profiles.
 - `tests/conformance` (CT-01..CT-40), `tests/chaos`, `tests/replay`, `tests/fixtures`.
 - Docs: ADR-0013 (offline dependency-free runtime), ADR-0014 (plain TUI first), ADR-0015 (mock-first evidence and honest PENDING), plus README, NOTICE, third-party register, BUILD_STATUS, MORNING_RUNBOOK.
@@ -90,7 +90,7 @@ CT-01..CT-40: **40 passed, 0 failed, 0 skipped** (`tests/conformance/conformance
 | Real Tavily evidence | PENDING | TAVILY_API_KEY |
 | Real DeepSeek Flash/Pro | PENDING | DEEPSEEK_API_KEY in Bifrost |
 | Real benchmark numbers (model quality) | PENDING | keys + budget; run `bench --pilot` then `--full` |
-| Go plugin compile/vet/test | PENDING | Go 1.22+ toolchain |
+| Go plugin compile/vet/test | DONE: Go 1.27.3, `go vet` clean, `go test` ok (4.782s) | real Bifrost SDK binding still PENDING |
 | DSH TUI vendoring | PENDING | network access to the TUI package |
 | Bundled dist artifacts (tsdown) | PENDING | install tsdown (registry) |
 
