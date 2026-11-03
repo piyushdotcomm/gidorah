@@ -41,6 +41,6 @@ labelled so.
 
 - **Correction pass (current).** Real cascade wired and tested; synthetic math tasks replaced with 6 Class A + 6 runtime-docs Class B tasks; arms reduced to A/C/D/F; metrics derived from events; deterministic docs-first Tavily in arm D; Class B run 18 rows / 16 solved. Partial A-class run real_mw0g7hvx is superseded and not used as the headline.
 
-- **Evidence-integrity fix.** failureCategory/failureDetail/step-limit and split Tavily accounting now reach raw rows (verified in real_mw0k7ayt); the current post-fix evidence is `real_mw0ksdno`; full runs before the fix are superseded for those fields. Arm F is reported as the best arm on the current task set; cascade/Tavily savings are not claimed.
+- **Evidence-integrity fix.** failureCategory/failureDetail/step-limit and split Tavily accounting now reach raw rows (verified in real_mw0k7ayt); the current post-fix evidence is `real_mw0nvfe6` (full) and `real_mw0ksdno` (pilot); full runs before the fix are superseded for those fields. Arm F is reported as the best arm on the current task set; cascade/Tavily savings are not claimed.
 
-- **Post-fix full run.** 12 tasks x A/C/D/F, 1 run, 48 rows, 47 solved, 97.9%, $0.004475/solved; manifest records runs 1, maxSteps 20, temperature 0, timeouts, filters. Current evidence: eal_mw0nvfe6.
+- **Post-fix full run.** 12 tasks x A/C/D/F, 1 run, 48 rows, 47 solved, 97.9%, $0.004475/solved; manifest records runs 1, maxSteps 20, temperature 0, timeouts, filters. Current evidence: real_mw0nvfe6.

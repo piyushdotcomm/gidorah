@@ -118,6 +118,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
               prompt += `\n\nRESEARCH CARD (${outcome.card.tokenEstimate} tokens, ${outcome.card.confidence} confidence):\n${outcome.card.answer}\nFacts:\n${outcome.card.facts.join("\n")}\nSources: ${outcome.card.sources.map((source) => source.url).join(", ")}`;
             }
           }
+          prompt += "\n\nWork efficiently: after at most two exploratory reads or probes, apply the edit and run the test; do not spend all steps exploring.";
           const raced = await Promise.race([
             runTask(session, prompt, {
             model: createBifrostClient({ baseUrl: options.baseUrl, virtualKey: options.virtualKey, timeoutMs: 120_000 }),
