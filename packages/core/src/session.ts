@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Append-only, hash-chained session store (data-and-events.md, ADR-0011).
  *
  * The session log is the source of truth. Every event carries seq, time, type,
@@ -50,12 +50,15 @@ export function verifyChain(events: readonly SessionEvent[]): ChainVerification 
   return { valid: true, count: events.length, head: prev };
 }
 
+export type SessionListener = (event: SessionEvent) => void;
+
 export class Session {
   readonly header: SessionHeader;
   readonly file: string;
   private events: SessionEvent[] = [];
   private prevHash = GENESIS_HASH;
   private readonly now: () => number;
+  private readonly listeners = new Set<SessionListener>();
 
   private constructor(header: SessionHeader, file: string, now: () => number) {
     this.header = header;
@@ -110,7 +113,26 @@ export class Session {
     this.prevHash = event.hash;
     this.events.push(event);
     appendJsonl(this.file, event);
+    this.notify(event);
     return event;
+  }
+
+  /** Live view of the append-only stream. Listener errors never touch the chain. */
+  subscribe(listener: SessionListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notify(event: SessionEvent): void {
+    for (const listener of [...this.listeners]) {
+      try {
+        listener(event);
+      } catch {
+        // A renderer bug must never break the audit chain or the agent loop.
+      }
+    }
   }
 
   get all(): readonly SessionEvent[] {

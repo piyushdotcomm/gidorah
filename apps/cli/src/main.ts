@@ -25,9 +25,20 @@ import { priceOf } from "../../../packages/shared/src/pricing.ts";
 import type { Policy, Receipt, TuiEvent } from "../../../packages/shared/src/types.ts";
 import { buildContext } from "../../../packages/core/src/context.ts";
 import { renderEvents, statusLine } from "../../../apps/tui/src/index.ts";
+import { TuiApp, listSessionEntries } from "../../tui/src/app.ts";
+import { runPlainTui } from "../../tui/src/plain.ts";
+import type { ApprovalService, RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 
 const VERSION = "0.1.0";
 const EXIT = { ok: 0, failed: 1, usage: 2, denied: 3, budget: 4, provider: 5, internal: 6, sigint: 130 } as const;
+type MockScript = Array<{ content?: string; toolCalls?: Array<{ name: string; arguments: Record<string, unknown> }> }>;
+
+const TUI_DEMO_SCRIPT: MockScript = [
+  { content: "I'll write a demo file, then check the runtime.", toolCalls: [{ name: "write", arguments: { path: "tui-demo.txt", content: "hello from the Gidorah TUI demo\n" } }] },
+  { content: "Now I'll verify the runtime with a harmless shell command.", toolCalls: [{ name: "bash", arguments: { command: "node --version" } }] },
+  { content: "Done. I wrote tui-demo.txt and verified the runtime." },
+];
+
 
 interface Parsed {
   command: string;
@@ -377,6 +388,12 @@ async function main(): Promise<number> {
   if (process.env.GIDORAH_HOME === undefined) config.home = join(repoRoot(), ".gidorah");
   const paths = gidorahPaths(config.home);
 
+  if (process.argv.slice(2).length === 0) {
+    if (process.stdin.isTTY === true && process.stdout.isTTY === true) return commandTui(config, parsed);
+    out(helpText());
+    return EXIT.ok;
+  }
+
   if (parsed.flags.has("--version") || parsed.command === "version") {
     out(VERSION);
     return EXIT.ok;
@@ -389,6 +406,8 @@ async function main(): Promise<number> {
   switch (parsed.command) {
     case "doctor":
       return commandDoctor(config, parsed);
+    case "tui":
+      return commandTui(config, parsed);
     case "demo":
       return commandDemo(config, parsed);
     case "bench":
@@ -537,69 +556,166 @@ async function commandAudit(config: ReturnType<typeof loadConfig>, parsed: Parse
   return EXIT.usage;
 }
 
-async function commandRun(config: ReturnType<typeof loadConfig>, task: string, parsed: Parsed): Promise<number> {
-  if (parsed.flags.has("--yes") && !parsed.flags.has("--sandbox")) {
-    err("--yes is only valid with --sandbox (or the benchmark policy)");
-    return EXIT.usage;
-  }
-  const headless = parsed.flags.has("--headless");
+interface HarnessHooks {
+  approval: ApprovalService;
+  onModelDelta?: (text: string) => void;
+  signal?: AbortSignal;
+  maxSteps?: number;
+}
+
+interface Harness {
+  paths: ReturnType<typeof gidorahPaths>;
+  policy: Policy;
+  classification: ReturnType<typeof classifyRepo>;
+  session: Session;
+  budget: BudgetService;
+  makeDeps: (session: Session, hooks: HarnessHooks) => RuntimeDeps;
+  createSession: () => Session;
+  resetBudget: () => void;
+  listSessions: () => Array<{ id: string; label: string }>;
+  loadSession: (id: string) => Session;
+  close: () => Promise<void>;
+}
+
+/** Shared runtime setup for `run` (headless) and the interactive TUI. */
+async function createHarness(
+  config: ReturnType<typeof loadConfig>,
+  parsed: Parsed,
+  options: { session?: Session; taskBudget?: number; mockScript?: MockScript } = {},
+): Promise<Harness> {
   const paths = gidorahPaths(config.home);
   ensureDirs(paths);
-  const policyResult = policyFor(config, parsed.values.get("--policy"));
-  const policy = policyResult.policy;
+  const policy = policyFor(config, parsed.values.get("--policy")).policy;
   const classification = classifyRepo(policy, process.cwd());
-  const session = Session.create({ dir: paths.sessionsDir, cwd: process.cwd(), user: config.user, mode: config.mode === "confidential" ? "confidential" : "cloud", policyVersion: String(policy.version) });
-  const budget = new BudgetService(0.5, Number.parseFloat(parsed.values.get("--task-budget") ?? String(policy.budgets.task.default_usd)));
-
+  const sessionMode = config.mode === "confidential" ? "confidential" : "cloud";
+  const createSession = (): Session =>
+    Session.create({ dir: paths.sessionsDir, cwd: process.cwd(), user: config.user, mode: sessionMode, policyVersion: String(policy.version) });
+  const session = options.session ?? createSession();
+  const taskBudget = options.taskBudget ?? Number.parseFloat(parsed.values.get("--task-budget") ?? String(policy.budgets.task.default_usd));
+  let budget = new BudgetService(0.5, taskBudget);
+  const closers: Array<() => Promise<void>> = [];
   let model;
-  let close: (() => Promise<void>) | null = null;
   if (config.mode === "mock") {
-    const deepseek = await startMockProvider({ script: [{ content: "mock mode: task acknowledged. Use gidorah demo for the scripted scenes." }] });
+    const deepseek = await startMockProvider({ script: options.mockScript ?? [{ content: "mock mode: task acknowledged. Use gidorah demo for the scripted scenes." }] });
     const gateway = await startMockGateway({
       upstreams: { deepseek: deepseek.url, ollama: deepseek.url },
       virtualKeys: [{ name: "run-cloud", kind: "cloud", providers: ["deepseek"], budgetUsd: 0.5, usedUsd: 0 }],
       routing: { aliases: { "gidorah-auto": "deepseek/deepseek-flash" }, phases: { explore: "deepseek/deepseek-flash", edit: "deepseek/deepseek-flash", verify: "deepseek/deepseek-pro", research: "deepseek/deepseek-flash", other: "deepseek/deepseek-flash" }, fallbacks: {} },
     });
     model = createBifrostClient({ baseUrl: gateway.url, virtualKey: "run-cloud" });
-    close = async () => {
+    closers.push(async () => {
       await gateway.close();
       await deepseek.close();
-    };
+    });
   } else {
     model = createBifrostClient({ baseUrl: config.bifrost.baseUrl, virtualKey: config.bifrost.vkCloud });
   }
-
   let researchCache: ResearchCache | null = null;
   let researchClient: import("../../../packages/shared/src/types.ts").ResearchClient | undefined;
   if (config.tavily.apiKey !== "" && classification.mode !== "confidential" && policy.research.enabled) {
     researchCache = new ResearchCache({ dbPath: paths.researchDb });
     researchClient = createScout({ client: createTavilyClient({ apiKey: config.tavily.apiKey }), cache: researchCache, policy, userId: config.user });
   }
+  const close = async (): Promise<void> => {
+    researchCache?.close();
+    for (const closer of closers.reverse()) await closer();
+  };
+  const makeDeps = (target: Session, hooks: HarnessHooks): RuntimeDeps => ({
+    model,
+    tools: createDefaultTools(),
+    approval: hooks.approval,
+    budget,
+    policy,
+    repoClass: classification.mode,
+    workspaceRoot: process.cwd(),
+    run: runProcess,
+    estimateCost: (usage, servedModel) => priceOf(servedModel, usage) ?? costFor(servedModel, { input: usage.input, output: usage.output }),
+    classifyTool: (tool, args) => classifyToolCall(tool, args, { policy, classification, cwd: process.cwd(), workspaceRoot: process.cwd() }),
+    tracePath: join(paths.tracesDir, `${target.header.sessionId}.jsonl`),
+    ...(researchClient === undefined ? {} : { research: researchClient }),
+    docsGuard: { factSheets: new Map() },
+    ...(hooks.maxSteps === undefined ? {} : { maxSteps: hooks.maxSteps }),
+    ...(hooks.onModelDelta === undefined ? {} : { onModelDelta: hooks.onModelDelta }),
+    ...(hooks.signal === undefined ? {} : { signal: hooks.signal }),
+  });
+  return {
+    paths,
+    policy,
+    classification,
+    session,
+    budget,
+    makeDeps,
+    createSession,
+    resetBudget: () => {
+      budget = new BudgetService(0.5, taskBudget);
+    },
+    listSessions: () => listSessionEntries(paths.sessionsDir),
+    loadSession: (id) => Session.load(join(paths.sessionsDir, id, "session.jsonl")),
+    close,
+  };
+}
+
+async function commandRun(config: ReturnType<typeof loadConfig>, task: string, parsed: Parsed): Promise<number> {
+  if (parsed.flags.has("--yes") && !parsed.flags.has("--sandbox")) {
+    err("--yes is only valid with --sandbox (or the benchmark policy)");
+    return EXIT.usage;
+  }
+  const headless = parsed.flags.has("--headless");
+  const harness = await createHarness(config, parsed);
   try {
-    const result = await runTask(session, task, {
-      model,
-      tools: createDefaultTools(),
-      approval: parsed.flags.has("--yes") && parsed.flags.has("--sandbox") ? new AutoApprovalService() : new DenyApprovalService(),
-      ...(researchClient === undefined ? {} : { research: researchClient }),
-      docsGuard: { factSheets: new Map() },
-      budget,
-      policy,
-      repoClass: classification.mode,
-      workspaceRoot: process.cwd(),
-      run: runProcess,
-      estimateCost: (usage, servedModel) => priceOf(servedModel, usage) ?? costFor(servedModel, { input: usage.input, output: usage.output }),
-      classifyTool: (tool, args) => classifyToolCall(tool, args, { policy, classification, cwd: process.cwd(), workspaceRoot: process.cwd() }),
-      tracePath: join(paths.tracesDir, `${session.header.sessionId}.jsonl`),
-    });
+    const approval = parsed.flags.has("--yes") && parsed.flags.has("--sandbox") ? new AutoApprovalService() : new DenyApprovalService();
+    const result = await runTask(harness.session, task, harness.makeDeps(harness.session, { approval }));
     if (parsed.json || headless) jsonOut({ sessionId: result.receipt.sessionId, status: result.receipt.status, receipt: result.receipt });
     else out(`${result.receipt.status}: ${result.receipt.summary} (${result.receipt.tokens.total} tokens)`);
     return result.receipt.status === "success" ? EXIT.ok : EXIT.failed;
   } finally {
-    researchCache?.close();
-    if (close !== null) await close();
+    await harness.close();
   }
 }
 
+async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed): Promise<number> {
+  const harness = await createHarness(config, parsed, { mockScript: TUI_DEMO_SCRIPT });
+  const modelAlias = config.mode === "mock" ? "gidorah-auto" : process.env.GIDORAH_MODEL_ALIAS ?? "gidorah-auto";
+  try {
+    const interactive = process.stdin.isTTY === true && process.stdout.isTTY === true && !parsed.plain;
+    if (!interactive) {
+      return await runPlainTui({
+        session: harness.session,
+        createDeps: harness.makeDeps,
+        createSession: harness.createSession,
+        listSessions: harness.listSessions,
+        loadSession: harness.loadSession,
+        budgetSnapshot: () => harness.budget.snapshot(),
+        cwd: process.cwd(),
+        mode: config.mode,
+        modelAlias,
+        stdin: process.stdin,
+        stdout: process.stdout,
+      });
+    }
+    const branch = await runProcess({ command: "git", args: ["rev-parse", "--abbrev-ref", "HEAD"], cwd: process.cwd() });
+    const app = new TuiApp({
+      session: harness.session,
+      createDeps: harness.makeDeps,
+      createSession: harness.createSession,
+      listSessions: harness.listSessions,
+      loadSession: harness.loadSession,
+      budgetSnapshot: () => harness.budget.snapshot(),
+      resetBudget: harness.resetBudget,
+      cwd: process.cwd(),
+      branch: branch.code === 0 ? branch.stdout.trim() : "(no branch)",
+      mode: config.mode,
+      modelAlias,
+      researchLimit: DEFAULT_POLICY.budgets.research.credits_per_day,
+      maxSteps: 20,
+      color: !parsed.flags.has("--no-color"),
+      historyFile: join(config.home, "tui-history"),
+    });
+    return await app.start();
+  } finally {
+    await harness.close();
+  }
+}
 function helpText(): string {
   return [
     "gidorah: the governed coding agent",
@@ -608,6 +724,7 @@ function helpText(): string {
     "",
     "Commands:",
     "  run <task>              Run one task (mock or Bifrost mode); --headless emits JSON",
+    "  tui                     Interactive session (--plain for pipe/line mode)",
     "  resume [session]        Resume or inspect a session",
     "  doctor                  Check runtime, policy, gateway, and keys",
     "  budget                  Show LLM and research budgets",
@@ -629,7 +746,7 @@ function helpText(): string {
 }
 
 const COMMANDS = [
-  "run", "resume", "doctor", "budget", "trace", "receipt", "audit", "redteam",
+  "run", "tui", "resume", "doctor", "budget", "trace", "receipt", "audit", "redteam",
   "demo", "bench", "conformance", "chaos", "policy", "config", "completion", "version", "help",
 ];
 
