@@ -61,6 +61,7 @@ export interface ModelRequest {
   confidential: boolean;
   cacheKey?: string;
   maxTokens?: number;
+  temperature?: number;
   tools?: ToolSchema[];
 }
 

@@ -57,3 +57,6 @@ node apps/cli/src/main.ts bench --real --full
    gateway DLP and canary evidence.
 2. Record the 3-minute demo, add slides, star the Bifrost repo.
 3. Rotate the keys shared in chat and the local `sk-bf-` dev key.
+## Benchmark variance
+
+`GIDORAH_BENCH_RUNS=3` or `bench --runs 3` runs each task and arm three times; `GIDORAH_BENCH_MAX_STEPS=20` raises the step cap. Temperature is pinned to 0 and recorded in the manifest.
