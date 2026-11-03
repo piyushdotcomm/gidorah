@@ -167,3 +167,10 @@ Real benchmark numbers with the benchmark harness (the harness still uses its sc
 - Measurements recorded: session resume load of a 101-event session 2 ms (target <2 s); CLI cold start 144 ms average (target <150 ms); DLP scan 7.6 microseconds per 4 KB request (target <20 ms p95).
 - CI workflow no longer requires a frozen pnpm lockfile (the offline sandbox could not generate a matching one).
 - Full real benchmark re-run in progress with a hard 180 s per-task timeout and arms A and C (documented reduction from four arms because the uncapped run hung).
+## Full real benchmark result (16 tasks, arms A and C, one run each)
+
+- Rows 32 (16 tasks x 2 arms), 13 solved, pass@1 40.6%.
+- Cost per solved task $0.007097; total cost $0.092260; 285,654 tokens; 191 model requests; p50 row cost $0.003407, p95 $0.005349.
+- Per arm: always-strong A 2/16 solved; cascade C 11/16 solved. The cascade arm is both more reliable and cheaper, matching the pilot direction.
+- Reduction versus the docs protocol: 2 arms x 1 run instead of 4 arms x 5 runs, because the uncapped run hung (documented); a hard 180 s per-task timeout now prevents that. Timeouts recorded separately, not counted as evaluated rows.
+- Artifacts: `bench/real_mw0ffoii/raw.jsonl`, `report.md`, `manifest.json`, `traces/`.

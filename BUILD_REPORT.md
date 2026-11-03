@@ -146,3 +146,6 @@ Remaining: wire the benchmark harness to real Bifrost models for measured cost p
 - Local 3B: qwen2.5-coder:3b imported from GGUF; real confidential request via Bifrost returned 200 with provider ollama; local key rejects cloud with 403. See `evidence/real-local-3b-2026-11-03.json`.
 - Go plugin: real SDK binding verified (go vet clean, go test ok against core v1.14.1); live loading PENDING (Linux .so).
 - DSH TUI vendored at `third_party/dsh-tui` with LICENSE and NOTICE; adaptation PENDING.
+## Full real benchmark addendum (16 tasks, arms A and C)
+
+Real Bifrost, real Fireworks models, real tests: 32 rows, 13 solved, pass@1 40.6%, cost per solved task $0.007097, 285,654 tokens, 191 model requests. Always-strong arm A solved 2/16; cascade arm C solved 11/16. Documented reduction: 2 arms x 1 run (the uncapped four-arm run hung; a 180 s per-task timeout was added). Artifacts: `bench/real_mw0ffoii/`.
