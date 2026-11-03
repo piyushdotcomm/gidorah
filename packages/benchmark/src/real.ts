@@ -295,6 +295,8 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     taskFilter,
     armFilter,
     maxTokens: process.env.GIDORAH_MAX_TOKENS ?? "unset",
+    promptVersion: "edit-nudge-v1",
+    editNudge: true,
     generatedAt: new Date().toISOString(),
   };
   const manifestPath = join(runDir, "manifest.json");
@@ -324,7 +326,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     "",
     "- Pricing: DeepSeek V4.1 Flash $0.30 in / $0.006 cached / $1.20 out per 1M; GLM 5.3 Flash $0.15 / $0.03 / $0.50 per 1M.",
     "- Errored/timeout rows are counted in the header and are not treated as test failures.",
-    "- Sample: pilot is 3 tasks x 3 arms; full is 12 tasks x 4 arms. Runs, maxSteps, temperature, task/client timeouts, and filters are recorded in manifest.json.",
+    "- Sample: pilot is 3 tasks x 3 arms; full is 12 tasks x 4 arms. Runs, maxSteps, temperature, task/client timeouts, filters, and promptVersion are recorded in manifest.json.",
     "",
   ];
   writeFileSync(reportPath, lines.join("\n"));

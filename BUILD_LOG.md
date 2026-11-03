@@ -44,3 +44,5 @@ labelled so.
 - **Evidence-integrity fix.** failureCategory/failureDetail/step-limit and split Tavily accounting now reach raw rows (verified in real_mw0k7ayt); the current post-fix evidence is `real_mw0nvfe6` (full) and `real_mw0ksdno` (pilot); full runs before the fix are superseded for those fields. Arm F is reported as the best arm on the current task set; cascade/Tavily savings are not claimed.
 
 - **Post-fix full run.** 12 tasks x A/C/D/F, 1 run, 48 rows, 47 solved, 97.9%, $0.004475/solved; manifest records runs 1, maxSteps 20, temperature 0, timeouts, filters. Current evidence: real_mw0nvfe6.
+
+- **Nudge full run.** 12 tasks x A/C/D/F with promptVersion edit-nudge-v1: recorded under eal_mw0or6tw; manifest carries promptVersion/editNudge.
