@@ -73,6 +73,9 @@ export function renderPiDemo(): string {
   shell.hidePicker();
   shell.addText("model gidorah-auto · available gidorah-auto, fireworks/accounts/fireworks/models/deepseek-v4p1-flash, gidorah-local");
   frame("6. /model aliases");
+  for (const [w, h] of [[120, 40], [100, 30], [80, 24], [40, 24]] as const) {
+    out.push("", `### Responsive ${w}x${h}`, "```text", shell.snapshot(w, h), "```");
+  }
   out.push("", "Frames rendered by pi-tui components with a fake terminal (`renderPiDemo`). The interactive path uses `ProcessTerminal`; this artifact is deterministic and offline.");
   return `${out.join("\n")}\n`;
 }
