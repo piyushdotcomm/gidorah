@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { redactSecrets } from "../../shared/src/redaction.ts";
-import type { ContentBlock, ResearchClient, ToolResult } from "../../shared/src/types.ts";
+import type { ContentBlock, ResearchClient, ToolResult, ToolSchema } from "../../shared/src/types.ts";
 
 export interface CommandResult {
   code: number;
@@ -120,6 +120,30 @@ export class ToolRegistry {
 
   names(): string[] {
     return [...this.tools.keys()].sort();
+  }
+
+  /** JSON schemas advertised to a real model so it can call these tools. */
+  schemas(): ToolSchema[] {
+    const specs: Record<string, { properties: Record<string, unknown>; required: string[] }> = {
+      read: { properties: { path: { type: "string" }, start: { type: "number" }, end: { type: "number" } }, required: ["path"] },
+      repo_map: { properties: { path: { type: "string" } }, required: [] },
+      glob: { properties: { pattern: { type: "string" } }, required: ["pattern"] },
+      grep: { properties: { pattern: { type: "string" }, path: { type: "string" } }, required: ["pattern"] },
+      list: { properties: { path: { type: "string" } }, required: [] },
+      write: { properties: { path: { type: "string" }, content: { type: "string" }, reason: { type: "string" } }, required: ["path", "content"] },
+      edit: { properties: { path: { type: "string" }, find: { type: "string" }, replace: { type: "string" } }, required: ["path", "find", "replace"] },
+      bash: { properties: { command: { type: "string" }, cwd: { type: "string" } }, required: ["command"] },
+      git: { properties: { subcommand: { type: "string" }, args: { type: "array", items: { type: "string" } } }, required: ["subcommand"] },
+      research: { properties: { question: { type: "string" }, packageName: { type: "string" }, packageVersion: { type: "string" }, errorText: { type: "string" } }, required: ["question"] },
+    };
+    return [...this.tools.values()].map((tool) => ({
+      type: "function" as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: { type: "object", properties: specs[tool.name]?.properties ?? {}, required: specs[tool.name]?.required ?? [] },
+      },
+    }));
   }
 }
 

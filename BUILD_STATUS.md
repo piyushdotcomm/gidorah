@@ -116,3 +116,27 @@ Real DeepSeek and Tavily calls (no keys), Ollama model weights and inference (CD
 - A real CLI session ran: `gidorah run "Say hi ..." --yes` with `GIDORAH_MODE=cloud`, the real gateway, and `GIDORAH_MODEL_ALIAS=ollama/qwen2.5-coder:0.5b`. Receipt: success, 243 tokens. The session hash chain verified valid (7 events). Evidence: `evidence/real-services-2026-11-03.json`.
 - New documented overrides: `GIDORAH_MODEL_ALIAS` (provider-qualified model for real gateways) and `GIDORAH_MAX_TOKENS` (required with the tiny model; without a token cap it streams indefinitely and non-streaming requests hang).
 - Still PENDING: DeepSeek and Tavily keys, 3B+ model quality, Go plugin binding to the real Bifrost SDK, DSH TUI vendoring, `pnpm install` under this sandbox.
+## Real Fireworks cloud runs, Tavily, and a real coding task (13:25-13:50 IST)
+
+The user supplied a Tavily key and a Fireworks AI key. Fireworks replaces the DeepSeek key: it is OpenAI-compatible and Bifrost has a native `fireworks` provider.
+
+### What was verified with real credentials
+
+- Bifrost configured with the native `fireworks` provider (`x-bf` cloud key `gidorah-cloud`), plus the existing local Ollama provider. Model list includes `accounts/fireworks/models/deepseek-v4p1-flash`, `qwen3p8-max`, `glm-5p3`.
+- Real completion through Bifrost: HTTP 200 in ~1s, routing header `x-bifrost-routing-info-provider: fireworks`, content `ready`.
+- Real Gidorah CLI session on the Fireworks model: coherent reply "Hi! I'm Gidorah, ready to help with your terminal coding tasks.", 234 tokens, hash chain valid.
+- Real Tavily through Gidorah's Scout (`packages/tavily/src/client.ts`, new real HTTP client): a Stripe webhook question produced a 332-token evidence card with 6 facts and 3 sources (`docs.stripe.com`, `github.com`), high confidence, 1 credit; the repeat call was a cache hit at 0 credits. Usage ledger recorded 1 call, 1 credit.
+- **Real coding task**: a fixture repo with a failing test was handed to Gidorah running the Fireworks model. The model used the tools, patched `math.js` from `n + 100` to `n * 100`, and the test went from 1 failing to 1 passing. Evidence: `evidence/real-coding-task-2026-11-03.json` (session events, tool calls, chain validity).
+
+### Code changes required for real models
+
+- The agent request now advertises workspace tool schemas (`tools` + `tool_choice: auto`) to the model. Without this, a real model could never call a tool; the mock provider had hidden the gap.
+- New real Tavily HTTP client (`createTavilyClient`) using Bearer auth, cheap search depth, `chunks_per_source: 2`, no raw page content, extract limited to chosen URLs.
+
+### Credential hygiene
+
+Keys are stored only in `.tools/credentials.env` (gitignored) and passed as environment variables. They are not in the repo, the evidence files, or the session logs. Because both keys were pasted into a chat message, rotate them when the demo work is done.
+
+### Still PENDING
+
+Real benchmark numbers with the benchmark harness (the harness still uses its scripted model; wiring it to Bifrost is the next step), the 3B local model import (GGUF downloading), Go plugin binding to the real Bifrost SDK, DSH TUI vendoring, and `pnpm install` in sandboxed environments.

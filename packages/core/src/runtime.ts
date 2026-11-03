@@ -184,6 +184,7 @@ export async function runTask(session: Session, task: string, deps: RuntimeDeps)
         sessionId: session.header.sessionId,
         confidential,
         ...(process.env.GIDORAH_MAX_TOKENS === undefined ? {} : { maxTokens: Number(process.env.GIDORAH_MAX_TOKENS) }),
+        tools: deps.tools.schemas(),
       };
 
       let response;

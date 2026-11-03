@@ -135,3 +135,8 @@ Real routing evidence (`evidence/real-services-2026-11-03.json`): a chat complet
 ## Final real-run addendum
 
 Two fixes were required by real-gateway testing: the SSE parser now stops at `[DONE]` (Bifrost keeps the stream open after it), and the runtime accepts `GIDORAH_MODEL_ALIAS` and `GIDORAH_MAX_TOKENS` so a real provider-qualified model can be used and capped. All 104 tests, the strict typecheck, and lint still pass after these changes.
+## Real credential run (13:25 IST)
+
+Fireworks AI replaced DeepSeek as the cloud provider (OpenAI-compatible, native Bifrost `fireworks` provider). Real evidence captured: Fireworks completion routed through Bifrost (routing headers, ~1s), a real Gidorah CLI session (234 tokens, valid chain), a real Tavily card (332 tokens, 6 facts, 3 official sources, high confidence, 1 credit, then a 0-credit cache hit), and a real coding task where the model used Gidorah tools to fix a failing test (1 fail -> 1 pass). Evidence files: `evidence/real-services-2026-11-03.json` (services and routing), `evidence/real-tavily-2026-11-03.json`, `evidence/real-coding-task-2026-11-03.json`. Keys live only in gitignored `.tools/credentials.env`; rotate them since they were pasted into chat. Tool schemas are now sent to real models (a gap the mocks had hidden).
+
+Remaining: wire the benchmark harness to real Bifrost models for measured cost per solved task, finish the 3B local model import, bind the Go plugin to the real SDK, vendor the DSH TUI.
