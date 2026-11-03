@@ -66,3 +66,15 @@ test("approval: protected paths and workspace reads", () => {
     cleanup();
   }
 });
+
+test("approval: the workspace root itself is readable", () => {
+  const { ctx, cleanup } = ws();
+  try {
+    assert.equal(classifyToolCall("list", { path: "." }, ctx).verdict, "allow");
+    assert.equal(classifyToolCall("repo_map", { path: "." }, ctx).verdict, "allow");
+    assert.equal(classifyToolCall("read", { path: "." }, ctx).verdict, "allow");
+    assert.equal(classifyToolCall("grep", { pattern: "x", path: "." }, ctx).verdict, "allow");
+  } finally {
+    cleanup();
+  }
+});

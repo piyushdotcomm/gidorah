@@ -60,3 +60,20 @@ Tavily honesty: full run arm D 12/12 vs C 11/12 (one task), Class B-only run arm
 ## Strategic honesty
 
 Arm F (always cheap) is 12/12 at $0.001756 per solved task in the full run; D is 12/12 at $0.003906, C 11/12 at $0.004230, A 10/12 at $0.008558. The cheapest arm wins on this task set. Cascade and Tavily are not proven to save money or raise pass rate here; they are framed as insurance for harder repositories, and no pass-rate claim is made.
+
+## Post-fix 3-run pilot (current evidence)
+
+Rows 27, evaluated 27, solved 24, errored 0, pass@1 88.9 percent, cost $0.165836, cost/solved $0.006910.
+
+| Arm | Solved | Errored | Cost |
+|---|---|---|---|
+| A | 7/9 | 0 | $0.089117 |
+| C | 8/9 | 0 | $0.043533 |
+| D | 9/9 | 0 | $0.033186 |
+
+Errored rows: none. Provider-error classification exists but was not triggered in this pilot.
+
+Research accounting totals: preResearchCalls 3, preResearchCredits 1, toolResearchCalls 3, toolResearchCredits 3, attempts 12, denied 6.
+Research cache reconciliation: research_usage 4 calls / 4 credits, 4 cache rows; raw rows sum to 6 calls / 4 credits. Any gap is tool-initiated calls whose credits were not observable; this is stated, not hidden.
+
+Manifest truth: mode real-pilot, runs 3, maxSteps 20, temperature 0, taskTimeoutMs 240000, clientTimeoutMs 120000, taskFilter [], armFilter [].
