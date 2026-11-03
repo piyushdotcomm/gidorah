@@ -33,3 +33,6 @@ worktrees/
 
 # Locally downloaded toolchains (pnpm standalone, Go, Ollama)
 .tools/
+
+# Real-gateway session homes created during toolchain verification
+.gidorah-*/

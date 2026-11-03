@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Bifrost model-plane client.
  *
  * Bifrost is the only path from Gidorah to a model (ADR-0001, ADR-0004). This
@@ -218,6 +218,7 @@ export function createBifrostClient(options: BifrostClientOptions): ModelClient 
     const toolCalls = new Map<number, { id: string; name: string; args: string }>();
     let usage: TokenUsage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 };
     let finishReason = "stop";
+    let finished = false;
 
     for (;;) {
       const { done, value } = await reader.read();
@@ -230,7 +231,10 @@ export function createBifrostClient(options: BifrostClientOptions): ModelClient 
         for (const line of frame.split("\n")) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6).trim();
-          if (payload === "[DONE]") continue;
+          if (payload === "[DONE]") {
+            finished = true;
+            continue;
+          }
           let chunk: {
             choices?: Array<{
               delta?: { content?: string; tool_calls?: Array<{ index: number; id?: string; function?: { name?: string; arguments?: string } }> };
@@ -259,6 +263,10 @@ export function createBifrostClient(options: BifrostClientOptions): ModelClient 
           if (choice?.finish_reason !== undefined && choice.finish_reason !== null) finishReason = choice.finish_reason;
         }
         boundary = buffer.indexOf("\n\n");
+      }
+      if (finished) {
+        await reader.cancel();
+        break;
       }
     }
 

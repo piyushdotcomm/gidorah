@@ -94,9 +94,9 @@ The user asked to download and install whatever was needed. This session install
 - The request reached the real Ollama server (it answered, 404 `model 'qwen2.5-coder:0.5b' not found` because the weights are not downloaded).
 - So the real path `Gidorah Bifrost client -> real Bifrost -> real Ollama` is verified up to model availability. Real inference is the only remaining gap.
 
-### Model weights blocker
+### Model weights (resolved)
 
-`qwen2.5-coder:0.5b` (397,808,000-byte blob) downloaded 379 MB, then the Cloudflare R2 CDN returned repeated retry failures. A direct Node download from `registry.ollama.ai` was also refused (0 bytes, timeout). Weights are PENDING, not faked.
+`qwen2.5-coder:0.5b` is installed (397,821,516 bytes, digest verified). Ollama's CDN stalled at 95 percent, so the remaining tail was completed with one range request to the registry blob URL and the blob was moved into place; `ollama pull` then verified the digest and reported success. Real inference through real Bifrost and real Ollama now works. Quality note: 0.5b output is largely gibberish, so 3B or larger weights remain the recommendation for the demo.
 
 ### Bifrost configuration notes (needed for a rerun)
 
@@ -108,3 +108,11 @@ The user asked to download and install whatever was needed. This session install
 ### Still PENDING
 
 Real DeepSeek and Tavily calls (no keys), Ollama model weights and inference (CDN blocked), the Go plugin binding to the real Bifrost plugin SDK (build/test of the plugin itself is verified), DSH TUI vendoring, and `pnpm install` under this sandbox.
+### Final real-run results (12:30-12:55 IST)
+
+- `ollama pull` -> `verifying sha256 digest` then `success`; `/api/tags` shows `qwen2.5-coder:0.5b` (397,821,516 bytes).
+- Gidorah's own `createBifrostClient` completed against real Bifrost: served `ollama/qwen2.5-coder:0.5b`, 47 tokens, finish `length`.
+- Streaming through Gidorah's client also works. This exposed a real bug: Bifrost keeps the SSE connection open after `[DONE]`, so the client parser now stops on `[DONE]` instead of waiting for EOF.
+- A real CLI session ran: `gidorah run "Say hi ..." --yes` with `GIDORAH_MODE=cloud`, the real gateway, and `GIDORAH_MODEL_ALIAS=ollama/qwen2.5-coder:0.5b`. Receipt: success, 243 tokens. The session hash chain verified valid (7 events). Evidence: `evidence/real-services-2026-11-03.json`.
+- New documented overrides: `GIDORAH_MODEL_ALIAS` (provider-qualified model for real gateways) and `GIDORAH_MAX_TOKENS` (required with the tiny model; without a token cap it streams indefinitely and non-streaming requests hang).
+- Still PENDING: DeepSeek and Tavily keys, 3B+ model quality, Go plugin binding to the real Bifrost SDK, DSH TUI vendoring, `pnpm install` under this sandbox.

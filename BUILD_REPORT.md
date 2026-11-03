@@ -129,6 +129,9 @@ Gidorah is Apache-2.0 (LICENSE). Attributions: Bifrost (Apache-2.0, Maxim AI; no
 
 Installed after the initial mock-first build: Go 1.27.3 (Bifrost plugin `go vet` clean, `go test ./...` ok 4.782s), pnpm 12.16.1 standalone (`pnpm run build/lint/typecheck/test` pass), TypeScript 7.0.2 strict typecheck, Bifrost 2.4.0 built from source and running on 8080, Ollama 0.40.13 running on 11434.
 
-Real routing evidence (`evidence/real-services-2026-11-03.json`): a chat completion with the generated local virtual key was routed by real Bifrost to the real Ollama provider (routing headers present, 36 ms upstream latency) and reached Ollama, which returned 404 because the model weights are not downloaded. This verifies the real client -> gateway -> local runtime path; real inference is PENDING on the model blob CDN, which failed at 379/398 MB.
+Real routing evidence (`evidence/real-services-2026-11-03.json`): a chat completion with the generated local virtual key was routed by real Bifrost to the real Ollama provider (routing headers present, 36 ms upstream latency) and reached Ollama, which returned 404 because the model weights are not downloaded. This verified the real client -> gateway -> local runtime path. Real inference is now VERIFIED as well: `qwen2.5-coder:0.5b` was installed (digest verified after completing the stalled tail with a range request), and a real CLI session ran end-to-end (`gidorah run ... --yes`, 243 tokens, valid hash chain). Model output quality is poor at 0.5b; 3B+ weights remain the recommendation. See `evidence/real-services-2026-11-03.json`.
 
 `pnpm install` remains blocked by the sandbox (symlink EPERM); `npm install` is the working dependency path here. Full rerun steps are in `MORNING_RUNBOOK.md`.
+## Final real-run addendum
+
+Two fixes were required by real-gateway testing: the SSE parser now stops at `[DONE]` (Bifrost keeps the stream open after it), and the runtime accepts `GIDORAH_MODEL_ALIAS` and `GIDORAH_MAX_TOKENS` so a real provider-qualified model can be used and capped. All 104 tests, the strict typecheck, and lint still pass after these changes.
