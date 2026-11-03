@@ -119,7 +119,7 @@ export interface BenchRow {
   approvalPrompts: number;
   cacheHit: boolean;
   wallMs: number;
-  failureCategory?: "step_limit" | "no_edit" | "test_failed" | "timeout";
+  failureCategory?: "provider_error" | "step_limit" | "no_edit" | "test_failed" | "timeout";
   failureDetail?: string;
   stepLimitReached?: boolean;
   preResearchCalls?: number;
@@ -128,6 +128,10 @@ export interface BenchRow {
   toolResearchCredits?: number;
   researchSources?: string[];
   researchCardTokens?: number;
+  researchAttempts?: number;
+  researchDenied?: number;
+  toolResearchSources?: string[];
+  toolResearchCardTokens?: number;
 }
 
 export interface BenchResult {

@@ -42,10 +42,9 @@ const TOOL_CLASS: Record<string, ToolClass> = {
 const PROTECTED_PATTERNS = [/\.ssh[\\/]/, /\.aws[\\/]/, /id_rsa/, /id_ed25519/, /\.netrc/, /credentials\.json/, /\.git-credentials/];
 
 function isInsideRoot(root: string, target: string): boolean {
-  const resolvedRoot = resolve(root);
-  const resolvedTarget = resolve(target);
-  const rel = relative(resolvedRoot, resolvedTarget);
-  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+  const rel = relative(resolve(root), resolve(target));
+  // The workspace root itself is inside the workspace (list ., repo_map ., etc.).
+  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
 }
 
 function targetPath(args: Record<string, unknown>): string | null {

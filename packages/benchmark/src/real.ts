@@ -164,8 +164,15 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
           const stepCount = session.all.filter((event) => event.type === "step/start").length;
           const stepLimitReached = stepCount >= maxSteps;
           const editCallCount = session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "edit").length;
-          const failureCategory = passed ? undefined : stepLimitReached ? "step_limit" : editCallCount === 0 ? "no_edit" : "test_failed";
-          const failureDetail = passed ? undefined : `${test.code}: ${(test.stderr || test.stdout).replace(/\s+/g, " ").slice(0, 300)}`;
+          const sessionErrors = session.all.filter((event) => event.type === "session/error");
+          const lastTurnEnd = session.all.filter((event) => event.type === "turn/end").at(-1);
+          const providerFailed = sessionErrors.length > 0 || (lastTurnEnd !== undefined && (lastTurnEnd.data as { reason?: string }).reason === "provider_error");
+          const providerMessage = sessionErrors.length > 0
+            ? String((sessionErrors.at(-1)?.data as { message?: string } | undefined)?.message ?? "provider error")
+            : "provider error";
+          const status = passed ? "evaluated" : providerFailed ? "errored" : "evaluated";
+          const failureCategory = passed ? undefined : providerFailed ? "provider_error" : stepLimitReached ? "step_limit" : editCallCount === 0 ? "no_edit" : "test_failed";
+          const failureDetail = passed ? undefined : providerFailed ? providerMessage : `${test.code}: ${(test.stderr || test.stdout).replace(/\s+/g, " ").slice(0, 300)}`;
           if (!passed) {
             mkdirSync(join(runDir, "failures"), { recursive: true });
             writeFileSync(join(runDir, "failures", `${task.id}-${arm.id}-${run}.json`), JSON.stringify({ taskId: task.id, armId: arm.id, run, failureCategory, failureDetail, stepLimitReached, events: session.all.slice(-40) }, null, 2));
@@ -193,16 +200,42 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             const args = (event.data as { arguments?: { start?: number; end?: number } }).arguments;
             return args?.start === undefined && args?.end === undefined;
           }).length;
-          const toolResearchCalls = session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "research").length;
-          const researchCalls = usedResearchCalls + toolResearchCalls;
-          const researchCredits = usedResearchCredits + researchResults.reduce((total, event) => total + Number((event.data as { credits?: number }).credits ?? 0), 0);
+          const researchCallEvents = session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "research");
+          const resultByCallId = new Map<string, { ok?: boolean; meta?: Record<string, unknown> }>();
+          for (const event of session.all) {
+            if (event.type !== "tool/result") continue;
+            const data = event.data as { callId?: string; ok?: boolean; meta?: Record<string, unknown> };
+            if (data.callId !== undefined) resultByCallId.set(data.callId, data);
+          }
+          let toolResearchSuccess = 0;
+          let toolResearchCredits = 0;
+          let toolResearchDenied = 0;
+          const toolSources: string[] = [];
+          let toolCardTokens = 0;
+          for (const event of researchCallEvents) {
+            const callId = String((event.data as { callId?: string }).callId ?? "");
+            const result = resultByCallId.get(callId);
+            if (result?.ok === true) {
+              toolResearchSuccess += 1;
+              toolResearchCredits += Number(result.meta?.credits ?? 0);
+              toolCardTokens += Number(result.meta?.cardTokens ?? 0);
+              const sources = result.meta?.sources;
+              if (Array.isArray(sources)) toolSources.push(...sources.map(String));
+            } else {
+              toolResearchDenied += 1;
+            }
+          }
+          const researchAttempts = usedResearchCalls + researchCallEvents.length;
+          const researchCalls = usedResearchCalls + toolResearchSuccess;
+          const researchCredits = usedResearchCredits + toolResearchCredits;
+          const allResearchSources = [...new Set([...preResearchSources, ...toolSources])];
           const row: BenchRow = {
             taskId: task.id,
             class: task.class,
             armId: arm.id,
             run,
             passed,
-            status: "evaluated",
+            status,
             tokens,
             costUsd: cost,
             researchCredits,
@@ -221,10 +254,14 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             stepLimitReached,
             preResearchCalls: usedResearchCalls,
             preResearchCredits: usedResearchCredits,
-            toolResearchCalls,
-            toolResearchCredits: 0,
-            ...(preResearchSources.length === 0 ? {} : { researchSources: preResearchSources }),
-            ...(preResearchCardTokens === 0 ? {} : { researchCardTokens: preResearchCardTokens }),
+            toolResearchCalls: toolResearchSuccess,
+            toolResearchCredits,
+            researchAttempts,
+            researchDenied: toolResearchDenied,
+            ...(allResearchSources.length === 0 ? {} : { researchSources: allResearchSources }),
+            ...(preResearchCardTokens + toolCardTokens === 0 ? {} : { researchCardTokens: preResearchCardTokens + toolCardTokens }),
+            ...(toolSources.length === 0 ? {} : { toolResearchSources: toolSources }),
+            ...(toolCardTokens === 0 ? {} : { toolResearchCardTokens: toolCardTokens }),
           };
           rows.push(row);
           appendJsonl(rawPath, row);
@@ -241,7 +278,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
 
   const manifest = {
     runId,
-    mode: `real-${options.mode}`,
+    mode: taskFilter.length > 0 || armFilter.length > 0 ? `real-${options.mode}-targeted` : `real-${options.mode}`,
     model: "Fireworks AI via real Bifrost",
     strongModel: strong,
     cheapModel: cheap,
@@ -250,7 +287,12 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     taskSetHash: sha256Hex(BENCH_TASKS.map((task) => `${task.id}:${task.edit.find}`).join("|")),
     arms: arms.map((arm) => arm.id),
     runs,
-    maxSteps: 12,
+    maxSteps: Number(process.env.GIDORAH_BENCH_MAX_STEPS ?? "20"),
+    temperature: 0,
+    taskTimeoutMs: Number(process.env.GIDORAH_BENCH_TIMEOUT_MS ?? "180000"),
+    clientTimeoutMs: 120000,
+    taskFilter,
+    armFilter,
     maxTokens: process.env.GIDORAH_MAX_TOKENS ?? "unset",
     generatedAt: new Date().toISOString(),
   };
@@ -280,8 +322,8 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     "## Notes",
     "",
     "- Pricing: DeepSeek V4.1 Flash $0.30 in / $0.006 cached / $1.20 out per 1M; GLM 5.3 Flash $0.15 / $0.03 / $0.50 per 1M.",
-    "- Missing/errored/skipped rows: 0 for evaluated rows; a task that fails its test is a real failure, not missing data.",
-    "- Sample: pilot is 3 tasks x 3 arms; full is 12 tasks x 4 arms. Runs are controlled by --runs or GIDORAH_BENCH_RUNS; temperature is pinned to 0 and recorded in the manifest.",
+    "- Errored/timeout rows are counted in the header and are not treated as test failures.",
+    "- Sample: pilot is 3 tasks x 3 arms; full is 12 tasks x 4 arms. Runs, maxSteps, temperature, task/client timeouts, and filters are recorded in manifest.json.",
     "",
   ];
   writeFileSync(reportPath, lines.join("\n"));

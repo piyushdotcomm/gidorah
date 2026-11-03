@@ -454,7 +454,7 @@ export function createDefaultTools(): ToolRegistry {
         "Sources:",
         ...card.sources.map((source, index) => `[${index + 1}] ${source.url} (${source.domain})`),
       ].join("\n");
-      return ok(ctx, [{ type: "text", text: cap(text, 900) }], { credits: outcome.credits, cached: outcome.cached });
+      return ok(ctx, [{ type: "text", text: cap(text, 900) }], { credits: outcome.credits, cached: outcome.cached, sources: card.sources.map((source) => source.url), cardTokens: card.tokenEstimate });
     },
   });
 
