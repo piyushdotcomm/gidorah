@@ -186,6 +186,81 @@ class ApprovalModal implements Component {
   }
 }
 
+export interface PickerItem {
+  label: string;
+  value: string;
+  description?: string;
+}
+
+class PickerModal implements Component {
+  private readonly items: PickerItem[];
+  private index = 0;
+  private query = "";
+  private readonly color: boolean;
+  private readonly onSelect: (value: string) => void;
+  private readonly onCancel: () => void;
+
+  constructor(items: PickerItem[], color: boolean, onSelect: (value: string) => void, onCancel: () => void) {
+    this.items = items;
+    this.color = color;
+    this.onSelect = onSelect;
+    this.onCancel = onCancel;
+  }
+
+  invalidate(): void {}
+
+  private filtered(): PickerItem[] {
+    const query = this.query.trim().toLowerCase();
+    return query === "" ? this.items : this.items.filter((item) => `${item.label} ${item.description ?? ""}`.toLowerCase().includes(query));
+  }
+
+  render(width: number): string[] {
+    const items = this.filtered();
+    this.index = Math.max(0, Math.min(items.length - 1, this.index));
+    const lines: string[] = [paint(this.color, ANSI.bold, "Resume session"), `${paint(this.color, ANSI.dim, "search:")} ${this.query}${paint(this.color, ANSI.dim, "_")}`, paint(this.color, ANSI.dim, "─".repeat(Math.max(0, width)))];
+    if (items.length === 0) lines.push(paint(this.color, ANSI.dim, "no matching sessions"));
+    for (const [i, item] of items.slice(0, 12).entries()) {
+      const prefix = i === this.index ? paint(this.color, ANSI.cyan, "› ") : "  ";
+      lines.push(`${prefix}${truncateVisible(item.label, Math.max(8, width - 2))}`);
+    }
+    lines.push(paint(this.color, ANSI.dim, "↑/↓ select · type to search · Enter resume · Esc cancel"));
+    return lines;
+  }
+
+  handleInput(data: string): void {
+    const items = this.filtered();
+    if (data === "\u001b[A" || data === "\u001bOA") {
+      this.index = Math.max(0, this.index - 1);
+      return;
+    }
+    if (data === "\u001b[B" || data === "\u001bOB") {
+      this.index = Math.min(items.length - 1, this.index + 1);
+      return;
+    }
+    if (data === "\r") {
+      const item = items[this.index];
+      if (item !== undefined) this.onSelect(item.value);
+      return;
+    }
+    if (data === "\u001b") {
+      this.onCancel();
+      return;
+    }
+    if (data === "\u007f") {
+      this.query = this.query.slice(0, -1);
+      this.index = 0;
+      return;
+    }
+    if (data.length === 1 && data >= " ") {
+      this.query += data;
+      this.index = 0;
+    }
+  }
+}
+
+function truncateVisible(text: string, width: number): string {
+  return visibleWidth(text) <= width ? text : `${text.slice(0, Math.max(0, width - 1))}…`;
+}
 export interface ShellOptions {
   color?: boolean;
   onSubmit: (text: string) => void;
@@ -204,6 +279,8 @@ export class GidorahShell {
   private readonly viewport: TranscriptViewport;
   private approval: OverlayHandle | null = null;
   private approvalModal: ApprovalModal | null = null;
+  private picker: OverlayHandle | null = null;
+  private pickerModal: PickerModal | null = null;
   private readonly removeInputListener: () => void;
 
   private readonly terminal: Terminal;
@@ -278,6 +355,13 @@ export class GidorahShell {
     this.tui.requestRender();
   }
 
+  setTranscriptComponents(components: Component[]): void {
+    this.transcript.clear();
+    for (const component of components) this.transcript.addChild(component);
+    this.viewport.followTail();
+    this.tui.requestRender();
+  }
+
   addText(text: string): void {
     this.transcript.addChild(new Text(text, 0, 0));
     this.viewport.followTail();
@@ -337,6 +421,31 @@ export class GidorahShell {
     this.tui.setFocus(this.approvalModal);
   }
 
+  showPicker(items: PickerItem[], onSelect: (value: string) => void, onCancel: () => void): void {
+    this.hidePicker();
+    this.pickerModal = new PickerModal(items, this.options.color === true, (value) => {
+      this.hidePicker();
+      onSelect(value);
+    }, () => {
+      this.hidePicker();
+      onCancel();
+    });
+    this.picker = this.tui.showOverlay(this.pickerModal, { width: "70%", maxHeight: "60%", anchor: "center", margin: 1 });
+    this.tui.setFocus(this.pickerModal);
+  }
+
+  hidePicker(): void {
+    this.picker?.hide();
+    this.picker = null;
+    this.pickerModal = null;
+    this.tui.setFocus(this.editor);
+    this.tui.requestRender();
+  }
+
+  hasPicker(): boolean {
+    return this.pickerModal !== null;
+  }
+
   hasApproval(): boolean {
     return this.approvalModal !== null;
   }
@@ -345,7 +454,7 @@ export class GidorahShell {
     this.approval?.hide();
     this.approval = null;
     this.approvalModal = null;
-    this.tui.setFocus(this.editor);
+    if (!this.pickerModal) this.tui.setFocus(this.editor);
     this.tui.requestRender();
   }
 
@@ -366,6 +475,7 @@ export class GidorahShell {
   }
 
   stop(): void {
+    this.hidePicker();
     this.hideApproval();
     this.removeInputListener();
     this.tui.stop();
@@ -373,14 +483,15 @@ export class GidorahShell {
 
   /** Deterministic frame for tests/demo: framework component render, no ANSI. */
   snapshot(width: number, height: number): string {
-    const plain = makeThemes(false);
     const header = this.header.render(width);
     const status = this.status.render(width);
     const body = this.transcript.render(width);
-    const editor = new Editor(this.tui, plain.editor).render(width);
+    const text = this.editor.getText();
+    const composer = text === "" ? "› Type a task, /help for commands" : `› ${text}`;
+    const composerLines = new Text(composer, 0, 0).render(width);
     const footer = this.footer.render(width);
     const approvalLines = this.approvalModal === null ? [] : this.approvalModal.render(width);
-    const lines = [...header, ...status, ...body, ...approvalLines, ...editor, ...footer];
+    const lines = [...header, ...status, ...body, ...approvalLines, ...composerLines, ...footer];
     return lines.slice(-Math.max(1, height)).join("\n");
   }
 }

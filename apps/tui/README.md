@@ -1,8 +1,10 @@
 # Native Gidorah TUI
 
-Interactive terminal UI for coding sessions. No new runtime dependencies: raw
-mode, ANSI, and `node:readline` only. The vendored DSH package is **not** wired;
-this native app is the TUI surface.
+Interactive terminal UI for coding sessions, built on **`@earendil-works/pi-tui`
+0.80.7** (MIT, pinned in package-lock; license at `third_party/pi-tui.LICENSE`).
+The framework owns differential rendering, the transcript viewport, the Editor
+composer, focus-capturing overlays and the picker. The vendored DSH package is
+**not** wired.
 
 ## Run
 
@@ -112,9 +114,4 @@ available in this environment, so `apps/tui/DEMO.md` is the repeatable artifact.
 
 ## Tests
 
-`apps/tui/test/app.test.ts` covers panels, streaming, approval allow/deny,
-keys/history, slash commands, resume replay, Ctrl+C cancellation, Unicode-safe
-cursor edits, multiline/paste, completion, 40-column layout, and TTY
-enter/restore. `apps/tui/test/plain.test.ts` proves every advertised plain
-command is handled and no ANSI is emitted. `tests/cli/cli-contract.test.ts`
-covers bare-`gidorah` fallback and `tui --plain` in a pipe.
+`apps/tui/test/pi-app.test.ts` covers the pi-tui session: streaming, one receipt per turn, approval overlay, stale-approval cleanup after a provider error, and multi-frame redraw with two approval modal cycles. The legacy `app.test.ts` suite still covers the non-TTY/text path and its state helpers. `apps/tui/test/plain.test.ts` proves every advertised plain command is handled, no ANSI is emitted, and mock mode uses the generic reply instead of the demo script. `tests/cli/cli-contract.test.ts` covers bare-`gidorah` fallback and `tui --plain` in a pipe.

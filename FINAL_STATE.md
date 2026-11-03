@@ -6,7 +6,7 @@
 - Real Tavily card with citations and a zero-credit cache hit.
 - Confidential path: local 3B inference through Bifrost; the local-only key rejects a cloud model with 403.
 - Real chaos: Bifrost kill, Tavily outage, network drop.
-- Native TUI: session loop, streaming, approvals with numbered diffs, tool cards, resume replay, cancellation, plain/non-TTY fallback (`apps/tui`, repeatable demo in `apps/tui/DEMO.md`).
+- Native TUI: pi-tui 0.80.7 (MIT) framework shell with differential rendering, scrollable Markdown transcript, tool/diff/research cards, pi-tui Editor composer, approval overlay, searchable session picker, cancellation; plain/non-TTY fallback. (`apps/tui`, demo in `apps/tui/DEMO.md`.)
 
 ## Offline/mock only
 - Budget 402, provider fallback chains, DLP twin, replay demo, conformance, red team, CLI contract, audit tamper tests.

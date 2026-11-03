@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PassThrough } from "node:stream";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -80,6 +80,29 @@ test("plain mode handles every command it advertises", async () => {
     assert.match(captured, /receipt:/);
     assert.match(captured, /plain reply/);
     assert.equal(captured.includes("\u001b["), false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("CLI tui --plain uses the generic mock reply, not the demo script", async () => {
+  const root = mkdtempSync(join(tmpdir(), "gidorah-mock-"));
+  try {
+    const input = join(root, "input.txt");
+    writeFileSync(input, "hello there\n/quit\n", "utf8");
+    const cliRoot = process.cwd();
+    const result = await runProcess({
+      command: `node apps/cli/src/main.ts tui --plain < "${input}"`,
+      args: [],
+      cwd: cliRoot,
+      shell: true,
+      timeoutMs: 60_000,
+      env: { ...process.env, GIDORAH_MODE: "mock", GIDORAH_HOME: join(root, "home") },
+    });
+    assert.equal(result.code, 0);
+    assert.match(result.stdout, /mock mode: task acknowledged/);
+    assert.equal(result.stdout.includes("I'll write a demo file"), false);
+    assert.equal(result.stdout.includes("tui-demo.txt"), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
