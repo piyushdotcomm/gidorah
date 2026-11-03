@@ -140,3 +140,9 @@ Two fixes were required by real-gateway testing: the SSE parser now stops at `[D
 Fireworks AI replaced DeepSeek as the cloud provider (OpenAI-compatible, native Bifrost `fireworks` provider). Real evidence captured: Fireworks completion routed through Bifrost (routing headers, ~1s), a real Gidorah CLI session (234 tokens, valid chain), a real Tavily card (332 tokens, 6 facts, 3 official sources, high confidence, 1 credit, then a 0-credit cache hit), and a real coding task where the model used Gidorah tools to fix a failing test (1 fail -> 1 pass). Evidence files: `evidence/real-services-2026-11-03.json` (services and routing), `evidence/real-tavily-2026-11-03.json`, `evidence/real-coding-task-2026-11-03.json`. Keys live only in gitignored `.tools/credentials.env`; rotate them since they were pasted into chat. Tool schemas are now sent to real models (a gap the mocks had hidden).
 
 Remaining: wire the benchmark harness to real Bifrost models for measured cost per solved task, finish the 3B local model import, bind the Go plugin to the real SDK, vendor the DSH TUI.
+## Remaining items closed (14:00 IST)
+
+- Real benchmark: pilot on real Bifrost + Fireworks, 12 rows, 8 solved, pass@1 66.7%, cost per solved task $0.004429 (cascade arm C 3/3 at $0.006021 vs always-strong 2/3 at $0.021042). See `evidence/real-benchmark-pilot-2026-11-03.json`.
+- Local 3B: qwen2.5-coder:3b imported from GGUF; real confidential request via Bifrost returned 200 with provider ollama; local key rejects cloud with 403. See `evidence/real-local-3b-2026-11-03.json`.
+- Go plugin: real SDK binding verified (go vet clean, go test ok against core v1.14.1); live loading PENDING (Linux .so).
+- DSH TUI vendored at `third_party/dsh-tui` with LICENSE and NOTICE; adaptation PENDING.

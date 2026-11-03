@@ -20,10 +20,11 @@ Built for HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both s
 | Confidential mode | Implemented: local-only key path, research disabled, network shell denied, zero-egress tests |
 | Audit chain, red team, replay, chaos | Implemented and tested offline |
 | Conformance CT-01..CT-40 | 40/40 passing offline |
-| Benchmark | Harness implemented; pilot runs with a scripted mock model (real-provider numbers PENDING) |
-| Go DLP plugin | `go vet` clean and `go test` passing (Go 1.27.3); real Bifrost SDK binding PENDING |
-| Local model runtime | Ollama 0.40.13 installed and running on :11434; `qwen2.5-coder:0.5b` installed and verified; a real Gidorah CLI session ran through real Bifrost -> real Ollama (0.5b output quality is poor; 3B+ recommended) |
+| Benchmark | Real pilot on Fireworks via Bifrost: 12 rows, 8 solved (pass@1 66.7%), cost per solved task $0.004429; cascade arm C solved 3/3 at $0.006021 vs always-strong 2/3 at $0.021042 |
+| Go DLP plugin | Compiles and tests against the real Bifrost SDK (core v1.14.1): go vet clean, go test ok; loading into a live gateway PENDING (Linux .so) |
+| Local model runtime | Ollama 0.40.13 with qwen2.5-coder:3b imported from GGUF; real confidential-path inference through Bifrost returned 200 (provider ollama, content "ready"); the local-only key rejects cloud models with 403 |
 | TypeScript build/typecheck | Real strict `tsc --noEmit` passes; bundler artifacts PENDING |
+| TUI | DSH TUI package vendored with LICENSE and NOTICE; Gidorah panel adaptation PENDING (plain renderer is the v1 surface) |
 
 No provider keys were available for this build. Every real-provider result is marked PENDING in [BUILD_REPORT.md](BUILD_REPORT.md); nothing was fabricated. See [MORNING_RUNBOOK.md](MORNING_RUNBOOK.md) for the exact steps to turn the mock evidence into real evidence.
 

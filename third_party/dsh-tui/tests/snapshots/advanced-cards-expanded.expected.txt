@@ -1,0 +1,109 @@
+terminal 100x40 buffer=normal length=53 base=13 viewport=13
+lifecycle started=1 stopped=0 progress=inactive
+title "DSH snapshot"
+cursor visible column=3 viewportRow=36 bufferRow=49
+buffer
+0| " DEEPSEEK HARNESS v0.1.0"
+  style 1-8 fg=bright-blue bold
+  style 10-16 bold
+  style 18-23 dim
+1-2| <blank>
+3| "● Tool / bash / Run the coverage gate"
+  style 0-36 fg=green
+4| "$ pnpm run test:coverage                                                                            "
+  style 0-23 dim
+5| "/workspace/project                                                                                  "
+  style 0-17 dim
+6| "packages/ui/tui 100%                                                                                "
+  style 0-19 dim
+7| "4016 tests passed                                                                                   "
+  style 0-16 dim
+8| "1 test skipped                                                                                      "
+  style 0-13 dim
+9| "coverage complete                                                                                   "
+  style 0-16 dim
+10| "[exit 0]                                                                                            "
+  style 0-7 dim
+11| <blank>
+12| "● Tool / edit"
+  style 0-12 fg=green
+13| "src/view.ts                                                                                         "
+  style 0-10 bold
+14| "- old line                                                                                          "
+  style 0-9 fg=red
+15| "+ new line                                                                                          "
+  style 0-9 fg=green
+16| "  keep                                                                                              "
+  style 0-5 dim
+17| "└ +1 -1 · 1 file                                                                                    "
+  style 0-15 dim
+18| <blank>
+19| "● Tool / subagent"
+  style 0-16 fg=green
+20| "Delegate renderer audit                                                                             "
+  style 0-99 dim
+21| "The renderer has explicit lifecycle ownership.                                                      "
+  style 0-99 dim
+22| <blank>
+23| "● Tool / task_output"
+  style 0-19 fg=green
+24| "Read output from background task subagent-7                                                         "
+  style 0-99 dim
+25| "                                                                                                    "
+26| "console                                                                                             "
+  style 0-6 dim
+27| "  started background task bash-5                                                                    "
+  style 0-1 dim
+  style 2-31 fg=cyan dim
+  style 32-99 dim
+28| "                                                                                                    "
+29| <blank>
+30| "● Tool / skill"
+  style 0-13 fg=green
+31| "Load skill dsh-code-review                                                                          "
+  style 0-99 dim
+32| "Loaded review instructions.                                                                         "
+  style 0-99 dim
+33| <blank>
+34| "● Tool / large_edit"
+  style 0-18 fg=green
+35| "src/large.ts                                                                                        "
+  style 0-11 bold
+36| "[exact line diff omitted: >2 changed lines]                                                         "
+  style 0-42 dim
+37| "- old one                                                                                           "
+  style 0-8 fg=red
+38| "- old two                                                                                           "
+  style 0-8 fg=red
+39| "- old three                                                                                         "
+  style 0-10 fg=red
+40| "+ new one                                                                                           "
+  style 0-8 fg=green
+41| "+ new two                                                                                           "
+  style 0-8 fg=green
+42| "+ new three                                                                                         "
+  style 0-10 fg=green
+43| "└ +3 -3 · 1 file · approximate                                                                      "
+  style 0-29 dim
+44| <blank>
+45| "Tool and context cards expanded.                                                                    "
+  style 0-31 dim
+46-47| <blank>
+48| "                                                                                                    "
+  style 0-99 bg=ansi-236
+49| " › │Describe a task, @ a file, or / for commands                                                    "
+  style 0-0 bg=ansi-236
+  style 1-1 fg=bright-blue bg=ansi-236 bold
+  style 2-2 bg=ansi-236 dim
+  style 3-3 bg=ansi-236
+  style 4-47 bg=ansi-236 dim
+  style 48-99 bg=ansi-236
+50| "                                                                                                    "
+  style 0-99 bg=ansi-236
+51| "  Enter send · Shift+Enter newline · / commands"
+  style 0-46 dim
+52| "                                                    ▾   deepseek-v4-flash [alt+m]  ↑0 ↓0  0% context"
+  style 52-53 dim
+  style 56-80 dim
+  style 83-87 dim
+  style 90-99 dim

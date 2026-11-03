@@ -166,3 +166,20 @@ export TAVILY_API_KEY=tvly-...
 ```
 
 Both keys are in `.tools/credentials.env` on this machine (gitignored). Rotate them after the demo because they were shared in chat.
+## 3B local model and real benchmark (verified 2026-11-03)
+
+```bash
+# import a GGUF into Ollama (bypasses a flaky Ollama registry CDN)
+cd .tools/models && printf 'FROM ./Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf\nPARAMETER num_ctx 4096\n' > Modelfile
+ollama create qwen2.5-coder:3b -f Modelfile
+
+# real benchmark through Bifrost + Fireworks (price table is in packages/benchmark/src/real.ts)
+export BIFROST_BASE_URL=http://127.0.0.1:8080/openai
+export BIFROST_VK_CLOUD=sk-bf-gidorah-cloud-dev
+export TAVILY_API_KEY=tvly-...
+node apps/cli/src/main.ts bench --real --pilot
+node apps/cli/src/main.ts bench --real --full
+
+# build the Go plugin against the real SDK (Linux for a loadable .so)
+cd plugins/bifrost-dlp && go vet ./... && go test ./...
+```

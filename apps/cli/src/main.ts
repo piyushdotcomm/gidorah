@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /**
  * Gidorah CLI (docs/02-engineering/cli-contract.md).
  *
@@ -11,7 +11,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSy
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { runBenchmark, summarize } from "../../../packages/benchmark/src/index.ts";
+import { runBenchmark, runRealBenchmark, summarize } from "../../../packages/benchmark/src/index.ts";
 import { createBifrostClient, startMockGateway, startMockProvider, costFor } from "../../../packages/bifrost/src/index.ts";
 import { inspectOutbound } from "../../../packages/bifrost/src/dlp.ts";
 import { runProcess, createDefaultTools, runTask, Session, BudgetService, AutoApprovalService, DenyApprovalService, buildAuditBundle, exportAudit, verifyChain, runRedTeam, readReplay, writeReplay, renderTuiEvent } from "../../../packages/core/src/index.ts";
@@ -317,6 +317,28 @@ async function commandRedteam(config: ReturnType<typeof loadConfig>, parsed: Par
 async function commandBench(config: ReturnType<typeof loadConfig>, parsed: Parsed): Promise<number> {
   const full = parsed.flags.has("--full");
   const outDir = join(repoRoot(), "bench");
+  if (parsed.flags.has("--real")) {
+    if (config.bifrost.vkCloud === "") {
+      err("bench --real requires BIFROST_VK_CLOUD (and a running Bifrost gateway)");
+      return EXIT.usage;
+    }
+    const real = await runRealBenchmark({
+      mode: full ? "full" : "pilot",
+      outDir,
+      baseUrl: config.bifrost.baseUrl,
+      virtualKey: config.bifrost.vkCloud,
+      tavilyApiKey: config.tavily.apiKey,
+    });
+    const realSummary = summarize(real.rows);
+    if (parsed.json) jsonOut({ ...realSummary, rawPath: real.rawPath, reportPath: real.reportPath });
+    else {
+      out(`REAL benchmark (${full ? "full" : "pilot"}, Fireworks via Bifrost): ${realSummary.evaluated} rows, ${realSummary.solved} solved, pass@1 ${(realSummary.passAt1 * 100).toFixed(1)}%`);
+      out(`cost per solved task: $${realSummary.costPerSolvedTask.toFixed(6)} · tokens ${realSummary.tokens.total} · model requests ${realSummary.modelRequests}`);
+      out(`raw: ${real.rawPath}`);
+      out(`report: ${real.reportPath}`);
+    }
+    return EXIT.ok;
+  }
   const result = await runBenchmark({ mode: full ? "full" : "pilot", outDir });
   const summary = summarize(result.rows);
   if (parsed.json) jsonOut({ ...summary, rawPath: result.rawPath, reportPath: result.reportPath });

@@ -1,0 +1,22 @@
+{
+  "capturedAt": "2026-11-03T08:19:42.935Z",
+  "gateway": "real Bifrost 2.4.0",
+  "runtime": "Ollama 0.40.13",
+  "model": "qwen2.5-coder:3b",
+  "import": "GGUF Qwen2.5-Coder-3B-Instruct-Q4_K_M imported with ollama create",
+  "request": {
+    "path": "/openai/v1/chat/completions",
+    "confidential": true,
+    "virtualKey": "gidorah-local (redacted)"
+  },
+  "result": {
+    "status": 200,
+    "provider": "ollama",
+    "model": "qwen2.5-coder:3b",
+    "content": "ready",
+    "firstLoadLatencyMs": 89877
+  },
+  "guard": {
+    "cloudModelWithLocalKey": "403 provider_blocked (model cloud rejected by real Bifrost governance)"
+  }
+}
