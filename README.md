@@ -10,16 +10,16 @@ HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both sponsors ar
 
 | Area | Verified with real services | Offline/mock evidence | Pending |
 |---|---|---|---|
-| Agent loop, tools, approvals, policy, session, context | Real Fireworks model fixed a failing test through `read/edit/bash`; real CLI sessions; audit chain valid | 160 tests, 40 conformance tests | None known |
+| Agent loop, tools, approvals, policy, session, context | Real Fireworks model fixed a failing test through `read/edit/bash`; real CLI sessions; audit chain valid | 161 tests, 40 conformance tests | None known |
 | Bifrost model plane | Real Bifrost 2.4.0 built from source, real Fireworks routing, real local-only key rejection (403), real Ollama routing | Mock gateway for budgets/402/fallbacks; real 2.4.0 path exercised | Live gateway DLP plugin load (native Go plugins are Linux .so) |
 | Tavily knowledge plane | Real API: 332-token card, 3 official sources, 1 credit, cache hit at 0 credits | Mock Tavily for CT-13..20 | Reliable pass-rate impact of arm D: samples disagree, no claim |
 | Benchmark | Corrected v2 task set (6 repo-local + 6 runtime-docs tasks, validated fail-before/pass-after); real cascade verified by phase; full run with edit-nudge: 48 rows, 48 solved, 100%, $0.002314 per solved; A $0.003797, C $0.001802, D $0.002383, F $0.001272 per solved; C is cheaper than D at the same pass rate, so Tavily has no measured pass-rate win and F remains cheapest | Pilot 9 rows, 7 solved; Class B 18 rows, 16 solved; 3-run pilot 27 rows, 24 solved | Repeated full runs for variance; harder tasks |
-| TUI / UX | Native interactive TUI (`gidorah tui`): live session, token streaming, approval allow/deny with numbered diffs, tool cards, slash commands, resume replay, session picker, multiline/completion, Ctrl+C cancellation, terminal restore; `--plain` and non-TTY fallback | 160 tests; deterministic offline demo (`apps/tui/DEMO.md`) | Real Windows Terminal manual session (agent shell is non-TTY); DSH package vendored but not wired |
+| TUI / UX | Native interactive TUI (`gidorah tui`): live session, token streaming, approval allow/deny with numbered diffs, tool cards, slash commands, resume replay, session picker, multiline/completion, Ctrl+C cancellation, terminal restore; `--plain` and non-TTY fallback | 161 tests; deterministic offline demo (`apps/tui/DEMO.md`) | Real Windows Terminal manual session (agent shell is non-TTY); DSH package vendored but not wired |
 | Go DLP plugin | `go vet` and `go test` against real Bifrost core v1.14.1 | DLP twin exercised in the mock gateway | Loaded into a live Linux Bifrost |
 | Audit, red team, conformance, chaos | Real-service chaos: Bifrost kill, Tavily outage, network drop | 40/40 conformance, 8/8 chaos, canary 0 | Live gateway canary scan |
 | Docs and submission | Current state in this file, BUILD_REPORT.md, FINAL_STATE.md | BUILD_LOG.md chronology | Demo recording, slides, Bifrost repo star, key rotation |
 
-Numbers measured on this machine: 160 tests passing; 40 conformance; 8 chaos; CLI cold start 144 ms average (target <150); DLP scan 7.6 microseconds per 4 KB request (target <20 ms p95); session resume 2 ms for 101 events (target <2 s); core+policy coverage 80.0 percent.
+Numbers measured on this machine: 161 tests passing; 40 conformance; 8 chaos; CLI cold start 144 ms average (target <150); DLP scan 7.6 microseconds per 4 KB request (target <20 ms p95); session resume 2 ms for 101 events (target <2 s); core+policy coverage 80.0 percent.
 
 Benchmark history is explicit: earlier synthetic-math runs are superseded and labelled in `BUILD_LOG.md`; they are not used as evidence.
 

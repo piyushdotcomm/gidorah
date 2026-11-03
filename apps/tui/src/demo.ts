@@ -59,6 +59,12 @@ function fakeResearch(): ResearchClient {
   };
 }
 
+export async function renderTuiDemo(): Promise<string> {
+  const lines: string[] = [];
+  await runTuiDemo((line) => lines.push(line));
+  return lines.join("\n");
+}
+
 export async function runTuiDemo(write: (line: string) => void = (line) => process.stdout.write(`${line}\n`)): Promise<number> {
   const root = mkdtempSync(join(tmpdir(), "gidorah-tui-demo-"));
   writeFileSync(join(root, "greeting.txt"), "hello\n", "utf8");
