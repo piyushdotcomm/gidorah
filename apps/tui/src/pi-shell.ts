@@ -302,6 +302,79 @@ class PickerModal implements Component {
 function truncateVisible(text: string, width: number): string {
   return visibleWidth(text) <= width ? text : `${text.slice(0, Math.max(0, width - 1))}…`;
 }
+/** Header row: title/tagline left, right-aligned badge, dim metadata line. */
+class HeaderView implements Component {
+  private lines: string[] = [];
+  private badge = "";
+  private readonly color: boolean;
+  constructor(color: boolean) {
+    this.color = color;
+  }
+  setLines(lines: string[], badge = ""): void {
+    this.lines = lines;
+    this.badge = badge;
+  }
+  invalidate(): void {}
+  render(width: number): string[] {
+    const [first = "", second = ""] = this.lines;
+    const badge = paint(this.color, ANSI.cyan, ` ${this.badge} `);
+    const badgeWidth = visibleWidth(badge);
+    const out: string[] = [];
+    if (badgeWidth > 0 && visibleWidth(first) + badgeWidth + 2 <= width) {
+      out.push(`${truncateStyled(first, width - badgeWidth - 2)}${" ".repeat(Math.max(1, width - visibleWidth(first) - badgeWidth))}${badge}`);
+    } else {
+      out.push(truncateStyled(first, width));
+      if (badgeWidth > 0) out.push(`${" ".repeat(Math.max(0, width - badgeWidth))}${badge}`);
+    }
+    if (second !== "") out.push(paint(this.color, ANSI.dim, truncateStyled(second, width)));
+    return out;
+  }
+}
+
+interface Pill {
+  label: string;
+  value: string;
+  color?: string;
+}
+
+/** Responsive status pills: one line wide, two lines at 80, compact at 40. */
+class StatusBar implements Component {
+  private pills: Pill[] = [];
+  private staticText: string | null = null;
+  private readonly color: boolean;
+  constructor(color: boolean) {
+    this.color = color;
+  }
+  setPills(pills: Pill[]): void {
+    this.pills = pills;
+    this.staticText = null;
+  }
+  setText(text: string): void {
+    this.staticText = text;
+  }
+  invalidate(): void {}
+  private segment(pill: Pill): string {
+    return `${paint(this.color, ANSI.dim, `${pill.label}:`)}${paint(this.color, pill.color ?? "", pill.value)}`;
+  }
+  render(width: number): string[] {
+    if (this.staticText !== null) return [truncateStyled(this.staticText, width)];
+    const pills = width < 60 ? this.pills.filter((pill) => ["mode", "model", "budget", "dlp"].includes(pill.label)) : this.pills;
+    const lines: string[] = [];
+    let current = "";
+    for (const pill of pills) {
+      const next = current === "" ? this.segment(pill) : `${current}  │  ${this.segment(pill)}`;
+      if (visibleWidth(next) > width && current !== "") {
+        lines.push(truncateStyled(current, width));
+        current = this.segment(pill);
+      } else {
+        current = next;
+      }
+    }
+    if (current !== "") lines.push(truncateStyled(current, width));
+    return lines.slice(0, width < 60 ? 2 : 2);
+  }
+}
+
 /** Centered content column: max 104 columns with 2-column outer padding. */
 class Frame extends Container {
   override render(width: number): string[] {
@@ -339,8 +412,8 @@ export interface ShellOptions {
 export class GidorahShell {
   readonly tui: TUI;
   readonly editor: Editor;
-  private readonly header: LineView;
-  private readonly status: LineView;
+  private readonly header: HeaderView;
+  private readonly status: StatusBar;
   private readonly footer: LineView;
   private readonly banner: Banner;
   private readonly frame = new Frame();
@@ -361,8 +434,8 @@ export class GidorahShell {
     const color = options.color === true;
     const themes = makeThemes(color);
     this.tui = new TUI(terminal);
-    this.header = new LineView(color);
-    this.status = new LineView(color);
+    this.header = new HeaderView(color);
+    this.status = new StatusBar(color);
     this.footer = new LineView(color);
     this.banner = new Banner(color);
     this.editor = new Editor(this.tui, themes.editor, { paddingX: 0 });
@@ -406,8 +479,8 @@ export class GidorahShell {
     });
   }
 
-  setHeader(lines: string[]): void {
-    this.header.setLines(lines);
+  setHeader(lines: string[], badge = ""): void {
+    this.header.setLines(lines, badge);
     this.tui.requestRender();
   }
 
@@ -417,7 +490,12 @@ export class GidorahShell {
   }
 
   setStatus(line: string): void {
-    this.status.setLines([line]);
+    this.status.setText(line);
+    this.tui.requestRender();
+  }
+
+  setPills(pills: Array<{ label: string; value: string; color?: string }>): void {
+    this.status.setPills(pills);
     this.tui.requestRender();
   }
 

@@ -7,7 +7,7 @@
  */
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Markdown, ProcessTerminal, Text, type Component, type Terminal } from "@earendil-works/pi-tui";
+import { Markdown, ProcessTerminal, Spacer, Text, type Component, type Terminal } from "@earendil-works/pi-tui";
 import { runTask, type BudgetSnapshot, type RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 import { Session } from "../../../packages/core/src/session.ts";
 import type { Receipt, SessionEvent, TraceRecord } from "../../../packages/shared/src/types.ts";
@@ -501,13 +501,22 @@ export class PiTuiApp {
   private sync(): void {
     if (this.state.phase === "exited") return;
     this.shell.setBanner(this.opts.mode === "mock"
-      ? "MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real coding. Use `gidorah tui --demo` for the scripted demo."
+      ? "MOCK — synthetic replies. Set GIDORAH_MODE=cloud + Bifrost for real coding. `gidorah tui --demo` for the scripted demo."
       : null);
     this.shell.setHeader([
       paint(this.opts.color === true, C.bold + C.cyan, "Gidorah") + "  " + paint(this.opts.color === true, C.dim, "the governed coding agent"),
       paint(this.opts.color === true, C.dim, `cwd: ${this.opts.cwd}  ·  branch: ${this.opts.branch}  ·  session: ${this.session.header.sessionId}  ·  mode: ${this.opts.mode}  ·  model: ${this.state.modelAlias}`),
+    ], `${this.opts.mode} · ${this.state.modelAlias.split("/").at(-1) ?? this.state.modelAlias}`);
+    this.shell.setPills([
+      { label: "mode", value: this.state.status.mode, color: this.state.status.mode === "mock" ? C.yellow : C.green },
+      { label: "model", value: this.state.modelAlias.split("/").at(-1) ?? this.state.modelAlias, color: C.cyan },
+      { label: "budget", value: `$${this.state.status.llmUsd.toFixed(3)}/$${this.state.status.llmLimit.toFixed(2)}`, color: C.green },
+      { label: "research", value: `${this.state.status.researchCredits}/${this.state.status.researchLimit}`, color: C.cyan },
+      { label: "dlp", value: this.state.status.dlp, color: this.state.status.dlp === "clean" ? C.green : C.red },
+      { label: "cache", value: `${Math.round(this.state.status.cacheHitRate * 100)}%`, color: C.dim },
+      { label: "ctx", value: `${Math.round(this.state.status.contextPressure * 100)}%`, color: C.dim },
+      { label: "compact", value: this.state.status.compaction, color: C.dim },
     ]);
-    this.shell.setStatus(compactStatus(this.state.status));
     const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
     const elapsed = this.activityStarted === 0 ? "" : ` ${Math.round((Date.now() - this.activityStarted) / 1000)}s`;
     this.shell.setFooter([this.state.phase === "approval" ? "[y] allow  [n] deny  [Esc] deny" : this.state.phase === "running" ? `${frames[this.spinner % frames.length]} ${this.activity}${elapsed}  Ctrl+C cancel  Ctrl+O expand` : "Enter send  ↑↓ history  Tab complete  Ctrl+O tools  Ctrl+D quit  PgUp/PgDn scroll"]);
@@ -526,7 +535,8 @@ export class PiTuiApp {
     for (const item of this.state.transcript) {
       switch (item.kind) {
         case "user":
-          out.push(new Text(paint(this.opts.color === true, C.green, `› ${item.text}`), 0, 0));
+          out.push(new Spacer(1));
+          out.push(new Text(paint(this.opts.color === true, C.green, `│ ${item.text}`), 0, 0));
           break;
         case "assistant":
           out.push(new Markdown(item.text, 0, 0, makeThemes(this.opts.color === true).markdown));
@@ -535,6 +545,7 @@ export class PiTuiApp {
           const statusCode = item.tool.status === "ok" ? C.green : item.tool.status === "running" ? C.yellow : C.red;
           const lines = [`${paint(this.opts.color === true, C.cyan, "⚙")} ${paint(this.opts.color === true, C.bold, item.tool.name)}${paint(this.opts.color === true, C.dim, `(${this.shortArgs(item.tool.args)})`)} ${paint(this.opts.color === true, statusCode, `[${item.tool.status}${item.tool.elapsedMs === undefined ? "" : ` ${Math.round(item.tool.elapsedMs)}ms`}]`)}`];
           if (item.tool.result !== undefined && item.tool.result !== "") for (const line of item.tool.result.split("\n").slice(0, item.tool.expanded === true ? 40 : 3)) lines.push(paint(this.opts.color === true, C.dim, `  ${line}`));
+          out.push(new Spacer(1));
           out.push(new Text(lines.join("\n"), 0, 0));
           break;
         }
@@ -545,6 +556,7 @@ export class PiTuiApp {
           out.push(new Text(paint(this.opts.color === true, C.yellow, `! ${item.text}`), 0, 0));
           break;
         case "receipt":
+          out.push(new Spacer(1));
           out.push(new Text(paint(this.opts.color === true, C.green, `✓ receipt: ${item.text}`), 0, 0));
           break;
         case "error":
