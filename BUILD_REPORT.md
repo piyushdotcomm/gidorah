@@ -1,151 +1,78 @@
-# Gidorah build report
+# Gidorah build report (current)
 
-**Date:** 2026-11-03 (Asia/Calcutta). **Mode:** offline mock-first build, no provider keys.
-**Draft:** v0.6 docs implemented as a working repository.
+Evidence-first. Chronology and superseded runs: `BUILD_LOG.md`. One-page state:
+`FINAL_STATE.md`. Commands are reproducible from this repository.
 
-## What was built
+## Verified with real services
 
-A dependency-light TypeScript/Node monorepo that implements the dual-plane control plane from `docs/`:
+- Real Bifrost 2.4.0 (built from source) on `:8080`; real Fireworks AI models
+  (30 available, e.g. deepseek-v4p1-flash) and real Ollama 0.40.13 with a 3B
+  GGUF model.
+- Real agent work: a failing test fixed through `read/edit/bash` in a real CLI
+  session; 103-event session, valid audit chain (`evidence/real-coding-task-2026-11-03.json`).
+- Real Tavily: 332-token evidence card, 6 facts, 3 official sources, high
+  confidence, 1 credit, then a 0-credit cache hit (`evidence/real-tavily-2026-11-03.json`).
+- Real confidential path: local-only key rejects a cloud model with 403; 3B
+  local inference through Bifrost returns 200 (`evidence/real-local-3b-2026-11-03.json`).
+- Real chaos: kill Bifrost (client fails with a clear provider error), Tavily
+  outage degrades, network drop is structured. `tests/chaos/real.test.ts`.
 
-- `apps/cli` - the full command surface (`run`, `resume`, `doctor`, `budget`, `trace`, `receipt`, `audit`, `redteam`, `demo`, `bench`, `conformance`, `chaos`, `policy`, `config`, `version`), with `--json`, `--plain`, stdout/stderr separation, exit codes, SIGINT handling.
-- `apps/tui` - plain `TuiEvent` renderer (status line, transcript, approvals, takeover, research card, DLP notice, Docs Guard) with ANSI/control stripping. DSH TUI vendoring is PENDING.
-- `packages/core` - turn/step runtime, approval gate, budget service, 10 tools (patch-first `edit`, `repo_map`, shell lexer-gated `bash`, `git`, `research`), context economics (cap -> clear -> conditional compact), hash-chained session store with resume, audit verify/export and anchoring, red-team corpus plus canary scanner, replay, Docs Guard.
-- `packages/bifrost` - OpenAI-compatible client (routing headers, 402/429/503 mapping, streaming), DLP/confidential guard, mock Bifrost gateway (virtual keys, provider allowlists, pre-request budgets with 402, phase routing, aliases, fallbacks with headers, request logs, DLP) and mock DeepSeek/Ollama providers.
-- `packages/policy` - YAML policy schema with fail-closed loading, repo classification (path/remote/marker), virtual-key selection, approval classifier, real shell lexer, read-only allowlist.
-- `packages/tavily` - Scout with local-first short-circuit, version-aware query builder, 700-token cited evidence cards, SQLite cache (node:sqlite), credit budget, task call cap, graceful outage handling, mock Tavily.
-- `packages/benchmark` - 16 task specs (8 Class A, 8 Class B), 7 arms, real loop/tools/context execution with a scripted mock model, metrics, raw JSONL, manifest, report.
-- `packages/shared` - types, canonical JSON/hashing, redaction and canary scanning, YAML subset parser, config/paths, JSONL.
-- `plugins/bifrost-dlp` - Go plugin source and tests for the confidential guard, 10-class DLP scanner (block/redact, fail closed, class+hash logging) and policy headers. Verified with Go 1.27.3: `go vet` clean and `go test ./...` passes; real Bifrost SDK binding PENDING.
-- `config/` - policy, Bifrost providers/keys/routing examples, cloud and confidential profiles.
-- `tests/conformance` (CT-01..CT-40), `tests/chaos`, `tests/replay`, `tests/fixtures`.
-- Docs: ADR-0013 (offline dependency-free runtime), ADR-0014 (plain TUI first), ADR-0015 (mock-first evidence and honest PENDING), plus README, NOTICE, third-party register, BUILD_STATUS, MORNING_RUNBOOK.
+## Verified offline (mock)
 
-## Commands run and results
+Conformance CT-01..CT-40, mock Bifrost budget/402/fallback/confidential flows,
+mock Tavily cache/credits, replay demo, CLI contract, audit tamper tests, red
+team corpus with canary 0.
 
-Run from `C:\Users\13725\OneDrive\Desktop\gidorah` on Node v26.13.0, Windows 11 sandbox.
+## Benchmark
 
-| Command | Result |
-|---|---|
-| `node scripts/build.ts` (`pnpm build`) | PASS: 8 package/app entrypoints load |
-| `node scripts/lint.ts` (`pnpm lint`) | PASS: 66 files, 0 failures (no provider SDK/URL egress, no secrets, no skipped tests, honest security language) |
-| `node scripts/typecheck.ts` (`pnpm typecheck`) | PASS: tsc 7.0.2 strict `--noEmit`, 0 errors |
-| `node scripts/run-tests.ts` (`pnpm test`) | PASS: 104 tests, 0 failures, 0 skipped |
-| `node apps/cli/src/main.ts doctor` | PASS: node, git, gidorah home, policy, classification, mock gateway/providers/Tavily; real deps PENDING |
-| `node apps/cli/src/main.ts demo --record` then `--replay` | PASS: deterministic scenes recorded and replayed offline |
-| `node apps/cli/src/main.ts audit verify --all` | PASS: session hash chain valid |
-| `node apps/cli/src/main.ts redteam` | PASS: 20/20 attacks blocked, 0 bypassed, canary egress 0 (mock-mode classifier regression; live egress scan PENDING) |
-| `node apps/cli/src/main.ts conformance` | PASS: 40/40 (CT-01..CT-40), offline mocks |
-| `node apps/cli/src/main.ts chaos` | PASS: 5/5 (Bifrost kill, Ollama kill in confidential, Tavily kill, network drop, process-kill resume) |
-| `node apps/cli/src/main.ts bench --pilot` | PASS: 12 rows, 12 solved, pass@1 100%, cost per solved task $0.000417 (mock scripted model; see validity note) |
+The corrected v2 task set (`packages/benchmark/src/tasks.ts`) has 6 Class A
+repo-local tasks and 6 Class B runtime-docs-dependent tasks, every one validated
+fail-before/pass-after by `packages/benchmark/test/tasks.test.ts`. Per-phase
+cascade is wired through `modelAliasByPhase` and tested. Arms are limited to A
+(always strong), C (cheap explore/edit, strong verify) and D (C plus docs-first
+Tavily research on Class B). Metrics come from session events (research calls
+and credits, patch tokens, full-file reads, approval prompts, cache hits).
+Cost uses the published Fireworks Standard rates in
+`packages/shared/src/pricing.ts`.
 
-## Requirements coverage
+Old synthetic-math runs (`bench/real_mw0etfge`, `bench/real_mw0ffoii`,
+`bench/real_mw0g3w0s`) and the hung run (`real_mw0f94jv`) are kept, labelled
+superseded, and are not used as evidence.
 
-All four hackathon behaviors plus both sponsor integrations have automated evidence:
+## Verification
 
-- Failover/takeover: CT-01/02/03 (fallback headers, durable `route/changed`, structured all-fail error).
-- Budget: CT-04/05/06 (one 80% warning, 402 authority with local fallback, concurrent no-overspend with admission reservation).
-- Confidentiality: CT-07/08/09/28 (local-only key, forged header rejected, zero research/network calls).
-- Approvals: CT-10/11/23/24 (bypass prompt still asks, denial never executes, path escape denied, git alias asks).
-- Token/context discipline: CT-34 plus benchmark arms; cap-before-compact enforced in `buildContext`.
-- DLP: CT-25/26/27 (fake AWS key blocked before upstream, private key blocked, false-positive corpus clean).
-- Audit/red team: CT-35/36/37/38/39/40 plus `redteam` (0 bypasses, canary 0).
-- Mocks are test doubles; the real-provider versions are PENDING below.
+typecheck PASS; lint 75 files 0 failures; 140 tests PASS; conformance 40/40;
+chaos 8/8; audit chain VALID; redteam 20/20 blocked, canary 0; demo replay PASS;
+Go plugin vet clean and tests ok; no tracked key material; clean working tree.
 
-## Conformance results
+## Measurements
 
-CT-01..CT-40: **40 passed, 0 failed, 0 skipped** (`tests/conformance/conformance.test.ts`).
+CLI cold start 144 ms average (target <150 ms); DLP scan 7.6 microseconds per
+4 KB request (target <20 ms p95); session resume 2 ms for 101 events (target
+<2 s); core+policy line coverage 80.0 percent (target >=80).
 
-## Benchmark results (pilot)
+## External blockers (not code)
 
-- Mode: mock-model harness measurement (real model quality NOT measured).
-- Pilot: 3 tasks x 4 arms (A always-Pro, C cascade, D full dual-plane, F always-Flash) x 1 run = 12 rows.
-- pass@1 = 100%; 12 solved / 12 evaluated; cost per solved task = $0.000417 (mock price table); 14,496 tokens; 48 model requests; 0 missing/errored rows.
-- Per-arm table, raw JSONL, manifest, and per-row trace records: `bench/run_mvztjgwg/report.md`, `raw.jsonl`, `manifest.json`, `traces/`.
-- Full 16-task run: not executed in this build (honest scope reduction, recorded in BUILD_STATUS).
+1. Live gateway DLP/canary: requires loading the Go plugin into a Linux Bifrost
+   (native Go plugins are Linux `.so`; Windows cannot).
+2. Record the 3-minute demo, slides, star the Bifrost repo.
+3. Rotate the keys pasted into chat and the local `sk-bf-` dev key.
+4. Full DSH TUI package integration behind `gidorah` (plain renderer plus
+   adapter panels ship today).
 
-## Audit and red-team results
+## Licenses
 
-- Audit: hash chain valid; tamper fixture fails at the edited event (CT-36); export redacted (CT-39); anchor head written (CT-40).
-- Red team: 20 corpus attacks, 20 blocked, 0 bypassed, canary egress 0 in mock mode.
-- Limitation: mock mode performs no real egress, so live canary scanning is PENDING with real providers.
+Apache-2.0 for Gidorah. Bifrost Apache-2.0 (Maxim AI, not an official product).
+Tavily commercial terms. DSH TUI vendored under MIT AND BSD-3-Clause with
+LICENSE/NOTICE in `third_party/dsh-tui`. Full register: `third_party/README.md`.
+## Corrected benchmark evidence (v2 task set)
 
-## Demo and replay results
-
-- `demo --record` produced a deterministic trace with 5 scenes: approvals (read/allow, write/deny), confidential injection + DLP block + local model served, 429 fallback with takeover banner, cited research card, budget warning + receipt.
-- `demo --replay` renders the committed trace offline with no network.
-
-## Deviations and ADRs
-
-- ADR-0013: dependency-free runtime; Node type stripping, `node:test`, `node:sqlite`; custom lint/typecheck/build scripts; file-redirected subprocess capture.
-- ADR-0014: plain TUI renderer first; DSH TUI vendoring deferred.
-- ADR-0015: mock-first evidence with honest PENDING; runtime data falls back to repo-local `.gidorah` when `GIDORAH_HOME` is unset.
-- TypeScript toolchain was installed mid-build from a local npm cache after a Node fetch probe succeeded; real `tsc` strict typecheck now passes.
-
-## Blockers and pending items
-
-| Item | Status | Unblock |
-|---|---|---|
-| Real Bifrost budget/fallback/logs | PENDING | run Bifrost 8080 + virtual keys (MORNING_RUNBOOK) |
-| Real Ollama confidential mode | PENDING | install Ollama + 3B model |
-| Real Tavily evidence | PENDING | TAVILY_API_KEY |
-| Real DeepSeek Flash/Pro | PENDING | DEEPSEEK_API_KEY in Bifrost |
-| Real benchmark numbers (model quality) | PENDING | keys + budget; run `bench --pilot` then `--full` |
-| Go plugin compile/vet/test | DONE: Go 1.27.3, `go vet` clean, `go test` ok (4.782s) | real Bifrost SDK binding still PENDING |
-| DSH TUI vendoring | PENDING | network access to the TUI package |
-| Bundled dist artifacts (tsdown) | PENDING | install tsdown (registry) |
-
-## Known limitations
-
-- No real provider was exercised; the security and policy claims are validated against mocks, conformance tests, and the TypeScript DLP twin.
-- The benchmark is a mock-model harness measurement, not evidence of model quality or real spend.
-- Small sample: pilot is 3 tasks x 4 arms x 1 run.
-- Node 26 was used instead of the documented 22/24 LTS because it is what the machine has; the code targets Node 22.6+ APIs.
-- Sandbox constraints: piped child stdio is denied, so tests use `--test-isolation=none` and tools capture output through files.
-
-## How to run
-
-```bash
-npm install                     # or pnpm install (registry available)
-node scripts/build.ts
-node scripts/lint.ts
-node scripts/typecheck.ts
-node scripts/run-tests.ts
-node apps/cli/src/main.ts doctor
-node apps/cli/src/main.ts demo --replay
-node apps/cli/src/main.ts conformance
-node apps/cli/src/main.ts chaos
-node apps/cli/src/main.ts redteam
-node apps/cli/src/main.ts audit verify --all
-node apps/cli/src/main.ts bench --pilot
-```
-
-Real providers and the full five-run benchmark: see MORNING_RUNBOOK.md.
-
-## License and attribution
-
-Gidorah is Apache-2.0 (LICENSE). Attributions: Bifrost (Apache-2.0, Maxim AI; not an official product), Tavily (commercial API), planned DSH TUI (MIT AND BSD-3-Clause, not vendored), pi-tui (MIT, not vendored), TypeScript/@types/node (dev only). Full register: third_party/README.md and NOTICE.
-
-## Real toolchain and service verification (post-build, 2026-11-03)
-
-Installed after the initial mock-first build: Go 1.27.3 (Bifrost plugin `go vet` clean, `go test ./...` ok 4.782s), pnpm 12.16.1 standalone (`pnpm run build/lint/typecheck/test` pass), TypeScript 7.0.2 strict typecheck, Bifrost 2.4.0 built from source and running on 8080, Ollama 0.40.13 running on 11434.
-
-Real routing evidence (`evidence/real-services-2026-11-03.json`): a chat completion with the generated local virtual key was routed by real Bifrost to the real Ollama provider (routing headers present, 36 ms upstream latency) and reached Ollama, which returned 404 because the model weights are not downloaded. This verified the real client -> gateway -> local runtime path. Real inference is now VERIFIED as well: `qwen2.5-coder:0.5b` was installed (digest verified after completing the stalled tail with a range request), and a real CLI session ran end-to-end (`gidorah run ... --yes`, 243 tokens, valid hash chain). Model output quality is poor at 0.5b; 3B+ weights remain the recommendation. See `evidence/real-services-2026-11-03.json`.
-
-`pnpm install` remains blocked by the sandbox (symlink EPERM); `npm install` is the working dependency path here. Full rerun steps are in `MORNING_RUNBOOK.md`.
-## Final real-run addendum
-
-Two fixes were required by real-gateway testing: the SSE parser now stops at `[DONE]` (Bifrost keeps the stream open after it), and the runtime accepts `GIDORAH_MODEL_ALIAS` and `GIDORAH_MAX_TOKENS` so a real provider-qualified model can be used and capped. All 104 tests, the strict typecheck, and lint still pass after these changes.
-## Real credential run (13:25 IST)
-
-Fireworks AI replaced DeepSeek as the cloud provider (OpenAI-compatible, native Bifrost `fireworks` provider). Real evidence captured: Fireworks completion routed through Bifrost (routing headers, ~1s), a real Gidorah CLI session (234 tokens, valid chain), a real Tavily card (332 tokens, 6 facts, 3 official sources, high confidence, 1 credit, then a 0-credit cache hit), and a real coding task where the model used Gidorah tools to fix a failing test (1 fail -> 1 pass). Evidence files: `evidence/real-services-2026-11-03.json` (services and routing), `evidence/real-tavily-2026-11-03.json`, `evidence/real-coding-task-2026-11-03.json`. Keys live only in gitignored `.tools/credentials.env`; rotate them since they were pasted into chat. Tool schemas are now sent to real models (a gap the mocks had hidden).
-
-Remaining: wire the benchmark harness to real Bifrost models for measured cost per solved task, finish the 3B local model import, bind the Go plugin to the real SDK, vendor the DSH TUI.
-## Remaining items closed (14:00 IST)
-
-- Real benchmark: pilot on real Bifrost + Fireworks, 12 rows, 8 solved, pass@1 66.7%, cost per solved task $0.004429 (cascade arm C 3/3 at $0.006021 vs always-strong 2/3 at $0.021042). See `evidence/real-benchmark-pilot-2026-11-03.json`.
-- Local 3B: qwen2.5-coder:3b imported from GGUF; real confidential request via Bifrost returned 200 with provider ollama; local key rejects cloud with 403. See `evidence/real-local-3b-2026-11-03.json`.
-- Go plugin: real SDK binding verified (go vet clean, go test ok against core v1.14.1); live loading PENDING (Linux .so).
-- DSH TUI vendored at `third_party/dsh-tui` with LICENSE and NOTICE; adaptation PENDING.
-## Full real benchmark addendum (16 tasks, arms A and C)
-
-Real Bifrost, real Fireworks models, real tests: 32 rows, 13 solved, pass@1 40.6%, cost per solved task $0.007097, 285,654 tokens, 191 model requests. Always-strong arm A solved 2/16; cascade arm C solved 11/16. Documented reduction: 2 arms x 1 run (the uncapped four-arm run hung; a 180 s per-task timeout was added). Artifacts: `bench/real_mw0ffoii/`.
+- Cascade is real: `bench/real_mw0g3w0s/traces/A1-C-0.jsonl` shows `glm-5p3-flash` for explore/edit and `deepseek-v4p1-flash` for verify. A runtime test asserts the phase switch.
+- Task validity: all 12 tasks are validated fail-before/pass-after by `packages/benchmark/test/tasks.test.ts` (6 Class A repo-local, 6 Class B runtime-docs-dependent).
+- Corrected pilot: 9 rows, 7 solved, cost per solved task $0.006454.
+- Class B full set (B1..B6, arms A/C/D): 18 rows, 16 solved, pass@1 88.9%, cost per solved task $0.006792, 313,088 tokens, 157 model requests.
+  - arm A (always strong): 5/6 solved; arm C (cascade): 6/6; arm D (cascade plus deterministic docs-first Tavily research): 5/6.
+  - arm D made one Tavily call and spent one credit per Class B task, and was cheaper per row than arm A (for example B5: $0.002534 vs $0.003140; B6: $0.002049 vs $0.011093).
+- Metrics are derived from session events: research calls count `research/result` only, research credits sum real Tavily usage, patch tokens/full-file reads/approval prompts/cache hits come from the event stream, and errored/timeout rows are counted separately.
+- Pricing: TokenUsage.input is treated as uncached input; cacheRead is billed separately, with a test using cacheRead > 0.
+- Superseded: the earlier synthetic-math runs and the uncapped hung run stay in `bench/` and are labelled in `BUILD_LOG.md`. The A-class full run was partially recorded (`real_mw0g7hvx`) before the Class B run; it is not used as the headline.

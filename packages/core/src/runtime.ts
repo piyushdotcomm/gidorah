@@ -142,6 +142,8 @@ export interface RuntimeDeps {
   maxSteps?: number;
   /** Explicit provider-qualified model alias (real gateways, per-arm runs). */
   modelAlias?: string;
+  /** Per-phase model aliases; overrides modelAlias for that phase (cascade arms). */
+  modelAliasByPhase?: Partial<Record<"explore" | "edit" | "verify" | "research" | "other", string>>;
   /** Docs Guard fact sheets and optional research client. */
   docsGuard?: { factSheets: Map<string, ApiFactSheet> };
 }
@@ -187,7 +189,7 @@ export async function runTask(session: Session, task: string, deps: RuntimeDeps)
 
       const request: ModelRequest = {
         messages: context.messages,
-        modelAlias: deps.modelAlias ?? process.env.GIDORAH_MODEL_ALIAS ?? (confidential ? "gidorah-local" : "gidorah-auto"),
+        modelAlias: deps.modelAliasByPhase?.[phase] ?? deps.modelAlias ?? process.env.GIDORAH_MODEL_ALIAS ?? (confidential ? "gidorah-local" : "gidorah-auto"),
         phase,
         sessionId: session.header.sessionId,
         confidential,

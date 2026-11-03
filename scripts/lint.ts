@@ -29,7 +29,8 @@ const SECRET_PATTERNS: Array<{ name: string; re: RegExp }> = [
   { name: "github-token", re: /\bghp_[A-Za-z0-9]{36}\b/ },
   { name: "slack-token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
   { name: "private-key", re: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/ },
-  { name: "tavily-key", re: /\btvly-[A-Za-z0-9]{20,}\b/ },
+  { name: "tavily-key", re: /\btvly-[A-Za-z0-9-]{16,}\b/ },
+  { name: "bifrost-virtual-key", re: /\bsk-bf-[A-Za-z0-9-]{8,}\b/ },
 ];
 const SECRET_ALLOWLIST = [/^tests\/fixtures\//, /^tests\/redteam\//, /^tests\/conformance\//, /^scripts\/lint\.ts$/];
 const BANNED_CLAIMS = /\b(tamper-proof|unhackable)\b/i;

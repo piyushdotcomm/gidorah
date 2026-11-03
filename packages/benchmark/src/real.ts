@@ -59,10 +59,12 @@ function armModels(armId: ArmId, strong: string, cheap: string): { explore: stri
 }
 
 export async function runRealBenchmark(options: RealBenchOptions): Promise<{ rows: BenchRow[]; rawPath: string; reportPath: string; manifestPath: string }> {
-  const tasks = options.mode === "pilot" ? BENCH_TASKS.slice(0, 3) : BENCH_TASKS;
+  const baseTasks = options.mode === "pilot" ? BENCH_TASKS.filter((task) => ["A1", "B1", "A2"].includes(task.id)) : BENCH_TASKS;
+  const taskFilter = (process.env.GIDORAH_BENCH_TASKS ?? "").split(",").map((value) => value.trim()).filter((value) => value !== "");
+  const tasks = taskFilter.length > 0 ? BENCH_TASKS.filter((task) => taskFilter.includes(task.id)) : baseTasks;
   const armFilter = (process.env.GIDORAH_BENCH_ARMS ?? "").split(",").map((value) => value.trim()).filter((value) => value !== "");
   const arms = options.mode === "pilot"
-    ? BENCH_ARMS.filter((arm) => ["A", "C", "D", "F"].includes(arm.id))
+    ? BENCH_ARMS.filter((arm) => ["A", "C", "D"].includes(arm.id))
     : armFilter.length > 0
       ? BENCH_ARMS.filter((arm) => armFilter.includes(arm.id))
       : BENCH_ARMS;
@@ -94,12 +96,26 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
           const policy = { ...DEFAULT_POLICY, context: { ...DEFAULT_POLICY.context, compaction: "off" as const } };
           const repoClass = classifyRepo(policy, workspace);
           const session = Session.create({ dir: join(tempRoot, "sessions"), cwd: workspace, user: "bench", mode: "cloud", policyVersion: "1" });
-          const models = armModels(arm.id, strong, cheap);
+          const models = { explore: arm.models.explore, verify: arm.models.verify };
           const useResearch = arm.id === "D" && researchClient !== undefined;
           const started = Date.now();
           const timeoutMs = Number(process.env.GIDORAH_BENCH_TIMEOUT_MS ?? "180000");
+          let usedResearchCalls = 0;
+          let usedResearchCredits = 0;
+          let prompt = `${task.goal}. Run the test command (${task.testCommand}) when done.`;
+          if (useResearch && task.class === "B" && researchClient !== undefined) {
+            const outcome = await researchClient.research(
+              { question: `${task.goal}. Current Node 26 API documentation.`, packageName: "node", packageVersion: process.versions.node, taskId: `${task.id}-${arm.id}` },
+              { confidential: false },
+            );
+            if (outcome.status === "card") {
+              usedResearchCalls = 1;
+              usedResearchCredits = outcome.credits;
+              prompt += `\n\nRESEARCH CARD (${outcome.card.tokenEstimate} tokens, ${outcome.card.confidence} confidence):\n${outcome.card.answer}\nFacts:\n${outcome.card.facts.join("\n")}\nSources: ${outcome.card.sources.map((source) => source.url).join(", ")}`;
+            }
+          }
           const raced = await Promise.race([
-            runTask(session, `${task.goal}. Run the test command (${task.testCommand}) when done.`, {
+            runTask(session, prompt, {
             model: createBifrostClient({ baseUrl: options.baseUrl, virtualKey: options.virtualKey, timeoutMs: 120_000 }),
             tools: createDefaultTools(),
             approval: new AutoApprovalService(),
@@ -110,14 +126,29 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             run: runProcess,
             estimateCost: (usage, model) => costOf(model, usage),
             classifyTool: (tool, args) => classifyToolCall(tool, args, { policy, classification: repoClass, cwd: workspace, workspaceRoot: workspace }),
-            modelAlias: `fireworks/${models.explore}`,
+            modelAliasByPhase: {
+              explore: `fireworks/${models.explore}`,
+              edit: `fireworks/${models.explore}`,
+              verify: `fireworks/${models.verify}`,
+              research: `fireworks/${models.explore}`,
+              other: `fireworks/${models.explore}`,
+            },
             ...(useResearch && researchClient !== undefined ? { research: researchClient } : {}),
-            maxSteps: 6,
+            maxSteps: 12,
             }),
             new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
           ]);
           if (raced === null) {
-            appendJsonl(rawPath, { taskId: task.id, armId: arm.id, run, passed: false, status: "errored", failureCategory: "timeout", wallMs: Date.now() - started });
+            const timeoutRow: BenchRow = {
+              taskId: task.id, class: task.class, armId: arm.id, run, passed: false, status: "errored",
+              tokens: { input: 0, cacheRead: 0, cacheWrite: 0, output: 0, total: 0 },
+              costUsd: 0, researchCredits: 0, researchCalls: 0, unnecessaryResearch: false,
+              modelRequests: 0, toolCalls: 0, patchTokens: 0, fullFileReads: 0,
+              fallbacks: 0, approvalPrompts: 0, cacheHit: false, wallMs: Date.now() - started,
+              failureCategory: "timeout",
+            };
+            rows.push(timeoutRow);
+            appendJsonl(rawPath, timeoutRow);
             continue;
           }
           const result = raced;
@@ -134,7 +165,21 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             if (data.usage !== undefined) cost += costOf(data.model ?? "", data.usage);
           }
           const toolCalls = session.all.filter((event) => event.type === "tool/call").length;
-          const researchCalls = session.all.filter((event) => event.type === "research/result" || event.type === "research/request").length;
+          const researchResults = session.all.filter((event) => event.type === "research/result");
+          const approvalPrompts = session.all.filter((event) => event.type === "approval/request").length;
+          const cacheHit = modelResults.some((event) => Number((event.data as { usage?: { cacheRead?: number } }).usage?.cacheRead ?? 0) > 0);
+          const editCalls = session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "edit");
+          const patchTokens = editCalls.reduce((total, event) => {
+            const args = (event.data as { arguments?: { replace?: string } }).arguments;
+            return total + Math.ceil(String(args?.replace ?? "").length / 4);
+          }, 0);
+          const readCalls = session.all.filter((event) => event.type === "tool/call" && (event.data as { name?: string }).name === "read");
+          const fullFileReads = readCalls.filter((event) => {
+            const args = (event.data as { arguments?: { start?: number; end?: number } }).arguments;
+            return args?.start === undefined && args?.end === undefined;
+          }).length;
+          const researchCalls = Math.max(usedResearchCalls, researchResults.length);
+          const researchCredits = usedResearchCredits + researchResults.reduce((total, event) => total + Number((event.data as { credits?: number }).credits ?? 0), 0);
           const row: BenchRow = {
             taskId: task.id,
             class: task.class,
@@ -144,16 +189,16 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
             status: "evaluated",
             tokens,
             costUsd: cost,
-            researchCredits: 0,
+            researchCredits,
             researchCalls,
             unnecessaryResearch: task.class === "A" && researchCalls > 0,
             modelRequests: modelResults.length,
             toolCalls,
-            patchTokens: 0,
-            fullFileReads: 0,
+            patchTokens,
+            fullFileReads,
             fallbacks: result.receipt.fallbacks,
-            approvalPrompts: 0,
-            cacheHit: false,
+            approvalPrompts,
+            cacheHit,
             wallMs,
           };
           rows.push(row);
@@ -180,6 +225,8 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     taskSetHash: sha256Hex(BENCH_TASKS.map((task) => `${task.id}:${task.edit.find}`).join("|")),
     arms: arms.map((arm) => arm.id),
     runs,
+    maxSteps: 12,
+    maxTokens: process.env.GIDORAH_MAX_TOKENS ?? "unset",
     generatedAt: new Date().toISOString(),
   };
   const manifestPath = join(runDir, "manifest.json");
@@ -194,7 +241,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     `- Strong model: ${strong}`,
     `- Cheap model: ${cheap}`,
     `- Price source: ${manifest.priceTableSource}`,
-    `- Rows: ${summary.evaluated}, solved: ${summary.solved}, pass@1: ${(summary.passAt1 * 100).toFixed(1)}%`,
+    `- Rows: ${summary.evaluated} evaluated, ${summary.solved} solved, ${summary.errored} errored/timeout, ${summary.missing} missing, pass@1: ${(summary.passAt1 * 100).toFixed(1)}%`,
     `- Cost per solved task: $${summary.costPerSolvedTask.toFixed(6)}`,
     `- Cost per successful task: $${summary.costPerSuccessfulTask.toFixed(6)}`,
     `- Total tokens: ${summary.tokens.total}, model requests: ${summary.modelRequests}`,
@@ -204,7 +251,7 @@ export async function runRealBenchmark(options: RealBenchOptions): Promise<{ row
     "",
     "| Task | Class | Arm | Run | Passed | Tokens | Cost USD | Model requests | Tool calls | Wall ms |",
     "|---|---|---|---|---|---|---|---|---|---|",
-    ...rows.map((row) => `| ${row.taskId} | ${row.class} | ${row.armId} | ${row.run} | ${row.passed ? "yes" : "no"} | ${row.tokens.total} | $${row.costUsd.toFixed(6)} | ${row.modelRequests} | ${row.toolCalls} | ${row.wallMs} |`),
+    ...rows.map((row) => `| ${row.taskId} | ${row.class} | ${row.armId} | ${row.run} | ${row.status === "evaluated" ? (row.passed ? "yes" : "no") : row.status} | ${row.tokens.total} | $${row.costUsd.toFixed(6)} | ${row.modelRequests} | ${row.toolCalls} | ${row.wallMs} |`),
     "",
     "## Notes",
     "",

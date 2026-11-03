@@ -23,7 +23,6 @@ export const MODEL_PRICES: Record<string, ModelPrice> = {
 export function priceOf(model: string, usage: { input: number; cacheRead: number; output: number }): number | undefined {
   const price = MODEL_PRICES[model];
   if (price === undefined) return undefined;
-  const cached = Math.min(usage.cacheRead, usage.input);
-  const uncached = Math.max(0, usage.input - cached);
-  return uncached * price.input + cached * price.cachedInput + usage.output * price.output;
+  // TokenUsage.input is the uncached prompt-token count; cacheRead is separate.
+  return usage.input * price.input + usage.cacheRead * price.cachedInput + usage.output * price.output;
 }

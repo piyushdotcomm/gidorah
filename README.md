@@ -2,108 +2,75 @@
 
 **The governed coding agent.** Less spend. Fewer guesses.
 
-Gidorah is a terminal coding agent with a dual-plane control plane:
+Gidorah is a terminal coding agent with a dual-plane control plane. Bifrost is the only path to a model (virtual keys, pre-request budgets, routing, fallbacks, logs). Tavily is the only external knowledge path (local-first, cited evidence cards, credit budget, cache, Docs Guard). Gidorah owns the loop, tools, approvals, context economics, audit chain, flight recorder, and benchmark.
 
-- **Bifrost is the model plane.** The only path to a model: per-user virtual keys, pre-request budgets with 402, phase routing, model aliases, cross-provider fallbacks with a visible takeover, exact cache, request logs, and a DLP/policy plugin.
-- **Tavily is the knowledge plane.** Local-first, version-aware research compressed into cited evidence cards, with a credit budget, a cache, Docs Guard, and a search-depth ladder. Hard-disabled in confidential mode.
-- **Gidorah owns** the agent loop, tools, approval gate, context economics, tamper-evident audit chain, red team, flight recorder, benchmark, replay, and the receipts.
+HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both sponsors are structural.
 
-Built for HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both sponsors are structurally required, not decorative.
+## Status: verified real, offline-mock, pending
 
-## Status
+| Area | Verified with real services | Offline/mock evidence | Pending |
+|---|---|---|---|
+| Agent loop, tools, approvals, policy, session, context | Real Fireworks model fixed a failing test through `read/edit/bash`; real CLI sessions; audit chain valid | 140 tests, 40 conformance tests | None known |
+| Bifrost model plane | Real Bifrost 2.4.0 built from source, real Fireworks routing, real local-only key rejection (403), real Ollama routing | Mock gateway for budgets/402/fallbacks; real 2.4.0 path exercised | Live gateway DLP plugin load (native Go plugins are Linux .so) |
+| Tavily knowledge plane | Real API: 332-token card, 3 official sources, 1 credit, cache hit at 0 credits | Mock Tavily for CT-13..20 | Measured benchmark impact of arm D (corrected run) |
+| Benchmark | Corrected v2 task set (6 repo-local + 6 runtime-docs tasks, each validated fail-before/pass-after); real cascade verified by phase; Class B run 18 rows, 16 solved, arm D uses 1 Tavily call/1 credit per task | Pilot 9 rows, 7 solved | Full A-class run (partial record kept); larger multi-run sweep |
+| TUI / UX | Plain renderer and TUI adapter panels (status, transcript, approval, takeover, research, DLP, Docs Guard, trace, receipt) with tests; CLI contract tests | DSH TUI package vendored with LICENSE/NOTICE | Both DSA package wired behind `gidorah` |
+| Go DLP plugin | `go vet` and `go test` against real Bifrost core v1.14.1 | DLP twin exercised in the mock gateway | Loaded into a live Linux Bifrost |
+| Audit, red team, conformance, chaos | Real-service chaos: Bifrost kill, Tavily outage, network drop | 40/40 conformance, 8/8 chaos, canary 0 | Live gateway canary scan |
+| Docs and submission | Current state in this file, BUILD_REPORT.md, FINAL_STATE.md | BUILD_LOG.md chronology | Demo recording, slides, Bifrost repo star, key rotation |
 
-| Area | State |
-|---|---|
-| Agent loop, tools, approvals, resume | Implemented and tested offline |
-| Bifrost integration | Mock gateway tested offline; real Bifrost 2.4.0 built from source and running on :8080, verified routing real virtual-key requests to real Fireworks models and real Ollama |
-| Tavily Scout, cards, cache, credits, Docs Guard | Implemented; real Tavily API verified through the new HTTP client (332-token card, 3 official sources, cache hit at 0 credits) |
-| Confidential mode | Implemented: local-only key path, research disabled, network shell denied, zero-egress tests |
-| Audit chain, red team, replay, chaos | Implemented and tested offline |
-| Conformance CT-01..CT-40 | 40/40 passing offline |
-| Benchmark | Real full run on Fireworks via Bifrost: 32 rows, 13 solved (pass@1 40.6%), cost per solved task $0.007097; cascade arm C solved 11/16 vs always-strong 2/16 (documented reduction: 2 arms x 1 run) |
-| Go DLP plugin | Compiles and tests against the real Bifrost SDK (core v1.14.1): go vet clean, go test ok; loading into a live gateway PENDING (Linux .so) |
-| Local model runtime | Ollama 0.40.13 with qwen2.5-coder:3b imported from GGUF; real confidential-path inference through Bifrost returned 200 (provider ollama, content "ready"); the local-only key rejects cloud models with 403 |
-| TypeScript build/typecheck | Real strict `tsc --noEmit` passes; bundler artifacts PENDING |
-| TUI | DSH TUI vendored with LICENSE/NOTICE; adapter implements status, transcript, approval, takeover, research, DLP, Docs Guard, trace and receipt panels; full package adaptation in progress |
+Numbers measured on this machine: 140 tests passing; 40 conformance; 8 chaos; CLI cold start 144 ms average (target <150); DLP scan 7.6 microseconds per 4 KB request (target <20 ms p95); session resume 2 ms for 101 events (target <2 s); core+policy coverage 80.0 percent.
 
-No provider keys were available for this build. Every real-provider result is marked PENDING in [BUILD_REPORT.md](BUILD_REPORT.md); nothing was fabricated. See [MORNING_RUNBOOK.md](MORNING_RUNBOOK.md) for the exact steps to turn the mock evidence into real evidence.
+Benchmark history is explicit: earlier synthetic-math runs are superseded and labelled in `BUILD_LOG.md`; they are not used as evidence.
 
-## Hackathon requirement mapping
-
-| Requirement | Implementation | Evidence |
-|---|---|---|
-| Survive outages/rate limits, announce takeover | Bifrost fallbacks + routing headers + durable `route/changed` | CT-01, CT-02, CT-03 |
-| Per-user budget before every request | Virtual keys + pre-request check + 402 + local fallback policy | CT-04, CT-05, CT-06 |
-| Confidential repos local only, prompt-proof | Local-only key, gateway confidential guard, Tavily disabled, network shell denied | CT-07, CT-08, CT-09, CT-28 |
-| Writes/shell/git need approval; reads free | Pre-tool classifier + approval service + audit | CT-10, CT-11, CT-23, CT-24 |
-| Meaningful Bifrost + Tavily use | Model plane and knowledge plane are required for the loop to run | Architecture + benchmark arms |
-| Measured savings | Cost per solved task, p50/p95 variance, token breakdown, raw JSONL | `bench/*/report.md` (mock-model pilot) |
-
-## Quickstart (offline mock mode)
+## Quickstart
 
 ```bash
-npm install            # or: pnpm install
+npm ci
 npm run build
 npm run lint
 npm run typecheck
-npm test               # 104 tests with node:test
+npm test
 node apps/cli/src/main.ts doctor
-node apps/cli/src/main.ts demo --replay      # deterministic offline demo
-node apps/cli/src/main.ts conformance        # CT-01..CT-40
-node apps/cli/src/main.ts chaos              # dependency-kill suite
-node apps/cli/src/main.ts redteam            # injection + canary corpus
-node apps/cli/src/main.ts audit verify --all # hash-chain verification
-node apps/cli/src/main.ts bench --pilot      # mock-model pilot benchmark
+node apps/cli/src/main.ts demo --replay
+node apps/cli/src/main.ts conformance
+node apps/cli/src/main.ts chaos
+node apps/cli/src/main.ts redteam
+node apps/cli/src/main.ts audit verify --all
+node apps/cli/src/main.ts bench --real --pilot
 ```
 
-With a real Bifrost gateway, Ollama, and keys, set `GIDORAH_MODE=cloud`, fill `.env` from `.env.example`, and follow [MORNING_RUNBOOK.md](MORNING_RUNBOOK.md).
+Real gateway runs need `BIFROST_BASE_URL`, `BIFROST_VK_CLOUD`, `TAVILY_API_KEY` and a provider-qualified `GIDORAH_MODEL_ALIAS` (for example `fireworks/accounts/fireworks/models/deepseek-v4p1-flash`). Provider keys live in Bifrost, never in the Gidorah process. See `MORNING_RUNBOOK.md`.
 
 ## Architecture
 
 ```text
-CLI / plain TUI (apps/cli, apps/tui)
-  |-- policy plane: repo classification, virtual-key selection, approval classifier, shell lexer
-  |-- Tavily Scout: local-first trigger, version-aware query, evidence card, cache, credit budget, Docs Guard
-  |-- tool plane: read, repo_map, glob, grep, list, write, edit (patch-first), bash, git, research
-  |-- context manager: cap -> clear -> compact (conditional, cache-aware, measured)
-  `-- Bifrost client (the only model egress) --> Bifrost --> DeepSeek flash/pro, Ollama local
-                                                     `-- DLP/policy plugin (Go)
+CLI / TUI adapter
+  |-- policy: repo classification, virtual-key selection, approval classifier, shell lexer
+  |-- Tavily Scout: local-first, version-aware, cited cards, cache, credits, Docs Guard
+  |-- tools: read, repo_map, glob, grep, list, write, edit (patch-first), bash, git, research
+  |-- context: cap -> clear -> conditional compact (cache-aware, measured)
+  `-- Bifrost client (only model egress) --> Bifrost --> Fireworks models / Ollama local
 ```
 
-Session events are append-only JSONL with a SHA-256 hash chain; `audit verify` recomputes it and reports the first broken link. A hash chain is tamper-evident, not tamper-proof.
+Sessions are append-only JSONL with a SHA-256 hash chain; `audit verify` recomputes it. A hash chain is tamper-evident, not tamper-proof.
 
-## Repository layout
+## Repo layout
 
-```text
-apps/cli             command entrypoint, all commands
-apps/tui             plain TuiEvent renderer (DSH TUI adaptation is PENDING)
-packages/core        runtime, tools, context, session/audit, red team, replay, Docs Guard
-packages/policy      repo classification, virtual keys, approvals, shell lexer
-packages/bifrost     gateway client, DLP gate, mock gateway and providers
-packages/tavily      Scout, query builder, evidence cards, SQLite cache, budgets
-packages/benchmark   tasks, arms, runner, metrics, report
-packages/shared      types, config, canonical JSON, redaction, YAML subset, JSONL
-plugins/bifrost-dlp  Go plugin (source and tests; build PENDING)
-tests/conformance    CT-01..CT-40
-tests/chaos          dependency-kill suite
-tests/replay         recorded demo trace (offline replay)
-```
-
-## Measurement honesty
-
-The included benchmark run uses a scripted mock model because no provider keys exist here. It exercises the real loop, tools, context manager, session/audit plumbing, and pricing table, but it does not measure model quality. Report, raw rows, and manifest are committed under `bench/` and labeled accordingly. Real-provider results remain PENDING.
+`apps/cli`, `apps/tui`, `packages/{core,policy,bifrost,tavily,benchmark,shared}`, `plugins/bifrost-dlp`, `tests/{conformance,chaos,redteam,replay,cli}`, `config/`, `docs/`, `third_party/dsh-tui`.
 
 ## Limitations
 
-- Real Bifrost, Ollama, DeepSeek, and Tavily were unavailable in this environment; their claims are tested against mocks and marked PENDING.
-- No Go toolchain: the Bifrost plugin is not compiled or tested here.
-- The DSH TUI is vendored at `third_party/dsh-tui`; the plain renderer and the TUI adapter panels are the working surfaces, full DSH package adaptation is in progress.
-- Benchmark sample is small (pilot: 3 tasks x 4 arms x 1 run) and mock-model only.
+- No live gateway DLP: the plugin is SDK-bound and source-tested; Windows cannot load native Go plugins.
+- The corrected real benchmark is a small sample; Task set is 12 tasks with real Node APIs, not a third-party OSS repository.
+- `pnpm install` cannot complete in this sandbox; the repo standard is npm with `package-lock.json`.
+- Full DSH TUI integration is in progress; the shipped surface is the plain renderer plus adapter panels.
+- Real demo recording and submission slides are external actions.
 
 ## Licensing and attribution
 
-Gidorah is Apache-2.0. Bifrost is Apache-2.0 by Maxim AI; Gidorah is not an official Bifrost product. Tavily is a commercial API used under its terms. The planned DeepSeek Harness TUI adaptation is MIT AND BSD-3-Clause and is not vendored in this build. See [LICENSE](LICENSE), [NOTICE](NOTICE), and [third_party/README.md](third_party/README.md).
+Gidorah is Apache-2.0. Bifrost is Apache-2.0 by Maxim AI and Gidorah is not an official Bifrost product. Tavily is a commercial API used under its terms. The vendored DSH TUI is MIT AND BSD-3-Clause with its own LICENSE and NOTICE in `third_party/dsh-tui`. See `LICENSE`, `NOTICE`, `third_party/README.md`.
 
 ## Docs
 
-Start with [docs/README.md](docs/README.md): product brief, requirements, architecture, engineering plan, benchmark plan, delivery plan, ADRs, and licensing.
+`docs/` holds the product, architecture, engineering, evaluation, delivery, ADR, and licensing documents. `BUILD_REPORT.md` holds the current evidence and commands; `BUILD_LOG.md` holds chronology and superseded runs; `FINAL_STATE.md` is the one-page submission state.
