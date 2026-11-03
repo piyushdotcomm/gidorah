@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-11-03T06:49:55.099Z",
+  "items": {
+    "ollama": {
+      "status": 200,
+      "body": {
+        "version": "0.40.13"
+      }
+    },
+    "bifrostRoot": {
+      "status": 200,
+      "contentType": "text/html; charset=utf-8"
+    },
+    "bifrostRouting": {
+      "status": 404,
+      "headers": {
+        "x-bifrost-original-model": "qwen2.5-coder:0.5b",
+        "x-bifrost-provider": "ollama",
+        "x-bifrost-request-id": "89796265-c7bf-4dcc-b902-e634c268d4c7",
+        "x-bifrost-request-type": "chat_completion",
+        "x-bifrost-resolved-model": "qwen2.5-coder:0.5b",
+        "x-bifrost-routing-info-key": "ollama-local",
+        "x-bifrost-routing-info-model": "qwen2.5-coder:0.5b",
+        "x-bifrost-routing-info-provider": "ollama",
+        "x-bifrost-routing-info-requested-model": "qwen2.5-coder:0.5b",
+        "x-bifrost-routing-info-requested-provider": "ollama",
+        "x-bifrost-trace-id": "e5a33984916f453ca15a530f037a7c8c",
+        "x-bifrost-upstream-latency-ms": "36.255",
+        "x-request-id": "89796265-c7bf-4dcc-b902-e634c268d4c7"
+      },
+      "body": "{\"is_bifrost_error\":false,\"status_code\":404,\"error\":{\"type\":\"not_found_error\",\"message\":\"model 'qwen2.5-coder:0.5b' not found\"},\"extra_fields\":{\"routing_info\":{\"provider\":\"ollama\",\"model\":\"qwen2.5-coder:0.5b\",\"key\":\"ollama-local\",\"requested_provider\":\"ollama\",\"requested_model\":\"qwen2.5-coder:0.5b\"},\"provider\":\"ollama\",\"original_model_requested\":\"qwen2.5-coder:0.5b\",\"resolved_model_used\":\"qwen2.5-coder:0.5b\",\"request_type\":\"chat_completion\",\"latency\":36}}"
+    },
+    "ollamaTags": {
+      "models": []
+    }
+  }
+}

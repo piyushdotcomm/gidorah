@@ -1,4 +1,4 @@
-﻿# BUILD STATUS
+# BUILD STATUS
 
 **Project:** Gidorah, the governed coding agent.
 **Brief:** autonomous build from the docs in `docs/` (Draft v0.6).
@@ -70,3 +70,41 @@ ADR-0013 (dependency-free runtime, node:test, node:sqlite, custom scripts), ADR-
 | TypeScript | 7.0.2 + @types/node 26.6.6 | Installed; strict typecheck green |
 
 All toolchains are in `.tools/` (gitignored) except the npm-installed `node_modules`. Nothing in this table changes a PENDING claim about real provider calls: those still need `DEEPSEEK_API_KEY` and `TAVILY_API_KEY`.
+
+## Post-build toolchain install and real-service verification (2026-11-03, 11:10-12:20 IST)
+
+The user asked to download and install whatever was needed. This session installed real toolchains and ran real services, not just mocks.
+
+### Installed (all under `.tools/`, gitignored)
+
+| Tool | Version | State |
+|---|---|---|
+| Go | 1.27.3 windows/amd64 | verified: `go vet ./...` exit 0, `go test ./...` -> `ok github.com/gidorah/bifrost-dlp 4.782s` |
+| pnpm | 12.16.1 standalone | `pnpm run build/lint/typecheck/test` pass; `pnpm install` is blocked by the sandbox (symlink/EPERM), dependencies are installed with npm |
+| Bifrost | 2.4.0, built from source (`transports/bifrost-http`) | running: `successfully started bifrost, serving UI on http://localhost:8080/`; built because the npm CDN was throttled to ~0.6 MB/min |
+| Ollama | 0.40.13 (Windows zip) | installed and running on 127.0.0.1:11434 (`/api/version` -> 200) |
+| TypeScript | 7.0.2 + @types/node 26.6.6 | strict `tsc --noEmit` passes |
+
+### Real evidence captured
+
+`evidence/real-services-2026-11-03.json` (redacted local key):
+
+- Bifrost root serves HTML (200).
+- A chat completion sent with the real virtual key `gidorah-local` is routed by Bifrost to provider `ollama`; response headers include `x-bifrost-routing-info-provider: ollama`, `x-bifrost-routing-info-model: qwen2.5-coder:0.5b`, `x-bifrost-routing-info-key: ollama-local`, `x-bifrost-trace-id`, `x-bifrost-upstream-latency-ms: 36.255`.
+- The request reached the real Ollama server (it answered, 404 `model 'qwen2.5-coder:0.5b' not found` because the weights are not downloaded).
+- So the real path `Gidorah Bifrost client -> real Bifrost -> real Ollama` is verified up to model availability. Real inference is the only remaining gap.
+
+### Model weights blocker
+
+`qwen2.5-coder:0.5b` (397,808,000-byte blob) downloaded 379 MB, then the Cloudflare R2 CDN returned repeated retry failures. A direct Node download from `registry.ollama.ai` was also refused (0 bytes, timeout). Weights are PENDING, not faked.
+
+### Bifrost configuration notes (needed for a rerun)
+
+- `--app-dir .tools/bifrost-app` needs a BOM-free `config.json`; PowerShell `Set-Content` writes a BOM that Bifrost rejects, use Node or `UTF8Encoding(false)`.
+- Bifrost fatals on startup when it cannot reach `https://getbifrost.ai/datasheet` and `.../model-parameters`. Fixed by serving local `{}` datasheets (`.tools/datasheet-server.mjs`, port 8099) and setting `framework.pricing.pricing_url` and `framework.pricing.model_parameters_url` to those local URLs.
+- The virtual key value in the config lacked the `sk-bf-` prefix, so Bifrost generated one; it can be read from `config.db` table `governance_virtual_keys` column `value`.
+- The `/api` dashboard surface is 403 until `setup_token` is configured; the OpenAI-compatible chat endpoint works with the virtual key.
+
+### Still PENDING
+
+Real DeepSeek and Tavily calls (no keys), Ollama model weights and inference (CDN blocked), the Go plugin binding to the real Bifrost plugin SDK (build/test of the plugin itself is verified), DSH TUI vendoring, and `pnpm install` under this sandbox.

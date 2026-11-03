@@ -1,4 +1,4 @@
-﻿# Gidorah build report
+# Gidorah build report
 
 **Date:** 2026-11-03 (Asia/Calcutta). **Mode:** offline mock-first build, no provider keys.
 **Draft:** v0.6 docs implemented as a working repository.
@@ -124,3 +124,11 @@ Real providers and the full five-run benchmark: see MORNING_RUNBOOK.md.
 ## License and attribution
 
 Gidorah is Apache-2.0 (LICENSE). Attributions: Bifrost (Apache-2.0, Maxim AI; not an official product), Tavily (commercial API), planned DSH TUI (MIT AND BSD-3-Clause, not vendored), pi-tui (MIT, not vendored), TypeScript/@types/node (dev only). Full register: third_party/README.md and NOTICE.
+
+## Real toolchain and service verification (post-build, 2026-11-03)
+
+Installed after the initial mock-first build: Go 1.27.3 (Bifrost plugin `go vet` clean, `go test ./...` ok 4.782s), pnpm 12.16.1 standalone (`pnpm run build/lint/typecheck/test` pass), TypeScript 7.0.2 strict typecheck, Bifrost 2.4.0 built from source and running on 8080, Ollama 0.40.13 running on 11434.
+
+Real routing evidence (`evidence/real-services-2026-11-03.json`): a chat completion with the generated local virtual key was routed by real Bifrost to the real Ollama provider (routing headers present, 36 ms upstream latency) and reached Ollama, which returned 404 because the model weights are not downloaded. This verifies the real client -> gateway -> local runtime path; real inference is PENDING on the model blob CDN, which failed at 379/398 MB.
+
+`pnpm install` remains blocked by the sandbox (symlink EPERM); `npm install` is the working dependency path here. Full rerun steps are in `MORNING_RUNBOOK.md`.
