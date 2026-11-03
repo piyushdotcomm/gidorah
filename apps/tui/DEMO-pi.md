@@ -6,7 +6,7 @@ Deterministic frames rendered by pi-tui components with a fake terminal; no netw
 ```text
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
-mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
+mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 › patch greeting.txt and verify the runtime                                                         
 I'll patch greeting.txt and then check the runtime.                                                 
                                                                                                     
@@ -22,7 +22,7 @@ I'll patch greeting.txt and then check the runtime.
 ```text
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
-mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
+mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 › patch greeting.txt and verify the runtime                                                         
 I'll patch greeting.txt and then check the runtime.                                                 
                                                                                                     
@@ -31,14 +31,13 @@ I'll patch greeting.txt and then check the runtime.
 - run the test                                                                                      
 ⚙ edit greeting.txt  hello -> hello, world [ok 19ms]                                                
   patched greeting.txt (5 -> 12 chars)                                                              
-────────────────────────────────────────────────────────────────────────────────────────────────────
-┌ approval required (1 pending)
-│ edit (risk: write)
-│     @ greeting.txt
-│   1 - hello
-│   2 + hello, world
-│ [y] allow   [n] deny   [Esc] deny
-└
+┌─ approval required (1 pending) ──────────────────────────────────────────────────────────────────┐
+│ edit (risk: write)                                                                               │
+│     @ greeting.txt                                                                               │
+│   1 - hello                                                                                      │
+│   2 + hello, world                                                                               │
+│ [y] allow   [n] deny   [Esc] deny                                                                │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
 › Type a task, /help for commands                                                                   
 ```
 
@@ -46,7 +45,7 @@ I'll patch greeting.txt and then check the runtime.
 ```text
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
-mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
+mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 › patch greeting.txt and verify the runtime                                                         
 I'll patch greeting.txt and then check the runtime.                                                 
                                                                                                     
@@ -68,7 +67,7 @@ I'll patch greeting.txt and then check the runtime.
 ```text
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
-mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
+mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 › patch greeting.txt and verify the runtime                                                         
 I'll patch greeting.txt and then check the runtime.                                                 
                                                                                                     
@@ -93,7 +92,7 @@ I'll patch greeting.txt and then check the runtime.
 ```text
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
-mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
+mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 › patch greeting.txt and verify the runtime                                                         
 I'll patch greeting.txt and then check the runtime.                                                 
                                                                                                     
@@ -124,7 +123,7 @@ search: _
 ```text
 Gidorah  the governed coding agent
 cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto
-mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
+mode mock · route glm · $0.0016 · research 1/50 · dlp clean · cache 12% · ctx 8% · compact off
 › patch greeting.txt and verify the runtime                                                         
 I'll patch greeting.txt and then check the runtime.                                                 
                                                                                                     

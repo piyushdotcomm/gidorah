@@ -37,6 +37,41 @@ function paint(color: boolean, code: string, text: string): string {
   return color ? `${code}${text}${ANSI.reset}` : text;
 }
 
+function isWide(codePoint: number): boolean {
+  return (codePoint >= 0x1100 && codePoint <= 0x115f) || (codePoint >= 0x2e80 && codePoint <= 0xa4cf) || (codePoint >= 0xac00 && codePoint <= 0xd7a3) || (codePoint >= 0xf900 && codePoint <= 0xfaff) || (codePoint >= 0xff00 && codePoint <= 0xff60) || (codePoint >= 0x1f300 && codePoint <= 0x1faff);
+}
+
+/** Truncate styled text by visible width while preserving ANSI sequences. */
+function truncateStyled(text: string, width: number): string {
+  if (visibleWidth(text) <= width) return text;
+  const target = Math.max(0, width - 1);
+  let out = "";
+  let used = 0;
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === "\u001b") {
+      const match = /^\u001b\[[0-9;?]*[ -/]*[@-~]/.exec(text.slice(i));
+      if (match !== null) {
+        out += match[0];
+        i += match[0].length;
+        continue;
+      }
+    }
+    const char = String.fromCodePoint(text.codePointAt(i) ?? 32);
+    const charWidth = isWide(text.codePointAt(i) ?? 0) ? 2 : 1;
+    if (used + charWidth > target) break;
+    out += char;
+    used += charWidth;
+    i += char.length;
+  }
+  return `${out}…${text.includes("\u001b") ? "\u001b[0m" : ""}`;
+}
+
+function padStyled(text: string, width: number): string {
+  const clean = truncateStyled(text, width);
+  return `${clean}${" ".repeat(Math.max(0, width - visibleWidth(clean)))}`;
+}
+
 export function makeThemes(color: boolean): { markdown: MarkdownTheme; editor: EditorTheme; select: SelectListTheme } {
   const c = (code: string) => (text: string) => paint(color, code, text);
   const plain = (text: string) => text;
@@ -81,7 +116,7 @@ class LineView implements Component {
   }
   invalidate(): void {}
   render(width: number): string[] {
-    return this.lines.map((line) => (visibleWidth(line) > width ? `${line.slice(0, Math.max(0, width - 1))}…` : line));
+    return this.lines.map((line) => truncateStyled(line, width));
   }
 }
 
@@ -160,18 +195,24 @@ class ApprovalModal implements Component {
   invalidate(): void {}
   render(width: number): string[] {
     const inner = Math.max(20, width - 4);
-    const border = paint(this.color, ANSI.yellow, "─".repeat(Math.max(0, width)));
-    const lines: string[] = [border, paint(this.color, ANSI.yellow, `┌ approval required (${this.payload.queueCount ?? 1} pending)`), `│ ${paint(this.color, ANSI.bold, this.payload.tool)} ${paint(this.color, ANSI.dim, `(risk: ${this.payload.risk})`)}`];
-    if (this.payload.hint !== undefined) lines.push(`│ ${paint(this.color, ANSI.dim, this.payload.hint)}`);
+    const title = ` approval required (${this.payload.queueCount ?? 1} pending) `;
+    const topFill = Math.max(0, width - 2 - title.length - 1);
+    const top = `┌─${paint(this.color, ANSI.yellow, title)}${"─".repeat(topFill)}┐`;
+    const lines: string[] = [top];
+    const row = (text: string): void => {
+      lines.push(`│ ${padStyled(text, inner)} │`);
+    };
+    row(`${paint(this.color, ANSI.bold, this.payload.tool)} ${paint(this.color, ANSI.dim, `(risk: ${this.payload.risk})`)}`);
+    if (this.payload.hint !== undefined) row(paint(this.color, ANSI.dim, this.payload.hint));
     for (const [index, diff] of (this.payload.diff ?? []).slice(0, 14).entries()) {
       const prefix = diff.kind === "remove" ? "- " : diff.kind === "add" ? "+ " : diff.kind === "path" ? "@ " : "  ";
       const code = diff.kind === "remove" ? ANSI.red : diff.kind === "add" ? ANSI.green : ANSI.dim;
       const lineNo = diff.kind === "path" ? "   " : String(index).padStart(3);
-      lines.push(`│ ${paint(this.color, code, `${lineNo} ${prefix}${diff.text}`.slice(0, inner))}`);
+      row(paint(this.color, code, `${lineNo} ${prefix}${diff.text}`));
     }
-    if ((this.payload.diff?.length ?? 0) > 14) lines.push(`│ ${paint(this.color, ANSI.dim, `... ${(this.payload.diff?.length ?? 0) - 14} more lines`)}`);
-    lines.push(`│ ${paint(this.color, ANSI.dim, "[y] allow   [n] deny   [Esc] deny")}`);
-    lines.push(paint(this.color, ANSI.yellow, "└"));
+    if ((this.payload.diff?.length ?? 0) > 14) row(paint(this.color, ANSI.dim, `... ${(this.payload.diff?.length ?? 0) - 14} more lines`));
+    row(paint(this.color, ANSI.dim, "[y] allow   [n] deny   [Esc] deny"));
+    lines.push(`└${"─".repeat(Math.max(0, width - 2))}┘`);
     return lines;
   }
   handleInput(data: string): void {

@@ -28,7 +28,7 @@ Current state is in `README.md`, `BUILD_REPORT.md`, and `FINAL_STATE.md`. The bu
 
 - Pin the Bifrost release and copy its license and NOTICE before distribution.
 
-- Verify the pi-tui 0.80.7 license file if the TUI is vendored.
+-  if the TUI is vendored.
 - Review Tavily terms for caching and for publishing benchmark excerpts.
 
 - Re-run a dependency license scan after any package is added from a registry.

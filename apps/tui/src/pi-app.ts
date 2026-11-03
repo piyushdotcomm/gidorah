@@ -13,10 +13,10 @@ import { Session } from "../../../packages/core/src/session.ts";
 import type { Receipt, SessionEvent, TraceRecord } from "../../../packages/shared/src/types.ts";
 import { TuiAdapter } from "./adapter.ts";
 import { InteractiveApprovalService } from "./approval.ts";
-import { statusLine, type StatusState } from "./index.ts";
+import type { StatusState } from "./index.ts";
 import { sanitizeUntrusted } from "./index.ts";
 import type { TranscriptItem } from "./layout.ts";
-import { GidorahShell, type ApprovalPayload } from "./pi-shell.ts";
+import { GidorahShell, makeThemes, type ApprovalPayload } from "./pi-shell.ts";
 import { listSessionEntries, replaySessionTranscript, type TuiHooks, type TuiSessionEntry } from "./app.ts";
 
 export interface PiTuiOptions {
@@ -53,6 +53,16 @@ interface State {
 
 function sanitize(text: string): string {
   return sanitizeUntrusted(text);
+}
+
+const C = { bold: "\u001b[1m", dim: "\u001b[2m", green: "\u001b[32m", red: "\u001b[31m", yellow: "\u001b[33m", cyan: "\u001b[36m", magenta: "\u001b[35m" } as const;
+
+function paint(color: boolean, code: string, text: string): string {
+  return color ? `${code}${text}\u001b[0m` : text;
+}
+
+function compactStatus(state: StatusState): string {
+  return `mode ${state.mode} · route ${state.route} · $${state.llmUsd.toFixed(4)}/$${state.llmLimit.toFixed(2)} · research ${state.researchCredits}/${state.researchLimit} · dlp ${state.dlp} · cache ${Math.round(state.cacheHitRate * 100)}% · ctx ${Math.round(state.contextPressure * 100)}% · compaction ${state.compaction}`;
 }
 
 function ref(value: unknown): string {
@@ -468,10 +478,10 @@ export class PiTuiApp {
   private sync(): void {
     if (this.state.phase === "exited") return;
     this.shell.setHeader([
-      "Gidorah  the governed coding agent",
-      `cwd: ${this.opts.cwd}  ·  branch: ${this.opts.branch}  ·  session: ${this.session.header.sessionId}  ·  mode: ${this.opts.mode}  ·  model: ${this.state.modelAlias}`,
+      paint(this.opts.color === true, C.bold + C.cyan, "Gidorah") + "  " + paint(this.opts.color === true, C.dim, "the governed coding agent"),
+      paint(this.opts.color === true, C.dim, `cwd: ${this.opts.cwd}  ·  branch: ${this.opts.branch}  ·  session: ${this.session.header.sessionId}  ·  mode: ${this.opts.mode}  ·  model: ${this.state.modelAlias}`),
     ]);
-    this.shell.setStatus(statusLine(this.state.status, this.opts.color === true));
+    this.shell.setStatus(compactStatus(this.state.status));
     this.shell.setFooter([this.state.phase === "approval" ? "[y] allow  [n] deny  [Esc] deny" : this.state.phase === "running" ? "running…  Ctrl+C cancel  Ctrl+O expand  PgUp/PgDn scroll" : "Enter send  ↑↓ history  Tab complete  Ctrl+O tools  Ctrl+D quit  PgUp/PgDn scroll"]);
     this.shell.setTranscriptComponents(this.components());
   }
@@ -481,37 +491,38 @@ export class PiTuiApp {
     for (const item of this.state.transcript) {
       switch (item.kind) {
         case "user":
-          out.push(new Text(`› ${item.text}`, 0, 0));
+          out.push(new Text(paint(this.opts.color === true, C.green, `› ${item.text}`), 0, 0));
           break;
         case "assistant":
-          out.push(new Markdown(item.text, 0, 0, { heading: (t) => t, link: (t) => t, linkUrl: (t) => t, code: (t) => t, codeBlock: (t) => t, codeBlockBorder: (t) => t, quote: (t) => t, quoteBorder: (t) => t, hr: (t) => t, listBullet: (t) => t, bold: (t) => t, italic: (t) => t, strikethrough: (t) => t, underline: (t) => t }));
+          out.push(new Markdown(item.text, 0, 0, makeThemes(this.opts.color === true).markdown));
           break;
         case "tool": {
-          const lines = [`⚙ ${item.tool.name}(${this.shortArgs(item.tool.args)}) [${item.tool.status}${item.tool.elapsedMs === undefined ? "" : ` ${Math.round(item.tool.elapsedMs)}ms`}]`];
-          if (item.tool.result !== undefined && item.tool.result !== "") for (const line of item.tool.result.split("\n").slice(0, item.tool.expanded === true ? 40 : 3)) lines.push(`  ${line}`);
+          const statusCode = item.tool.status === "ok" ? C.green : item.tool.status === "running" ? C.yellow : C.red;
+          const lines = [`${paint(this.opts.color === true, C.cyan, "⚙")} ${paint(this.opts.color === true, C.bold, item.tool.name)}${paint(this.opts.color === true, C.dim, `(${this.shortArgs(item.tool.args)})`)} ${paint(this.opts.color === true, statusCode, `[${item.tool.status}${item.tool.elapsedMs === undefined ? "" : ` ${Math.round(item.tool.elapsedMs)}ms`}]`)}`];
+          if (item.tool.result !== undefined && item.tool.result !== "") for (const line of item.tool.result.split("\n").slice(0, item.tool.expanded === true ? 40 : 3)) lines.push(paint(this.opts.color === true, C.dim, `  ${line}`));
           out.push(new Text(lines.join("\n"), 0, 0));
           break;
         }
         case "research":
-          out.push(new Text(`≈ research: ${item.text}${item.sources === undefined ? "" : `\n  sources: ${item.sources.join(", ")}`}`, 0, 0));
+          out.push(new Text(paint(this.opts.color === true, C.cyan, `≈ research: ${item.text}${item.sources === undefined ? "" : `\n  sources: ${item.sources.join(", ")}`}`), 0, 0));
           break;
         case "notice":
-          out.push(new Text(`! ${item.text}`, 0, 0));
+          out.push(new Text(paint(this.opts.color === true, C.yellow, `! ${item.text}`), 0, 0));
           break;
         case "receipt":
-          out.push(new Text(`✓ receipt: ${item.text}`, 0, 0));
+          out.push(new Text(paint(this.opts.color === true, C.green, `✓ receipt: ${item.text}`), 0, 0));
           break;
         case "error":
-          out.push(new Text(`✖ ${item.text}`, 0, 0));
+          out.push(new Text(paint(this.opts.color === true, C.red, `✖ ${item.text}`), 0, 0));
           break;
         case "dlp":
-          out.push(new Text(`⛨ dlp: ${item.text}`, 0, 0));
+          out.push(new Text(paint(this.opts.color === true, C.red, `⛨ dlp: ${item.text}`), 0, 0));
           break;
         case "docs":
-          out.push(new Text(`✎ docs guard: ${item.text}`, 0, 0));
+          out.push(new Text(paint(this.opts.color === true, C.magenta, `✎ docs guard: ${item.text}`), 0, 0));
           break;
         case "takeover":
-          out.push(new Text(`⇄ takeover: ${item.text}`, 0, 0));
+          out.push(new Text(paint(this.opts.color === true, C.yellow, `⇄ takeover: ${item.text}`), 0, 0));
           break;
         case "info":
           out.push(new Text(item.text, 0, 0));
