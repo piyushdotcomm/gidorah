@@ -10,16 +10,16 @@ HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both sponsors ar
 
 | Area | Verified with real services | Offline/mock evidence | Pending |
 |---|---|---|---|
-| Agent loop, tools, approvals, policy, session, context | Real Fireworks model fixed a failing test through `read/edit/bash`; real CLI sessions; audit chain valid | 140 tests, 40 conformance tests | None known |
+| Agent loop, tools, approvals, policy, session, context | Real Fireworks model fixed a failing test through `read/edit/bash`; real CLI sessions; audit chain valid | 141 tests, 40 conformance tests | None known |
 | Bifrost model plane | Real Bifrost 2.4.0 built from source, real Fireworks routing, real local-only key rejection (403), real Ollama routing | Mock gateway for budgets/402/fallbacks; real 2.4.0 path exercised | Live gateway DLP plugin load (native Go plugins are Linux .so) |
 | Tavily knowledge plane | Real API: 332-token card, 3 official sources, 1 credit, cache hit at 0 credits | Mock Tavily for CT-13..20 | Reliable pass-rate impact of arm D: samples disagree, no claim |
-| Benchmark | Corrected v2 task set (6 repo-local + 6 runtime-docs tasks, validated fail-before/pass-after); real cascade verified by phase; post-fix full run: 48 rows, 47 solved, 97.9%, $0.004475 per solved; A 11/12, C 12/12, D 12/12, F 12/12; Tavily samples disagree across runs, so no reliable pass-rate win is claimed | Pilot 9 rows, 7 solved; Class B 18 rows, 16 solved; 3-run pilot 27 rows, 24 solved | Repeated full runs for variance; harder tasks |
+| Benchmark | Corrected v2 task set (6 repo-local + 6 runtime-docs tasks, validated fail-before/pass-after); real cascade verified by phase; post-fix full run: 48 rows, 47 solved, 97.9%, $0.004475 per solved; A 11/12, C 12/12, D 12/12, F 12/12 (A B1 rerun after a prompt nudge: 3/3); Tavily samples disagree across runs, so no reliable pass-rate win is claimed | Pilot 9 rows, 7 solved; Class B 18 rows, 16 solved; 3-run pilot 27 rows, 24 solved | Repeated full runs for variance; harder tasks |
 | TUI / UX | Plain renderer and TUI adapter panels (status, transcript, approval, takeover, research, DLP, Docs Guard, trace, receipt) with tests; CLI contract tests | DSH TUI package vendored with LICENSE/NOTICE | DSH package not yet wired behind `gidorah` |
 | Go DLP plugin | `go vet` and `go test` against real Bifrost core v1.14.1 | DLP twin exercised in the mock gateway | Loaded into a live Linux Bifrost |
 | Audit, red team, conformance, chaos | Real-service chaos: Bifrost kill, Tavily outage, network drop | 40/40 conformance, 8/8 chaos, canary 0 | Live gateway canary scan |
 | Docs and submission | Current state in this file, BUILD_REPORT.md, FINAL_STATE.md | BUILD_LOG.md chronology | Demo recording, slides, Bifrost repo star, key rotation |
 
-Numbers measured on this machine: 140 tests passing; 40 conformance; 8 chaos; CLI cold start 144 ms average (target <150); DLP scan 7.6 microseconds per 4 KB request (target <20 ms p95); session resume 2 ms for 101 events (target <2 s); core+policy coverage 80.0 percent.
+Numbers measured on this machine: 141 tests passing; 40 conformance; 8 chaos; CLI cold start 144 ms average (target <150); DLP scan 7.6 microseconds per 4 KB request (target <20 ms p95); session resume 2 ms for 101 events (target <2 s); core+policy coverage 80.0 percent.
 
 Benchmark history is explicit: earlier synthetic-math runs are superseded and labelled in `BUILD_LOG.md`; they are not used as evidence.
 

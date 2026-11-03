@@ -36,7 +36,7 @@ node apps/cli/src/main.ts bench --real --full
 ```
 ## Review correction pass (latest)
 
-- Full 12-task run recorded under `bench/` (12 tasks x A/C/D/F, 1 run). A 3-run pilot measures variance. Post-fix runs carry `failureCategory`, `failureDetail`, step-limit flags, split Tavily accounting, and retained failure logs (`bench/real_mw0ksdno` is the current 3-run pilot).
+- Full 12-task run recorded under `bench/` (12 tasks x A/C/D/F, 1 run). A 3-run pilot measures variance. Current evidence: `bench/real_mw0nvfe6` (post-fix full run, 48 rows, 47 solved, 97.9%) and `bench/real_mw0ksdno` (post-fix 3-run pilot, 27 rows, 24 solved). Post-fix runs carry failure fields, split research accounting, and retained failure logs.
 - Tavily is reported as an honest negative for pass rate (C 6/6 vs D 5/6) and reframed as citations plus cost avoidance.
 - Real 402, real primary-provider fallback, and live gateway DLP are explicitly NOT demonstrated; see `BUILD_REPORT.md` and evidence files.
 - Patch-first/repo-map are always-on and not ablated; no savings claim.
@@ -92,9 +92,14 @@ Rows 48, evaluated 48, solved 47, errored 0, pass@1 97.9 percent, cost $0.210305
 Class A: 24/24; Class B: 23/24.
 
 Failures and timeouts:
-- B1 armA: status evaluated, category step_limit, stepLimit true, detail 1: âœ– counts rows (1.2991ms) â„¹ tests 1 â„¹ suites 0 â„¹ pass 0 â„¹ fail 1 â„¹ cancelled 0 â„¹ skipped 0 â„¹ todo 0 â„¹ duration_ms 11.1754 âœ– failing tests:
+- B1 armA: status evaluated, category step_limit, stepLimit true, detail 1: x counts rows (1.2991ms) i tests 1 i suites 0 i pass 0 i fail 1 i cancelled 0 i skipped 0 i todo 0 i duration_ms 11.1754 x failing tests:
 
 Research totals: preCalls 6, preCredits 6, toolCalls 6, toolCredits 6, attempts 24, denied 12.
 Cache reconciliation: research_usage 12 calls / 12 credits; rows sum 12 calls / 12 credits (call surplus is cache-hit research).
 
 Manifest: mode real-full-targeted, runs 1, maxSteps 20, temperature 0, taskTimeoutMs 240000, clientTimeoutMs 120000, taskFilter [], armFilter ["A","C","D","F"].
+
+
+## B1-A fix result
+
+After the edit-nudge prompt ("after at most two exploratory reads or probes, apply the edit and run the test"), A rerun B1 three times (`bench/real_mw0olcgu`): 3/3 passed, 0 errors, $0.004962 per solved task. The earlier 20-step A loop no longer reproduces on B1. The other arms already solved B1 without research, so this confirms the failure was an A-arm loop, not a docs gap. A full 48/48 run is now expected but not yet re-run as a whole; the full-run headline remains 47/48.
