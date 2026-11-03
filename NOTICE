@@ -24,3 +24,10 @@ this distribution are recorded in third_party/README.md. Summary:
 
 No DeepSeek, Bifrost, or Tavily name or logo is used as Gidorah's product
 identity. No real credentials are included in this repository.
+
+## pi-tui
+
+`@earendil-works/pi-tui` 0.80.7 (MIT). Installed runtime dependency used by the
+native Gidorah TUI (`apps/tui/src/pi-shell.ts`). The package does not ship a LICENSE file; the MIT text is reproduced at
+`third_party/pi-tui.LICENSE` with its declared author (Mario Zechner). The
+vendored DSH TUI package remains unwired.
