@@ -16,6 +16,7 @@ export interface ApprovalView {
   risk: string;
   preview: string;
   reason?: string;
+  hint?: string;
   diff?: ApprovalDiffLine[];
 }
 
@@ -59,6 +60,7 @@ export interface TuiView {
   height: number;
   color: boolean;
   resumeOptions?: Array<{ id: string; label: string }> | null;
+  resumeSelected?: number;
 }
 
 const ANSI = {
@@ -247,14 +249,20 @@ function renderApproval(approval: ApprovalView, width: number, color: boolean): 
   const lines: string[] = [];
   lines.push(paint(color, ANSI.yellow, "┌─ approval required " + "─".repeat(Math.max(0, width - 21))));
   lines.push(`│ ${paint(color, ANSI.bold, approval.tool)} ${paint(color, ANSI.dim, `(risk: ${approval.risk})`)}`);
+  if (approval.hint !== undefined && approval.hint !== "") {
+    lines.push(`│ ${paint(color, ANSI.dim, truncate(approval.hint, inner))}`);
+  }
   if (approval.diff !== undefined && approval.diff.length > 0) {
-    for (const diff of approval.diff.slice(0, 10)) {
+    const max = 14;
+    for (const [index, diff] of approval.diff.slice(0, max).entries()) {
       const prefix = diff.kind === "remove" ? "- " : diff.kind === "add" ? "+ " : diff.kind === "path" ? "@ " : "  ";
       const code = diff.kind === "remove" ? ANSI.red : diff.kind === "add" ? ANSI.green : ANSI.dim;
-      lines.push(`│ ${paint(color, code, truncate(prefix + diff.text, inner))}`);
+      const lineNo = diff.kind === "path" ? "   " : String(index).padStart(3);
+      lines.push(`│ ${paint(color, code, truncate(`${lineNo} ${prefix}${diff.text}`, inner))}`);
     }
+    if (approval.diff.length > max) lines.push(`│ ${paint(color, ANSI.dim, `... ${approval.diff.length - max} more lines`)}`);
   } else {
-    for (const line of wrapText(approval.preview, inner).slice(0, 6)) lines.push(`│ ${truncate(line, inner)}`);
+    for (const line of wrapText(approval.preview, inner).slice(0, 8)) lines.push(`│ ${truncate(line, inner)}`);
   }
   lines.push(`│ ${paint(color, ANSI.dim, "[y] allow   [n] deny   [Esc] deny")}`);
   lines.push(paint(color, ANSI.yellow, "└" + "─".repeat(Math.max(0, width - 1))));
@@ -266,17 +274,31 @@ function renderInput(view: TuiView): string {
   const input = stripAnsi(view.input);
   const cursor = Math.max(0, Math.min(view.cursor, input.length));
   if (view.phase === "running") {
-    return paint(view.color, ANSI.dim, `${prefix}${truncate(input, view.width - 2)}${input === "" ? "" : ""}`);
+    const last = input.split("\n").at(-1) ?? "";
+    return paint(view.color, ANSI.dim, `${prefix}${truncate(last, view.width - 2)}`);
   }
   if (input === "") {
     return `${prefix}${paint(view.color, ANSI.dim, "Type a task, /help for commands")}`;
   }
-  const before = input.slice(0, cursor);
-  const at = input.slice(cursor, cursor + 1) || " ";
-  const after = input.slice(cursor + 1);
-  return `${prefix}${before}${paint(view.color, ANSI.bold + ANSI.cyan, at)}${after}`;
+  const lines = input.split("\n");
+  const visible = lines.slice(-3);
+  const rendered: string[] = [];
+  const firstVisibleOffset = input.length - visible.join("\n").length;
+  for (const [index, line] of visible.entries()) {
+    const isLast = index === visible.length - 1;
+    const lead = index === 0 ? prefix : "  ";
+    if (isLast) {
+      const column = Math.max(0, Math.min(line.length, cursor - firstVisibleOffset - (index === 0 ? 0 : line.length + 1)));
+      const before = line.slice(0, column);
+      const at = line.slice(column, column + 1) || " ";
+      const after = line.slice(column + 1);
+      rendered.push(`${lead}${before}${paint(view.color, ANSI.bold + ANSI.cyan, at)}${after}`);
+    } else {
+      rendered.push(`${lead}${line}`);
+    }
+  }
+  return rendered.join("\n");
 }
-
 function footer(view: TuiView): string {
   if (view.phase === "approval") return paint(view.color, ANSI.yellow, "[y] allow  [n] deny  [Esc] deny");
   if (view.phase === "running") return paint(view.color, ANSI.dim, "running…  Ctrl+C cancel  Ctrl+O expand tools  Ctrl+L clear");
@@ -295,7 +317,8 @@ export function renderScreen(view: TuiView): string {
   if (view.resumeOptions !== undefined && view.resumeOptions !== null && view.resumeOptions.length > 0) {
     body.push(paint(color, ANSI.cyan, "Sessions:"));
     for (const [index, option] of view.resumeOptions.entries()) {
-      body.push(truncate(`  ${index + 1}. ${option.label}`, width));
+      const marker = view.resumeSelected === index ? "›" : " ";
+      body.push(truncate(`${marker} ${index + 1}. ${option.label}`, width));
     }
     body.push(paint(color, ANSI.dim, "Type a number and press Enter to resume, or Esc to cancel."));
   }
@@ -311,7 +334,7 @@ export function renderScreen(view: TuiView): string {
   lines.push(...visibleBody);
   while (lines.length < height - 1 - approvalLines.length - 2) lines.push("");
   if (approvalLines.length > 0) lines.push(...approvalLines);
-  lines.push(renderInput(view));
+  lines.push(...renderInput(view).split("\n"));
   lines.push(footer(view));
   return lines.slice(0, height).join("\n");
 }

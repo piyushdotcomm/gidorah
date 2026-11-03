@@ -27,6 +27,7 @@ import { buildContext } from "../../../packages/core/src/context.ts";
 import { renderEvents, statusLine } from "../../../apps/tui/src/index.ts";
 import { TuiApp, listSessionEntries } from "../../tui/src/app.ts";
 import { runPlainTui } from "../../tui/src/plain.ts";
+import { runTuiDemo } from "../../tui/src/demo.ts";
 import type { ApprovalService, RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 
 const VERSION = "0.1.0";
@@ -558,6 +559,7 @@ async function commandAudit(config: ReturnType<typeof loadConfig>, parsed: Parse
 
 interface HarnessHooks {
   approval: ApprovalService;
+  modelAlias?: string;
   onModelDelta?: (text: string) => void;
   signal?: AbortSignal;
   maxSteps?: number;
@@ -637,6 +639,7 @@ async function createHarness(
     ...(hooks.maxSteps === undefined ? {} : { maxSteps: hooks.maxSteps }),
     ...(hooks.onModelDelta === undefined ? {} : { onModelDelta: hooks.onModelDelta }),
     ...(hooks.signal === undefined ? {} : { signal: hooks.signal }),
+    ...(hooks.modelAlias === undefined ? {} : { modelAlias: hooks.modelAlias }),
   });
   return {
     paths,
@@ -674,6 +677,7 @@ async function commandRun(config: ReturnType<typeof loadConfig>, task: string, p
 }
 
 async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed): Promise<number> {
+  if (parsed.flags.has("--demo")) return runTuiDemo();
   const harness = await createHarness(config, parsed, { mockScript: TUI_DEMO_SCRIPT });
   const modelAlias = config.mode === "mock" ? "gidorah-auto" : process.env.GIDORAH_MODEL_ALIAS ?? "gidorah-auto";
   try {
@@ -689,6 +693,7 @@ async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed)
         cwd: process.cwd(),
         mode: config.mode,
         modelAlias,
+        availableAliases: [modelAlias, "fireworks/accounts/fireworks/models/deepseek-v4p1-flash", "fireworks/accounts/fireworks/models/glm-5p3-flash", "gidorah-local"].filter((alias, index, all) => all.indexOf(alias) === index),
         stdin: process.stdin,
         stdout: process.stdout,
       });
@@ -706,6 +711,7 @@ async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed)
       branch: branch.code === 0 ? branch.stdout.trim() : "(no branch)",
       mode: config.mode,
       modelAlias,
+      availableAliases: [modelAlias, "fireworks/accounts/fireworks/models/deepseek-v4p1-flash", "fireworks/accounts/fireworks/models/glm-5p3-flash", "gidorah-local"].filter((alias, index, all) => all.indexOf(alias) === index),
       researchLimit: DEFAULT_POLICY.budgets.research.credits_per_day,
       maxSteps: 20,
       color: !parsed.flags.has("--no-color"),

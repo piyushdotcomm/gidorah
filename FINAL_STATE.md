@@ -1,6 +1,7 @@
 # Final state (one page)
 
 ## Verified with real services
+- Native TUI: session loop, streaming, approvals with diffs, tool cards, resume replay, cancellation, plain/non-TTY fallback (`apps/tui`, demo in `apps/tui/DEMO.md`).
 - Bifrost 2.4.0 built from source, real Fireworks routing, real Ollama.
 - Real coding task: failing test to passing via agent tools.
 - Real Tavily card with citations and a cache hit.
@@ -14,7 +15,7 @@
 ## Pending (external)
 - Live gateway DLP and canary scan: needs a Linux Bifrost loading the Go plugin.
 - Demo recording and slides, Bifrost repo star, key rotation.
-- Full DSH TUI integration behind the CLI.
+- DSH package integration (vendored with LICENSE/NOTICE, not wired; the native TUI ships).
 - 3-5 run variance sweep (single-run full results are in `bench/`); older runs labelled superseded.
 
 ## Known limitations

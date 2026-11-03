@@ -99,6 +99,7 @@ export interface ToolContext {
   confidential: boolean;
   artifactsDir?: string;
   research?: ResearchClient;
+  signal?: AbortSignal;
   run: (options: RunOptions) => Promise<CommandResult>;
 }
 
@@ -383,7 +384,7 @@ export function createDefaultTools(): ToolRegistry {
       const command = typeof args.command === "string" ? args.command : "";
       if (command === "") return fail(ctx, "INVALID_ARGS", "bash requires a command");
       const cwd = args.cwd === undefined ? ctx.cwd : resolveInside(ctx.workspaceRoot, String(args.cwd), ctx.cwd);
-      const result = await ctx.run({ command, args: [], cwd, shell: true });
+      const result = await ctx.run({ command, args: [], cwd, shell: true, ...(ctx.signal === undefined ? {} : { signal: ctx.signal }) });
       const text = [
         result.stdout.trim(),
         result.stderr.trim() === "" ? "" : `stderr:\n${result.stderr.trim()}`,
@@ -412,7 +413,7 @@ export function createDefaultTools(): ToolRegistry {
       const subcommand = typeof args.subcommand === "string" ? args.subcommand : "";
       if (subcommand === "") return fail(ctx, "INVALID_ARGS", "git requires a subcommand");
       const extra = Array.isArray(args.args) ? (args.args as unknown[]).map(String) : [];
-      const result = await ctx.run({ command: "git", args: [subcommand, ...extra], cwd: ctx.cwd });
+      const result = await ctx.run({ command: "git", args: [subcommand, ...extra], cwd: ctx.cwd, ...(ctx.signal === undefined ? {} : { signal: ctx.signal }) });
       const text = [result.stdout.trim(), result.stderr.trim()].filter((part) => part !== "").join("\n");
       return {
         callId: ctx.callId,
@@ -454,7 +455,7 @@ export function createDefaultTools(): ToolRegistry {
         "Sources:",
         ...card.sources.map((source, index) => `[${index + 1}] ${source.url} (${source.domain})`),
       ].join("\n");
-      return ok(ctx, [{ type: "text", text: cap(text, 900) }], { credits: outcome.credits, cached: outcome.cached, sources: card.sources.map((source) => source.url), cardTokens: card.tokenEstimate });
+      return ok(ctx, [{ type: "text", text: cap(text, 900) }], { credits: outcome.credits, cached: outcome.cached, sources: card.sources.map((source) => source.url), cardTokens: card.tokenEstimate, confidence: card.confidence });
     },
   });
 

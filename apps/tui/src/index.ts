@@ -1,9 +1,7 @@
 /**
- * Plain renderer for the Gidorah TUI adapter.
- *
- * The docs plan to vendor the DeepSeek Harness terminal UI. That package cannot
- * be fetched offline, so v1 ships the mandated line-based renderer behind the
- * same TuiEvent contract; the adapted TUI is PENDING (ADR-0014, MORNING_RUNBOOK).
+ * Display helpers for the native Gidorah TUI (apps/tui/src/app.ts) and the
+ * replay/event renderers used by demo and plain mode. The vendored DSH package
+ * is not wired; this is the native surface (ADR-0014).
  * No ANSI is emitted unless stdout is a TTY and color is enabled.
  */
 import { renderTuiEvent } from "../../../packages/core/src/replay.ts";
