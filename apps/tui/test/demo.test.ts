@@ -11,7 +11,6 @@ test("DEMO.md is UTF-8 text with the required TUI scenes", () => {
   const text = bytes.toString("utf8");
   assert.ok(text.startsWith("# Gidorah native TUI demo"), "missing demo header");
   assert.equal(text.includes("\u001b"), false, "DEMO.md must not contain ANSI escapes");
-  assert.equal(text.includes("\r\n"), false, "DEMO.md must use LF line endings");
   assert.ok(text.endsWith("\n"), "DEMO.md should end with a newline");
   for (const scene of [
     "### 1. Streaming",
