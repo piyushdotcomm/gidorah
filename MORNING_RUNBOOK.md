@@ -124,3 +124,21 @@ The model blob CDN (Cloudflare R2) failed at 379/398 MB in this environment; ret
 ### pnpm
 
 pnpm 12.16.1 is installed as a standalone binary under `.tools/pnpm`. `pnpm run ...` works. `pnpm install` cannot complete in this sandbox because pnpm needs symlinks and a store lock outside the workspace; use `npm install` here.
+## Verified real-run commands (2026-11-03)
+
+```bash
+# Real Bifrost (built from source) + real Ollama are running on :8080 and :11434.
+# The local dev virtual key is read from .tools/bifrost-app/config.db (governance_virtual_keys.value).
+export GIDORAH_MODE=cloud
+export BIFROST_BASE_URL=http://127.0.0.1:8080/openai
+export BIFROST_VK_CLOUD=<the sk-bf key from config.db>
+export GIDORAH_HOME=./.gidorah-real
+export GIDORAH_MODEL_ALIAS=ollama/qwen2.5-coder:0.5b   # provider-qualified model for a real gateway
+export GIDORAH_MAX_TOKENS=48                            # required with the tiny model
+node apps/cli/src/main.ts run "Say hi" --yes
+node apps/cli/src/main.ts audit verify --all
+```
+
+Ollama model install note: if the weights CDN stalls near completion, finish the tail with an HTTP range request to
+`https://registry.ollama.ai/v2/library/<model>/blobs/sha256:<digest>`, move the completed file to
+`.tools/ollama-models/blobs/sha256-<digest>`, then re-run `ollama pull` so it verifies the digest.

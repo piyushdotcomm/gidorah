@@ -22,7 +22,7 @@ Built for HackCulture AI Global Hackathon, Track A (Bifrost by Maxim AI). Both s
 | Conformance CT-01..CT-40 | 40/40 passing offline |
 | Benchmark | Harness implemented; pilot runs with a scripted mock model (real-provider numbers PENDING) |
 | Go DLP plugin | `go vet` clean and `go test` passing (Go 1.27.3); real Bifrost SDK binding PENDING |
-| Local model runtime | Ollama 0.40.13 installed and running on :11434; model-weight pull blocked at 379/398 MB by the CDN (PENDING) |
+| Local model runtime | Ollama 0.40.13 installed and running on :11434; `qwen2.5-coder:0.5b` installed and verified; a real Gidorah CLI session ran through real Bifrost -> real Ollama (0.5b output quality is poor; 3B+ recommended) |
 | TypeScript build/typecheck | Real strict `tsc --noEmit` passes; bundler artifacts PENDING |
 
 No provider keys were available for this build. Every real-provider result is marked PENDING in [BUILD_REPORT.md](BUILD_REPORT.md); nothing was fabricated. See [MORNING_RUNBOOK.md](MORNING_RUNBOOK.md) for the exact steps to turn the mock evidence into real evidence.

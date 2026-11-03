@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Agent runtime: turn/step loop, approvals, budget enforcement, route notices,
  * flight recorder, and task receipt (agent-runtime.md, observability doc).
  *
@@ -179,11 +179,11 @@ export async function runTask(session: Session, task: string, deps: RuntimeDeps)
 
       const request: ModelRequest = {
         messages: context.messages,
-        modelAlias: confidential ? "gidorah-local" : "gidorah-auto",
+        modelAlias: process.env.GIDORAH_MODEL_ALIAS ?? (confidential ? "gidorah-local" : "gidorah-auto"),
         phase,
         sessionId: session.header.sessionId,
         confidential,
-        ...(step === 0 ? {} : {}),
+        ...(process.env.GIDORAH_MAX_TOKENS === undefined ? {} : { maxTokens: Number(process.env.GIDORAH_MAX_TOKENS) }),
       };
 
       let response;
