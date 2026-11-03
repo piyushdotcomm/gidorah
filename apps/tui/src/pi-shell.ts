@@ -491,7 +491,8 @@ export class GidorahShell {
     const composerLines = new Text(composer, 0, 0).render(width);
     const footer = this.footer.render(width);
     const approvalLines = this.approvalModal === null ? [] : this.approvalModal.render(width);
-    const lines = [...header, ...status, ...body, ...approvalLines, ...composerLines, ...footer];
+    const pickerLines = this.pickerModal === null ? [] : this.pickerModal.render(width);
+    const lines = [...header, ...status, ...body, ...approvalLines, ...pickerLines, ...composerLines, ...footer];
     return lines.slice(-Math.max(1, height)).join("\n");
   }
 }
