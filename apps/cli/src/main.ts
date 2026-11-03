@@ -311,7 +311,7 @@ async function commandRedteam(config: ReturnType<typeof loadConfig>, parsed: Par
   if (parsed.json) jsonOut(result);
   else {
     out(`redteam corpus: ${result.attacks} attacks, ${result.blocked} blocked, ${result.bypassed} bypassed, canary egress ${result.canaryEgress}`);
-    out(`result: ${result.pass ? "PASS" : "FAIL"} (mock-mode classifier regression; live egress scan PENDING with real providers)`);
+    out(`result: ${result.pass ? "PASS" : "FAIL"} (classifier corpus; live egress scan requires the plugin loaded in a Linux Bifrost gateway)`);
   }
   return result.pass ? EXIT.ok : EXIT.internal;
 }
