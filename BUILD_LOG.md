@@ -46,3 +46,5 @@ labelled so.
 - **Post-fix full run.** 12 tasks x A/C/D/F, 1 run, 48 rows, 47 solved, 97.9%, $0.004475/solved; manifest records runs 1, maxSteps 20, temperature 0, timeouts, filters. Current evidence: real_mw0nvfe6.
 
 - **Nudge full run.** 12 tasks x A/C/D/F with promptVersion edit-nudge-v1: recorded under eal_mw0or6tw; manifest carries promptVersion/editNudge.
+
+- **Nudge full run completes 48/48.** Current full evidence eal_mw0or6tw (100%, $0.002314/solved); eal_mw0nvfe6 47/48 is superseded. Manifest records promptVersion edit-nudge-v1.
