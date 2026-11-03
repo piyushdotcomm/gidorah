@@ -29,8 +29,8 @@ export function renderPiDemo(): string {
   const frame = (title: string): void => {
     out.push("", `### ${title}`, "```text", shell.snapshot(100, 34), "```");
   };
+  shell.setBanner("MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real coding. Use `gidorah tui --demo` for the scripted demo.");
   shell.setHeader([
-    "MOCK MODE — synthetic replies; no real model. Start Bifrost and set GIDORAH_MODE=cloud for real coding. Use `gidorah tui --demo` for the scripted demo.",
     "Gidorah  the governed coding agent",
     "cwd: /repo  ·  branch: main  ·  session: ses_demo  ·  mode: mock  ·  model: gidorah-auto",
   ]);

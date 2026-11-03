@@ -302,6 +302,32 @@ class PickerModal implements Component {
 function truncateVisible(text: string, width: number): string {
   return visibleWidth(text) <= width ? text : `${text.slice(0, Math.max(0, width - 1))}…`;
 }
+/** Centered content column: max 104 columns with 2-column outer padding. */
+class Frame extends Container {
+  override render(width: number): string[] {
+    const contentWidth = Math.min(104, Math.max(20, width - 4));
+    const pad = Math.max(0, Math.floor((width - contentWidth) / 2));
+    return super.render(contentWidth).map((line) => `${" ".repeat(pad)}${line}`);
+  }
+}
+
+/** Wrapped yellow banner (no ellipsis clipping). */
+class Banner implements Component {
+  private text = "";
+  private readonly color: boolean;
+  constructor(color: boolean) {
+    this.color = color;
+  }
+  setText(text: string): void {
+    this.text = text;
+  }
+  invalidate(): void {}
+  render(width: number): string[] {
+    if (this.text === "") return [];
+    return new Text(this.text, 0, 0).render(width).map((line) => paint(this.color, ANSI.bold + ANSI.yellow, line));
+  }
+}
+
 export interface ShellOptions {
   color?: boolean;
   onSubmit: (text: string) => void;
@@ -316,6 +342,8 @@ export class GidorahShell {
   private readonly header: LineView;
   private readonly status: LineView;
   private readonly footer: LineView;
+  private readonly banner: Banner;
+  private readonly frame = new Frame();
   private readonly transcript = new Container();
   private readonly viewport: TranscriptViewport;
   private approval: OverlayHandle | null = null;
@@ -336,18 +364,21 @@ export class GidorahShell {
     this.header = new LineView(color);
     this.status = new LineView(color);
     this.footer = new LineView(color);
+    this.banner = new Banner(color);
     this.editor = new Editor(this.tui, themes.editor, { paddingX: 0 });
     this.editor.onSubmit = (text) => options.onSubmit(text);
     this.viewport = new TranscriptViewport(this.transcript, (width) => {
-      const reserved = this.header.render(width).length + this.status.render(width).length + this.footer.render(width).length + this.editor.render(width).length + 2;
+      const reserved = this.header.render(width).length + this.banner.render(width).length + this.status.render(width).length + this.footer.render(width).length + this.editor.render(width).length + 2;
       return Math.max(1, terminal.rows - reserved);
     });
-    this.tui.addChild(this.header);
-    this.tui.addChild(this.status);
-    this.tui.addChild(this.viewport);
-    this.tui.addChild(new Spacer(1));
-    this.tui.addChild(this.editor);
-    this.tui.addChild(this.footer);
+    this.frame.addChild(this.header);
+    this.frame.addChild(this.banner);
+    this.frame.addChild(this.status);
+    this.frame.addChild(this.viewport);
+    this.frame.addChild(new Spacer(1));
+    this.frame.addChild(this.editor);
+    this.frame.addChild(this.footer);
+    this.tui.addChild(this.frame);
     this.tui.setFocus(this.editor);
     this.removeInputListener = this.tui.addInputListener((data) => {
       if (data === "\u0003") {
@@ -377,6 +408,11 @@ export class GidorahShell {
 
   setHeader(lines: string[]): void {
     this.header.setLines(lines);
+    this.tui.requestRender();
+  }
+
+  setBanner(text: string | null): void {
+    this.banner.setText(text ?? "");
     this.tui.requestRender();
   }
 
@@ -525,6 +561,7 @@ export class GidorahShell {
   /** Deterministic frame for tests/demo: framework component render, no ANSI. */
   snapshot(width: number, height: number): string {
     const header = this.header.render(width);
+    const banner = this.banner.render(width);
     const status = this.status.render(width);
     const body = this.transcript.render(width);
     const text = this.editor.getText();
@@ -533,7 +570,7 @@ export class GidorahShell {
     const footer = this.footer.render(width);
     const approvalLines = this.approvalModal === null ? [] : this.approvalModal.render(width);
     const pickerLines = this.pickerModal === null ? [] : this.pickerModal.render(width);
-    const lines = [...header, ...status, ...body, ...approvalLines, ...pickerLines, ...composerLines, ...footer];
+    const lines = [...header, ...banner, ...status, ...body, ...approvalLines, ...pickerLines, ...composerLines, ...footer];
     return lines.slice(-Math.max(1, height)).join("\n");
   }
 }
