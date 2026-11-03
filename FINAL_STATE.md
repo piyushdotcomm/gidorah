@@ -34,3 +34,9 @@ node apps/cli/src/main.ts redteam
 node apps/cli/src/main.ts bench --real --pilot
 node apps/cli/src/main.ts bench --real --full
 ```
+## Review correction pass (latest)
+
+- Full 12-task run recorded under `bench/` (A/C/D, 1 run; failures carry `failureCategory`).
+- Tavily is reported as an honest negative for pass rate (C 6/6 vs D 5/6) and reframed as citations plus cost avoidance.
+- Real 402, real primary-provider fallback, and live gateway DLP are explicitly NOT demonstrated; see `BUILD_REPORT.md` and evidence files.
+- Patch-first/repo-map are always-on and not ablated; no savings claim.

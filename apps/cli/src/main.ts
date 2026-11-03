@@ -43,7 +43,7 @@ function parseArgs(argv: string[]): Parsed {
   const flags = new Set<string>();
   const values = new Map<string, string>();
   const positionals: string[] = [];
-  const valueFlags = new Set(["--session", "--user", "--task-budget", "--config", "--policy", "--format", "--out"]);
+  const valueFlags = new Set(["--session", "--user", "--task-budget", "--config", "--policy", "--format", "--out", "--runs"]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index]!;
     if (arg === "--") {
@@ -330,6 +330,7 @@ async function commandBench(config: ReturnType<typeof loadConfig>, parsed: Parse
       baseUrl: config.bifrost.baseUrl,
       virtualKey: config.bifrost.vkCloud,
       tavilyApiKey: config.tavily.apiKey,
+      ...(parsed.values.has("--runs") ? { runs: Number.parseInt(parsed.values.get("--runs") ?? "1", 10) } : {}),
     });
     const realSummary = summarize(real.rows);
     if (parsed.json) jsonOut({ ...realSummary, rawPath: real.rawPath, reportPath: real.reportPath });

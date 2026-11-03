@@ -1,3 +1,7 @@
+> **Current state (2026-11-03):** the DSH TUI is vendored at
+> `third_party/dsh-tui` with LICENSE/NOTICE, and the Go plugin compiles and
+> tests against the real Bifrost SDK. The historical notes below describing
+> "not vendored" or "Go toolchain not installed" are superseded.
 # Third-party register
 
 This register lists third-party components that Gidorah uses, adapts, or deliberately does not use in this offline build. It is an engineering summary, not legal advice. Verify each license against the exact pinned version and consult counsel before commercial distribution.
