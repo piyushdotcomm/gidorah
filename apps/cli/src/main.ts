@@ -27,7 +27,7 @@ import { buildContext } from "../../../packages/core/src/context.ts";
 import { renderEvents, statusLine } from "../../../apps/tui/src/index.ts";
 import { TuiApp, listSessionEntries } from "../../tui/src/app.ts";
 import { runPlainTui } from "../../tui/src/plain.ts";
-import { runTuiDemo } from "../../tui/src/demo.ts";
+import { renderTuiDemo, runTuiDemo } from "../../tui/src/demo.ts";
 import type { ApprovalService, RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 
 const VERSION = "0.1.0";
@@ -677,7 +677,17 @@ async function commandRun(config: ReturnType<typeof loadConfig>, task: string, p
 }
 
 async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed): Promise<number> {
-  if (parsed.flags.has("--demo")) return runTuiDemo();
+  if (parsed.flags.has("--demo")) {
+    const text = await renderTuiDemo();
+    const outPath = parsed.values.get("--out");
+    if (outPath !== undefined) {
+      writeFileSync(outPath, `${text}\n`, "utf8");
+      out(`wrote ${outPath}`);
+      return EXIT.ok;
+    }
+    process.stdout.write(`${text}\n`);
+    return EXIT.ok;
+  }
   const harness = await createHarness(config, parsed, { mockScript: TUI_DEMO_SCRIPT });
   const modelAlias = config.mode === "mock" ? "gidorah-auto" : process.env.GIDORAH_MODEL_ALIAS ?? "gidorah-auto";
   try {

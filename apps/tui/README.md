@@ -93,6 +93,23 @@ card; no network). It shows streaming, edit approval with a numbered diff, shell
 approval + denial, research card, takeover banner, receipt, `/status`, `/trace`,
 `/receipt`, the `/resume` picker, and `/model`.
 
+## Terminal acceptance (manual)
+
+The agent shell used to build this repository is non-TTY, so raw-mode operation was
+**not** verified in a real terminal. Manual acceptance checklist:
+
+1. Open `node apps/cli/src/main.ts tui` in Windows Terminal (and once on Linux).
+2. Run a task and confirm assistant text streams in and tool cards appear live.
+3. Approve an edit (check the numbered diff) and deny a shell command.
+4. Press Ctrl+C during a turn; confirm it cancels and returns to idle; press twice to exit.
+5. Check `/status`, `/trace`, `/receipt`, `/resume`, `/model`, `/quit`.
+6. Resize the window to 40 columns and back; confirm the layout does not break.
+7. After exit, confirm the cursor is visible and the normal screen is restored.
+
+If anything fails, capture the sequence and file it; raw-mode behavior is the only
+part of the native TUI not covered by automated tests. No screen recorder was
+available in this environment, so `apps/tui/DEMO.md` is the repeatable artifact.
+
 ## Tests
 
 `apps/tui/test/app.test.ts` covers panels, streaming, approval allow/deny,

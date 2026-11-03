@@ -39,12 +39,18 @@ labelled so.
 | `bench/real_mw0ffoii` | 16 synthetic math tasks; arm C was always-cheap, not a cascade |
 | `bench/real_mw0g3w0s` | corrected pilot before the docs-first research trigger |
 
-- **Correction pass (current).** Real cascade wired and tested; synthetic math tasks replaced with 6 Class A + 6 runtime-docs Class B tasks; arms reduced to A/C/D/F; metrics derived from events; deterministic docs-first Tavily in arm D; Class B run 18 rows / 16 solved. Partial A-class run real_mw0g7hvx is superseded and not used as the headline.
+- **Correction pass (current).** Real cascade wired and tested; synthetic math tasks replaced with 6 Class A + 6 runtime-docs Class B tasks; arms reduced to A/C/D/F; metrics derived from events; deterministic docs-first Tavily in arm D; Class B run 18 rows / 16 solved. Partial A-class run 
+real_mw0g7hvx is superseded and not used as the headline.
 
-- **Evidence-integrity fix.** failureCategory/failureDetail/step-limit and split Tavily accounting now reach raw rows (verified in real_mw0k7ayt); the current post-fix evidence is `real_mw0nvfe6` (full) and `real_mw0ksdno` (pilot); full runs before the fix are superseded for those fields. Arm F is reported as the best arm on the current task set; cascade/Tavily savings are not claimed.
+- **Evidence-integrity fix.** failureCategory/failureDetail/step-limit and split Tavily accounting now reach raw rows (verified in 
+real_mw0k7ayt); the current post-fix evidence is `real_mw0or6tw` (full, post-nudge) and `real_mw0ksdno` (pilot); `real_mw0nvfe6` (47/48) is pre-nudge and superseded; full runs before the fix are superseded for those fields. Arm F is reported as the best arm on the current task set; cascade/Tavily savings are not claimed.
 
-- **Post-fix full run.** 12 tasks x A/C/D/F, 1 run, 48 rows, 47 solved, 97.9%, $0.004475/solved; manifest records runs 1, maxSteps 20, temperature 0, timeouts, filters. Current evidence: real_mw0nvfe6.
+- **Post-fix full run.** 12 tasks x A/C/D/F, 1 run, 48 rows, 47 solved, 97.9%, $0.004475/solved; manifest records runs 1, maxSteps 20, temperature 0, timeouts, filters. Current evidence: 
+`real_mw0or6tw` (48/48). This 47/48 run is pre-nudge and superseded.
 
-- **Nudge full run.** 12 tasks x A/C/D/F with promptVersion edit-nudge-v1: recorded under eal_mw0or6tw; manifest carries promptVersion/editNudge.
+- **Nudge full run.** 12 tasks x A/C/D/F with promptVersion edit-nudge-v1: recorded under 
+real_mw0or6tw; manifest carries promptVersion/editNudge.
 
-- **Nudge full run completes 48/48.** Current full evidence eal_mw0or6tw (100%, $0.002314/solved); eal_mw0nvfe6 47/48 is superseded. Manifest records promptVersion edit-nudge-v1.
+- **Nudge full run completes 48/48.** Current full evidence 
+real_mw0or6tw (100%, $0.002314/solved); 
+real_mw0nvfe6 47/48 is superseded. Manifest records promptVersion edit-nudge-v1.
