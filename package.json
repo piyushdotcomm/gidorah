@@ -57,5 +57,13 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piyushdotcom/gidorah.git"
+  },
+  "homepage": "https://github.com/piyushdotcom/gidorah#readme",
+  "bugs": {
+    "url": "https://github.com/piyushdotcom/gidorah/issues"
   }
 }
