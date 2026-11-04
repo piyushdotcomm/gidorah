@@ -21,6 +21,12 @@ The interactive surface needs a TTY on both stdin and stdout. In non-TTY shells
 Plain mode denies write/shell approvals explicitly because there is no approval
 channel.
 
+## Themes
+
+Built-in themes: `tokyo-night` (default), `catppuccin-mocha`, `nord`, `gruvbox-dark`, `light`.
+Use `/theme` for the picker, `/theme nord` for a direct switch, or start with
+`gidorah tui --theme nord`. The choice is saved in `~/.gidorah/tui-theme` and restored next launch.
+
 ## Two renderers
 
 The interactive TTY path is `pi-app.ts` + `pi-shell.ts` on pi-tui. The legacy
@@ -59,6 +65,7 @@ Ctrl+D quits.
 | `/help` | keys and commands |
 | `/status` | session, cwd, mode, model, budget, receipts |
 | `/model` | current alias and configured aliases; `/model <alias>` selects for the next turn |
+| `/theme` | theme picker (↑/↓, Enter, Esc); `/theme <name>` applies directly; choice persists in `~/.gidorah/tui-theme` |
 | `/budget` | LLM budget snapshot |
 | `/trace` | flight-recorder table for the last turn |
 | `/receipt` | last turn receipt |
