@@ -43,6 +43,7 @@ export interface OpenTuiOptions {
   mode: string;
   modelAlias: string;
   availableAliases?: string[];
+  theme?: string;
   researchLimit?: number;
   maxSteps?: number;
   historyFile?: string;
@@ -50,22 +51,31 @@ export interface OpenTuiOptions {
   renderer?: CliRenderer;
 }
 
-const T = {
-  bg: "#0b0e14",
-  panel: "#11151f",
-  panelAlt: "#151b27",
-  border: "#273049",
-  text: "#c0caf5",
-  dim: "#565f89",
-  accent: "#7aa2f7",
-  purple: "#bb9af7",
-  green: "#9ece6a",
-  red: "#f7768e",
-  yellow: "#e0af68",
-  cyan: "#7dcfff",
-  magenta: "#c678dd",
-} as const;
+interface Palette {
+  bg: string;
+  panel: string;
+  panelAlt: string;
+  border: string;
+  text: string;
+  dim: string;
+  accent: string;
+  purple: string;
+  green: string;
+  red: string;
+  yellow: string;
+  cyan: string;
+  magenta: string;
+}
 
+const THEMES: Record<string, Palette> = {
+  "tokyo-night": { bg: "#0b0e14", panel: "#11151f", panelAlt: "#151b27", border: "#273049", text: "#c0caf5", dim: "#565f89", accent: "#7aa2f7", purple: "#bb9af7", green: "#9ece6a", red: "#f7768e", yellow: "#e0af68", cyan: "#7dcfff", magenta: "#c678dd" },
+  "catppuccin-mocha": { bg: "#1e1e2e", panel: "#181825", panelAlt: "#313244", border: "#45475a", text: "#cdd6f4", dim: "#6c7086", accent: "#89b4fa", purple: "#cba6f7", green: "#a6e3a1", red: "#f38ba8", yellow: "#f9e2af", cyan: "#89dceb", magenta: "#f5c2e7" },
+  nord: { bg: "#2e3440", panel: "#3b4252", panelAlt: "#434c5e", border: "#4c566a", text: "#eceff4", dim: "#7b88a1", accent: "#88c0d0", purple: "#b48ead", green: "#a3be8c", red: "#bf616a", yellow: "#ebcb8b", cyan: "#8fbcbb", magenta: "#b48ead" },
+  "gruvbox-dark": { bg: "#282828", panel: "#1d2021", panelAlt: "#32302f", border: "#504945", text: "#ebdbb2", dim: "#928374", accent: "#83a598", purple: "#d3869b", green: "#b8bb26", red: "#fb4934", yellow: "#fabd2f", cyan: "#8ec07c", magenta: "#d3869b" },
+  light: { bg: "#f4f4f4", panel: "#ffffff", panelAlt: "#e9e9e9", border: "#c4c4c4", text: "#1f1f1f", dim: "#666666", accent: "#005f87", purple: "#7a3e9d", green: "#2e7d32", red: "#c62828", yellow: "#9a6700", cyan: "#00695c", magenta: "#8e24aa" },
+};
+
+let T: Palette = THEMES["tokyo-night"]!;
 interface Item {
   kind: string;
   text: string;
@@ -142,6 +152,10 @@ export class OpenTuiApp {
   private inputTokens = 0;
   private contextCap = 128_000;
   private history: string[];
+  private themeName = "tokyo-night";
+  private themeLayer!: BoxRenderable;
+  private themePicker!: SelectRenderable;
+  private themeNames: string[] = Object.keys(THEMES);
   private done: ((code: number) => void) | null = null;
   private renderTimer: NodeJS.Timeout | null = null;
   private activityTimer: NodeJS.Timeout | null = null;
@@ -176,6 +190,8 @@ export class OpenTuiApp {
     this.modelOptions = options.availableAliases ?? [options.modelAlias];
     this.llmLimit = options.budgetSnapshot().limitUsd;
     this.researchLimit = options.researchLimit ?? 50;
+    this.themeName = options.theme !== undefined && THEMES[options.theme] !== undefined ? options.theme : this.loadTheme();
+    T = THEMES[this.themeName] ?? THEMES["tokyo-night"]!;
     this.history = this.loadHistory();
     for (const entry of this.history) this.textareaHistoryPush(entry);
     this.attach(this.session);
@@ -331,7 +347,7 @@ export class OpenTuiApp {
       id: "footer",
       flexShrink: 0,
       fg: color(T.dim),
-      content: `${this.opts.branch} · ${this.opts.cwd.split(/[\\\\/]/).at(-1) ?? this.opts.cwd} · session ${this.session.header.sessionId} · /help`,
+      content: `${this.opts.branch} · ${this.opts.cwd.split(/[\\\\/]/).at(-1) ?? this.opts.cwd} · session ${this.session.header.sessionId} · theme ${this.themeName} · /help`,
     }));
 
     // Approval overlay
@@ -421,8 +437,116 @@ export class OpenTuiApp {
     this.pickerLayer.add(pickerModal);
     this.renderer.root.add(this.pickerLayer);
 
+    // Theme picker overlay
+    this.themeLayer = new BoxRenderable(this.renderer, {
+      id: "theme-layer",
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      zIndex: 95,
+      backgroundColor: RGBA.fromValues(0, 0, 0, 0.62),
+      justifyContent: "center",
+      alignItems: "center",
+      visible: false,
+    });
+    const themeModal = new BoxRenderable(this.renderer, {
+      id: "theme-modal",
+      width: "50%",
+      minWidth: 34,
+      border: true,
+      borderStyle: "double",
+      borderColor: color(T.cyan),
+      backgroundColor: color("#161b26"),
+      flexDirection: "column",
+      padding: 1,
+      gap: 1,
+    });
+    themeModal.add(new TextRenderable(this.renderer, { id: "theme-title", content: `Theme · current ${this.themeName}`, fg: color(T.cyan) }));
+    this.themePicker = new SelectRenderable(this.renderer, {
+      id: "theme-list",
+      width: "100%",
+      height: 10,
+      options: this.themeNames.map((name) => ({ name, description: "", value: name })),
+      backgroundColor: color(T.panel),
+      textColor: color(T.text),
+      focusedBackgroundColor: color(T.panelAlt),
+      focusedTextColor: color(T.text),
+      selectedBackgroundColor: color(T.accent),
+      selectedTextColor: color(T.bg),
+    });
+    this.themePicker.on("itemSelected", (index: number) => {
+      const name = this.themeNames[index];
+      this.hideThemePicker();
+      if (name !== undefined) this.applyTheme(name);
+    });
+    themeModal.add(this.themePicker);
+    themeModal.add(new TextRenderable(this.renderer, { id: "theme-hint", fg: color(T.dim), content: "↑/↓ select · Enter apply · Esc cancel" }));
+    this.themeLayer.add(themeModal);
+    this.renderer.root.add(this.themeLayer);
+
     this.renderer.focusRenderable(this.textarea);
     this.sync();
+  }
+
+  private themeFile(): string | undefined {
+    return this.opts.historyFile?.replace(/tui-history$/, "tui-theme");
+  }
+
+  private loadTheme(): string {
+    try {
+      const file = this.themeFile();
+      if (file !== undefined && existsSync(file)) {
+        const name = readFileSync(file, "utf8").trim();
+        if (THEMES[name] !== undefined) return name;
+      }
+    } catch {
+      // fall through
+    }
+    return "tokyo-night";
+  }
+
+  private persistTheme(): void {
+    const file = this.themeFile();
+    if (file === undefined) return;
+    try {
+      writeFileSync(file, this.themeName, "utf8");
+    } catch {
+      // best effort
+    }
+  }
+
+  applyTheme(name: string): void {
+    if (THEMES[name] === undefined) {
+      this.info(`unknown theme ${name} · available: ${this.themeNames.join(", ")}`);
+      return;
+    }
+    this.themeName = name;
+    T = THEMES[name]!;
+    this.persistTheme();
+    for (const child of [...this.renderer.root.getChildren()]) {
+      try {
+        child.destroyRecursively();
+      } catch {
+        // ignore native cleanup failures
+      }
+      this.renderer.root.remove(child);
+    }
+    this.statusValues = [];
+    this.mount();
+    this.renderer.focusRenderable(this.textarea);
+    this.sync();
+  }
+
+  private showThemePicker(): void {
+    this.themeLayer.visible = true;
+    this.renderer.focusRenderable(this.themePicker);
+    this.renderer.requestRender();
+  }
+
+  private hideThemePicker(): void {
+    this.themeLayer.visible = false;
+    this.renderer.focusRenderable(this.textarea);
+    this.renderer.requestRender();
   }
 
   private pill(label: string, value: string, fg: string): { box: BoxRenderable; valueText: TextRenderable } {
@@ -478,6 +602,13 @@ export class OpenTuiApp {
         if (key.name === "escape") {
           key.preventDefault();
           this.hidePicker();
+        }
+        return;
+      }
+      if (this.themeLayer.visible) {
+        if (key.name === "escape") {
+          key.preventDefault();
+          this.hideThemePicker();
         }
         return;
       }
@@ -985,7 +1116,7 @@ export class OpenTuiApp {
     const arg = rest.join(" ");
     switch (name) {
       case "/help":
-        this.info("/help /status /model /budget /trace /receipt /new /resume /doctor /quit\nEnter send · Shift+Enter newline · Tab complete · y/n approve");
+        this.info("/help /status /model /theme /budget /trace /receipt /new /resume /doctor /quit\nEnter send · Shift+Enter newline · Tab complete · y/n approve");
         return;
       case "/doctor":
         this.info(this.opts.mode === "mock" ? "mock mode: no provider calls. Set GIDORAH_MODE=cloud and BIFROST_BASE_URL, start Bifrost, restart." : `cloud mode · model ${this.modelAlias} · if requests fail, check BIFROST_BASE_URL and the gateway on :8080`);
@@ -993,6 +1124,11 @@ export class OpenTuiApp {
       case "/status":
         this.info(`session ${this.session.header.sessionId} · ${this.opts.mode} · ${this.modelAlias} · $${this.llmUsd.toFixed(4)}/$${this.llmLimit.toFixed(2)} · receipts ${this.receipts.length}`);
         return;
+      case "/theme": {
+        if (arg !== "") this.applyTheme(arg);
+        else this.showThemePicker();
+        return;
+      }
       case "/model":
         if (arg !== "") {
           this.modelAlias = this.modelOptions.find((alias) => alias === arg) ?? arg;

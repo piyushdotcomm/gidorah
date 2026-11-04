@@ -55,7 +55,7 @@ function parseArgs(argv: string[]): Parsed {
   const flags = new Set<string>();
   const values = new Map<string, string>();
   const positionals: string[] = [];
-  const valueFlags = new Set(["--session", "--user", "--task-budget", "--config", "--policy", "--format", "--out", "--runs"]);
+  const valueFlags = new Set(["--session", "--user", "--task-budget", "--config", "--policy", "--format", "--out", "--runs", "--theme"]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index]!;
     if (arg === "--") {
@@ -726,6 +726,7 @@ async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed)
       researchLimit: DEFAULT_POLICY.budgets.research.credits_per_day,
       maxSteps: 20,
       color: !parsed.flags.has("--no-color"),
+      ...(parsed.values.has("--theme") ? { theme: parsed.values.get("--theme") ?? "tokyo-night" } : {}),
       historyFile: join(config.home, "tui-history"),
     });
   } finally {
