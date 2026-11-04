@@ -36,3 +36,5 @@ worktrees/
 
 # Real-gateway session homes created during toolchain verification
 .gidorah-*/
+
+*.tgz

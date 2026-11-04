@@ -8,7 +8,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { runBenchmark, runRealBenchmark, summarize } from "../../../packages/benchmark/src/index.ts";
@@ -386,7 +386,7 @@ async function main(): Promise<number> {
   // Sandboxed or restricted machines cannot write ~/.gidorah; keep runtime data
   // inside the workspace when no explicit GIDORAH_HOME is set (documented in
   // BUILD_STATUS.md and ADR-0015).
-  if (process.env.GIDORAH_HOME === undefined) config.home = join(repoRoot(), ".gidorah");
+  if (process.env.GIDORAH_HOME === undefined) config.home = join(homedir(), ".gidorah");
   const paths = gidorahPaths(config.home);
 
   if (process.argv.slice(2).length === 0) {

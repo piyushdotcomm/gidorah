@@ -1,8 +1,7 @@
 {
   "name": "gidorah",
   "version": "0.1.0",
-  "private": true,
-  "description": "The governed coding agent. Bifrost is the model plane, Tavily is the knowledge plane, and every task ends with a receipt.",
+  "description": "The governed coding agent: OpenTUI terminal UI, Bifrost model plane, Tavily knowledge plane, audit chain and receipts.",
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
@@ -22,14 +21,41 @@
     "bench": "node apps/cli/src/main.ts bench",
     "conformance": "node apps/cli/src/main.ts conformance",
     "chaos": "node apps/cli/src/main.ts chaos",
-    "doctor": "node apps/cli/src/main.ts doctor"
+    "doctor": "node apps/cli/src/main.ts doctor",
+    "pack:npm": "node scripts/pack-npm.ts"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
+    "tar": "^7.5.22",
     "typescript": "7.0.2"
   },
   "dependencies": {
     "@earendil-works/pi-tui": "0.80.7",
     "@opentui/core": "0.8.2"
+  },
+  "bin": {
+    "gidorah": "./bin/gidorah.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "config",
+    "tests/replay/demo.jsonl",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "third_party/*.LICENSE"
+  ],
+  "keywords": [
+    "coding-agent",
+    "tui",
+    "opentui",
+    "bifrost",
+    "tavily",
+    "ai",
+    "cli"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }

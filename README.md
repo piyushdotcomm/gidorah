@@ -23,6 +23,29 @@ Numbers measured on this machine: 167 tests passing; 40 conformance; 8 chaos; CL
 
 Benchmark history is explicit: earlier synthetic-math runs are superseded and labelled in `BUILD_LOG.md`; they are not used as evidence.
 
+## Install as a product
+
+```bash
+npm install -g gidorah
+gidorah doctor
+gidorah tui
+```
+
+Requires **Node >= 26.4** (OpenTUI native renderer). Gidorah does not ship provider
+keys: you run a Bifrost gateway yourself (Fireworks/Ollama) and provide a Tavily
+key. Configure with:
+
+```bash
+export GIDORAH_MODE=cloud
+export BIFROST_BASE_URL=http://127.0.0.1:8080/openai
+export BIFROST_VK_CLOUD=<your-bifrost-virtual-key>      # created in your Bifrost dashboard
+export TAVILY_API_KEY=tvly-...
+export GIDORAH_MODEL_ALIAS=fireworks/accounts/fireworks/models/deepseek-v4p1-flash
+```
+
+Runtime data lives in `~/.gidorah`. State/config examples are in `config/`.
+Use `/theme` for themes, `/doctor` for setup hints, and `gidorah tui --plain`
+for non-TTY shells. Publishing: see `PUBLISHING.md`.
 ## Quickstart
 
 ```bash
