@@ -60,10 +60,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/piyushdotcom/gidorah.git"
+    "url": "git+https://github.com/piyushdotcomm/gidorah.git"
   },
-  "homepage": "https://github.com/piyushdotcom/gidorah#readme",
+  "homepage": "https://github.com/piyushdotcomm/gidorah#readme",
   "bugs": {
-    "url": "https://github.com/piyushdotcom/gidorah/issues"
+    "url": "https://github.com/piyushdotcomm/gidorah/issues"
   }
 }

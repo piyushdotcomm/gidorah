@@ -14,8 +14,8 @@
     <a href="https://www.npmjs.com/package/gidorah"><img alt="downloads" src="https://img.shields.io/npm/dm/gidorah?style=for-the-badge&logo=npm&color=CB3837"></a>
     <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge"></a>
     <img alt="node" src="https://img.shields.io/node/v/gidorah?style=for-the-badge&logo=nodedotjs">
-    <a href="https://github.com/piyushdotcom/gidorah/actions/workflows/ci.yml"><img alt="ci" src="https://github.com/piyushdotcom/gidorah/actions/workflows/ci.yml/badge.svg"></a>
-    <a href="https://github.com/piyushdotcom/gidorah"><img alt="stars" src="https://img.shields.io/github/stars/piyushdotcom/gidorah?style=for-the-badge&logo=github"></a>
+    <a href="https://github.com/piyushdotcomm/gidorah/actions/workflows/ci.yml"><img alt="ci" src="https://github.com/piyushdotcomm/gidorah/actions/workflows/ci.yml/badge.svg"></a>
+    <a href="https://github.com/piyushdotcomm/gidorah"><img alt="stars" src="https://img.shields.io/github/stars/piyushdotcomm/gidorah?style=for-the-badge&logo=github"></a>
   </p>
 <sub>Bifrost model plane · Tavily knowledge plane · OpenTUI terminal · every turn ends with a receipt</sub>
 </p>
@@ -181,7 +181,7 @@ docs            product, architecture, engineering, eval, delivery, ADRs
 ## Development
 
 ```bash
-git clone https://github.com/piyushdotcom/gidorah.git
+git clone https://github.com/piyushdotcomm/gidorah.git
 cd gidorah
 npm ci
 npm run build && npm run lint && npm run typecheck && npm test   # 167 tests
@@ -196,5 +196,5 @@ Gidorah is **Apache-2.0**. Bifrost (Maxim AI) is Apache-2.0 and Gidorah is not a
 
 <p align="center">
   <b>If Gidorah saves you tokens or a bad afternoon, star the repo.</b><br>
-  <a href="https://github.com/piyushdotcom/gidorah/stargazers">⭐ Star Gidorah</a> · <a href="https://www.npmjs.com/package/gidorah">npm</a>
+  <a href="https://github.com/piyushdotcomm/gidorah/stargazers">⭐ Star Gidorah</a> · <a href="https://www.npmjs.com/package/gidorah">npm</a>
 </p>
