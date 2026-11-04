@@ -1,0 +1,15 @@
+name: Feature request
+description: Propose a capability, with a demo or metric in mind
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes: { label: Problem }
+    validations: { required: true }
+  - type: textarea
+    id: proposal
+    attributes: { label: Proposal }
+    validations: { required: true }
+  - type: textarea
+    id: evidence
+    attributes: { label: How would we demo or measure it? }
