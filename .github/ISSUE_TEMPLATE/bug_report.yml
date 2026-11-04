@@ -1,0 +1,30 @@
+name: Bug report
+description: Something is broken or unsafe
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened? }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: What did you expect? }
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes: { label: Gidorah version, description: Output of `gidorah --version` }
+    validations: { required: true }
+  - type: input
+    id: node
+    attributes: { label: Node version }
+    validations: { required: true }
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options: [mock, cloud, confidential]
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: Reproduction, description: Commands, screenshots, traces. Do not paste API keys. }
+    validations: { required: true }
