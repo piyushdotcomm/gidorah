@@ -4,7 +4,7 @@ Evidence-first. Chronology and superseded runs: `BUILD_LOG.md`. One-page state:
 `FINAL_STATE.md`. Commands are reproducible from this repository.
 
 ## Verified with real services
-- Native TUI: `gidorah tui` drives the same runtime inside a pi-tui 0.80.7 (MIT) shell: framework differential rendering, scrollable transcript with Markdown/tool/diff/research cards, pi-tui Editor composer, focus-capturing approval overlay, searchable session picker, cancellation, and plain/non-TTY fallback. Demo: `apps/tui/DEMO-pi.md` (pi-tui frames); `apps/tui/DEMO.md` is the legacy text demo; manual terminal acceptance pending.
+- Native TUI: `gidorah tui` drives the same runtime inside an OpenTUI 0.8.2 (SST, MIT; the framework opencode uses) shell: Yoga layout, gradient ASCII logo, status pills, transcript cards, Markdown/diff renderables, bordered Textarea composer, mouse-clickable approval buttons, session picker, spinner, mock banner. Screenshots: `apps/tui/screenshots/`; demo: `apps/tui/DEMO-opentui.md`; manual terminal acceptance pending.
 
 - Real Bifrost 2.4.0 (built from source) on `:8080`; real Fireworks AI models
   (30 available, e.g. deepseek-v4p1-flash) and real Ollama 0.40.13 with a 3B

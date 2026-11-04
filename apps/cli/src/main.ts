@@ -27,7 +27,6 @@ import { buildContext } from "../../../packages/core/src/context.ts";
 import { renderEvents, statusLine } from "../../../apps/tui/src/index.ts";
 import { TuiApp, listSessionEntries } from "../../tui/src/app.ts";
 import { runPlainTui } from "../../tui/src/plain.ts";
-import { PiTuiApp } from "../../tui/src/pi-app.ts";
 import { renderTuiDemo, runTuiDemo } from "../../tui/src/demo.ts";
 import type { ApprovalService, RuntimeDeps } from "../../../packages/core/src/runtime.ts";
 
@@ -710,7 +709,8 @@ async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed)
       });
     }
     const branch = await runProcess({ command: "git", args: ["rev-parse", "--abbrev-ref", "HEAD"], cwd: process.cwd() });
-    const app = new PiTuiApp({
+    const { OpenTuiApp } = await import("../../tui/src/opentui-app.ts");
+    return await OpenTuiApp.run({
       session: harness.session,
       createDeps: harness.makeDeps,
       createSession: harness.createSession,
@@ -728,7 +728,6 @@ async function commandTui(config: ReturnType<typeof loadConfig>, parsed: Parsed)
       color: !parsed.flags.has("--no-color"),
       historyFile: join(config.home, "tui-history"),
     });
-    return await app.start();
   } finally {
     await harness.close();
   }

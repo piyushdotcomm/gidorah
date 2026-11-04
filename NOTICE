@@ -31,3 +31,9 @@ identity. No real credentials are included in this repository.
 native Gidorah TUI (`apps/tui/src/pi-shell.ts`). The package does not ship a LICENSE file; the MIT text is reproduced at
 `third_party/pi-tui.LICENSE` with its declared author (Mario Zechner). The
 vendored DSH TUI package remains unwired.
+
+## OpenTUI
+
+`@opentui/core` 0.8.2 (MIT, SST / github.com/anomalyco/opentui). Native TUI
+framework used by the interactive Gidorah TUI. License text:
+`third_party/opentui.LICENSE`.

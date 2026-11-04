@@ -1,10 +1,11 @@
 # Native Gidorah TUI
 
-Interactive terminal UI for coding sessions, built on **`@earendil-works/pi-tui`
-0.80.7** (MIT, pinned in package-lock; license at `third_party/pi-tui.LICENSE`).
-The framework owns differential rendering, the transcript viewport, the Editor
-composer, focus-capturing overlays and the picker. The vendored DSH package is
-**not** wired.
+Interactive terminal UI for coding sessions, built on **OpenTUI 0.8.2**
+(`@opentui/core`, MIT, by SST — the framework opencode uses; license at
+`third_party/opentui.LICENSE`). Real Yoga layout, gradient logo, status pills,
+transcript cards, Markdown/diff renderables, bordered composer, mouse-clickable
+approval buttons and a selectable session picker. Requires **Node >=26.4**.
+The vendored DSH package is **not** wired.
 
 ## Run
 
