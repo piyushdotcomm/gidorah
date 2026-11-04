@@ -5,7 +5,7 @@ Interactive terminal UI for coding sessions, built on **OpenTUI 0.8.2**
 `third_party/opentui.LICENSE`). Real Yoga layout, gradient logo, status pills,
 transcript cards, Markdown/diff renderables, bordered composer, mouse-clickable
 approval buttons and a selectable session picker. Requires **Node >=26.4**.
-The vendored DSH package is **not** wired.
+The DSH TUI license/notice are retained; its unused source is not distributed.
 
 ## Run
 

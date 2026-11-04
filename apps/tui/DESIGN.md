@@ -1,8 +1,7 @@
 # Native TUI design (Phase 0)
 
 Goal: an interactive terminal coding session for a human, with live steps, approvals,
-transcripts, and slash commands. No new runtime dependencies. The vendored DSH TUI is
-not the critical path.
+transcripts, and slash commands. No new runtime dependencies. The DSH TUI source has been removed; only its license/notice remain.
 
 ## State (`TuiApp`)
 

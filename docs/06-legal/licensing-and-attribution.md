@@ -12,7 +12,7 @@
 
 Rationale: explicit patent grant, enterprise-friendly, compatible with the Apache-2.0 Bifrost ecosystem. MIT is a simpler alternative; decide before the first public release.
 
-The adapted DSH TUI remains under its own recorded license (`MIT AND BSD-3-Clause`); our Apache-2.0 applies only to original code. The combined distribution must satisfy all licenses.
+The DSH TUI license/notice are retained under `third_party/dsh-tui.LICENSE` and `.NOTICE`; its source is not distributed. Gidorah code is Apache-2.0.
 
 ---
 
@@ -22,7 +22,7 @@ The adapted DSH TUI remains under its own recorded license (`MIT AND BSD-3-Claus
 |---|---|---|---|---|
 | **Bifrost** (`maximhq/bifrost`) | Model gateway, runtime dependency | Apache-2.0 (verified from repo LICENSE) | Include license/notice; state changes if modified | Confirmed |
 | **Tavily API** (`tavily.com`) | Web search/extract service | Commercial API terms | Acceptable use, attribution where required, no unlawful scraping/redistribution | Verify terms for caching/benchmark publication |
-| **DeepSeek Harness TUI** (`@deepseek-ai/dsh-tui`) | Adapted terminal UI | **MIT AND BSD-3-Clause** | Include both license texts, copyright, notice, mark changes | Copy `LICENSE` into `third_party/dsh-tui/` |
+| **DeepSeek Harness TUI** (`@deepseek-ai/dsh-tui`) | Adapted terminal UI | **MIT AND BSD-3-Clause** | Include both license texts, copyright, notice, mark changes | Retain `third_party/dsh-tui.LICENSE` |
 | **pi-tui** (`@earendil-works/pi-tui`) | TUI framework | MIT (verified; TUI package pins 0.80.7) | Include license/notice | Verify pinned version's license file |
 | **DeepSeek models** | Cloud models via Bifrost | Provider terms | Acceptable use, no resale of model outputs contrary to terms | Verify |
 | **Ollama** | Local model runtime | MIT (verify) | Include license if distributed | Verify |
@@ -58,8 +58,8 @@ Copyright (c) 2026, DeepSeek
 
 ### Required actions
 
-1. Copy the complete `LICENSE` from the package into `third_party/dsh-tui/LICENSE`.
-2. Add `third_party/dsh-tui/NOTICE` with:
+1. The unused vendored source has been removed; the complete license is retained at `third_party/dsh-tui.LICENSE`.
+2. Add `third_party/dsh-tui.NOTICE` with:
    - Source repo: `https://github.com/peiyuwang54/deepseek-harness-cli`
    - Package: `packages/ui/tui` (`@deepseek-ai/dsh-tui`)
    - Copyright: DeepSeek
@@ -78,7 +78,7 @@ https://github.com/peiyuwang54/deepseek-harness-cli (packages/ui/tui).
 
 Copyright (c) 2026 DeepSeek.
 Licensed under the MIT License and the BSD 3-Clause License.
-See third_party/dsh-tui/LICENSE for the full texts.
+See third_party/dsh-tui.LICENSE for the full texts.
 
 Modifications: replaced the DSH service/data layer with Gidorah's event bus,
 removed unused DSH commands and integrations, and added Gidorah-specific
@@ -148,8 +148,8 @@ Replay traces may contain prompts, file paths, and tool output. Before publishin
 
 - [ ] `LICENSE` (Gidorah, Apache-2.0)
 - [ ] `NOTICE` (third-party attributions)
-- [ ] `third_party/dsh-tui/LICENSE` (MIT + BSD-3-Clause)
-- [ ] `third_party/dsh-tui/NOTICE`
+- [ ] `third_party/dsh-tui.LICENSE` (MIT + BSD-3-Clause)
+- [ ] `third_party/dsh-tui.NOTICE`
 - [ ] `third_party/pi-tui/LICENSE` (verify)
 - [ ] `third_party/bifrost/LICENSE` if bundled
 - [ ] `plugins/bifrost-dlp/LICENSE` (Apache-2.0)

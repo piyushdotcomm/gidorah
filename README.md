@@ -192,7 +192,7 @@ Docs: [`docs/`](docs/) · engineering: [`docs/02-engineering`](docs/02-engineeri
 
 ## License and attribution
 
-Gidorah is **Apache-2.0**. Bifrost (Maxim AI) is Apache-2.0 and Gidorah is not an official Bifrost product. Tavily is a commercial API used under its terms. OpenTUI and pi-tui are MIT; the DSH TUI is vendored under MIT AND BSD-3-Clause. See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE), and [`third_party/README.md`](third_party/README.md).
+Gidorah is **Apache-2.0**. Bifrost (Maxim AI) is Apache-2.0 and Gidorah is not an official Bifrost product. Tavily is a commercial API used under its terms. OpenTUI and pi-tui are MIT. The DSH TUI license and notice are retained under `third_party/dsh-tui.LICENSE` / `.NOTICE`; its unused source is not distributed. See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE), and [`third_party/README.md`](third_party/README.md).
 
 <p align="center">
   <b>If Gidorah saves you tokens or a bad afternoon, star the repo.</b><br>

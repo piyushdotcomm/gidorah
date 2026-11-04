@@ -19,7 +19,7 @@ Gidorah will reuse the visual shell of the DeepSeek Harness TUI rather than buil
 
 **Obligations**
 
-- Include the full `LICENSE` text for the TUI package in `third_party/dsh-tui/LICENSE`.
+- Include the full `LICENSE` text for the TUI package in `third_party/dsh-tui.LICENSE`.
 - Include a `NOTICE` file with the source repo, package, copyright, and modifications.
 - Mark modified files clearly in the README/NOTICE.
 - Do not use the DeepSeek name or logo as Gidorah's product identity.

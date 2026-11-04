@@ -36,9 +36,7 @@ and credits, patch tokens, full-file reads, approval prompts, cache hits).
 Cost uses the published Fireworks Standard rates in
 `packages/shared/src/pricing.ts`.
 
-Old synthetic-math runs (`bench/real_mw0etfge`, `bench/real_mw0ffoii`,
-`bench/real_mw0g3w0s`) and the hung run (`real_mw0f94jv`) are kept, labelled
-superseded, and are not used as evidence.
+Old synthetic-math runs and the hung run are archived outside the public repo, labelled superseded, and are not used as evidence.
 
 ## Verification
 
@@ -65,10 +63,10 @@ CLI cold start 144 ms average (target <150 ms); DLP scan 7.6 microseconds per
 
 Apache-2.0 for Gidorah. Bifrost Apache-2.0 (Maxim AI, not an official product).
 Tavily commercial terms. DSH TUI vendored under MIT AND BSD-3-Clause with
-LICENSE/NOTICE in `third_party/dsh-tui`. Full register: `third_party/README.md`.
+LICENSE/NOTICE in `third_party/dsh-tui.LICENSE` and `third_party/dsh-tui.NOTICE`. Full register: `third_party/README.md`.
 ## Corrected benchmark evidence (v2 task set)
 
-- Cascade is real: `bench/real_mw0g3w0s/traces/A1-C-0.jsonl` shows `glm-5p3-flash` for explore/edit and `deepseek-v4p1-flash` for verify. A runtime test asserts the phase switch.
+- Cascade is real: `bench/real_mw0or6tw/traces/A1-C-0.jsonl` shows `glm-5p3-flash` for explore/edit and `deepseek-v4p1-flash` for verify. A runtime test asserts the phase switch.
 - Task validity: all 12 tasks are validated fail-before/pass-after by `packages/benchmark/test/tasks.test.ts` (6 Class A repo-local, 6 Class B runtime-docs-dependent).
 - Corrected pilot: 9 rows, 7 solved, cost per solved task $0.006454.
 - Class B full set (B1..B6, arms A/C/D): 18 rows, 16 solved, pass@1 88.9%, cost per solved task $0.006792, 313,088 tokens, 157 model requests.
@@ -111,7 +109,7 @@ Tavily honesty: current full run C 12/12 vs D 12/12 with D ~35 percent more expe
 - **F is cheapest on the current full run.** Current full run `real_mw0or6tw` (48/48): F $0.001272, C $0.001802, D $0.002383, A $0.003797 per solved. F is cheapest and C is cheaper than D; the cascade and Tavily are insurance for harder repositories, not measured pass-rate wins.
 - `costPerSuccessfulTask` is no longer reported; it is undefined until retries are tracked, and the duplicate label was removed from the generated report.
 
-### Superseded artifacts (kept, labelled)
+### Superseded artifacts (archived)
 
 `bench/real_mw0etfge` (synthetic pilot), `bench/real_mw0f94jv` (hung), `bench/real_mw0ffoii` (synthetic tasks, fake cascade), `bench/real_mw0g3w0s` (corrected pilot, pre research trigger), `bench/real_mw0g7hvx` (partial A run), `bench/real_mw0gj157` (Class B only), `bench/real_mw0i03nt` (full 1-run, pre field fix), `bench/real_mw0jtdu3` (variance pilot, pre field fix). Current verified evidence: `bench/real_mw0or6tw` (post-nudge full run, 48/48) and `bench/real_mw0ksdno` (post-fix 3-run pilot). `bench/real_mw0nvfe6` (47/48) is pre-nudge and superseded; the table with `real_mw0i03nt` is pre-fix economics only.
 
@@ -133,11 +131,11 @@ Research cache reconciliation: research_usage 4 calls / 4 credits, 4 cache rows;
 Manifest truth: mode real-pilot, runs 3, maxSteps 20, temperature 0, taskTimeoutMs 240000, clientTimeoutMs 120000, taskFilter [], armFilter [].
 ## B1 step-limit diagnosis (corrected)
 
-The single full-run failure is A-specific. In `bench/real_mw0nvfe6/failures/B1-A-0.json` the model confirmed the runtime ("Confirmed: Node v26.13.0, DatabaseSync is exported, and prepare().get() returns..."), but kept probing and re-reading and never edited within 20 steps. C and F solved B1 without research, so D's card is not necessary to solve it; the row records one denied research attempt on A, and the retained tail does not contain the denial event. The honest diagnosis is an A-arm looping weakness, not a docs gap. Candidate fixes (force an edit after two probe steps, preserve context across clears, give non-research arms a short API hint) were applied as an edit-nudge prompt. A rerun of B1 three times passed 3/3 (`bench/real_mw0olcgu`), so the failure was an A-arm loop, not a docs gap; the benchmark does not claim A is a quality ceiling.
+The single full-run failure is A-specific. In the archived pre-nudge run, the model confirmed the runtime ("Confirmed: Node v26.13.0, DatabaseSync is exported, and prepare().get() returns..."), but kept probing and re-reading and never edited within 20 steps. C and F solved B1 without research, so D's card is not necessary to solve it; the row records one denied research attempt on A, and the retained tail does not contain the denial event. The honest diagnosis is an A-arm looping weakness, not a docs gap. Candidate fixes (force an edit after two probe steps, preserve context across clears, give non-research arms a short API hint) were applied as an edit-nudge prompt. A rerun of B1 three times in the archived pilot passed 3/3, so the failure was an A-arm loop, not a docs gap; the benchmark does not claim A is a quality ceiling.
 
 ## B1-A fix result
 
-After the edit-nudge prompt ("after at most two exploratory reads or probes, apply the edit and run the test"), A rerun B1 three times (`bench/real_mw0olcgu`): 3/3 passed, 0 errors, $0.004962 per solved task. The earlier 20-step A loop no longer reproduces on B1. The other arms already solved B1 without research, so this confirms the failure was an A-arm loop, not a docs gap. A full 48/48 run is now expected but not yet re-run as a whole; the full-run headline remains 47/48.
+After the edit-nudge prompt ("after at most two exploratory reads or probes, apply the edit and run the test"), A rerun B1 three times in the archived pilot: 3/3 passed, 0 errors, $0.004962 per solved task. The earlier 20-step A loop no longer reproduces on B1. The other arms already solved B1 without research, so this confirms the failure was an A-arm loop, not a docs gap. A full 48/48 run is now expected but not yet re-run as a whole; the full-run headline remains 47/48.
 
 ## Full run with edit-nudge (current evidence)
 
@@ -156,4 +154,4 @@ Research: pre 6/6, tool 1/1, attempts 7, denied 0; cache 7/7.
 Manifest: mode real-full-targeted, runs 1, maxSteps 20, temperature 0, promptVersion edit-nudge-v1, editNudge true, timeouts 240000/120000, armFilter ["A","C","D","F"].
 ### Nudge full run supersedes the 47/48 headline
 
-`bench/real_mw0or6tw` (promptVersion `edit-nudge-v1`, recorded in the manifest) is the current full run: 48/48 solved, 100%, $0.111062 total, $0.002314 per solved. Per arm: A 12/12 $0.003797, C 12/12 $0.001802, D 12/12 $0.002383, F 12/12 $0.001272 per solved. Research reconciled: pre 6/6, tool 1/1, attempts 7, denied 0, cache 7/7. The earlier 47/48 (`real_mw0nvfe6`) was pre-nudge and is superseded. The current full run is still a negative for Tavily as a pass-rate lever: C matches D at 12/12 and is ~25 percent cheaper; F is cheapest of all. Cascade also shows no pass-rate gain over F, only cost differences. Tavily value remains citations and cost avoidance, not accuracy.
+`bench/real_mw0or6tw` (promptVersion `edit-nudge-v1`, recorded in the manifest) is the current full run: 48/48 solved, 100%, $0.111062 total, $0.002314 per solved. Per arm: A 12/12 $0.003797, C 12/12 $0.001802, D 12/12 $0.002383, F 12/12 $0.001272 per solved. Research reconciled: pre 6/6, tool 1/1, attempts 7, denied 0, cache 7/7. The earlier 47/48 run was pre-nudge and is archived. The current full run is still a negative for Tavily as a pass-rate lever: C matches D at 12/12 and is ~25 percent cheaper; F is cheapest of all. Cascade also shows no pass-rate gain over F, only cost differences. Tavily value remains citations and cost avoidance, not accuracy.

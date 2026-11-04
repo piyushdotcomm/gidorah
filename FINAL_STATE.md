@@ -19,7 +19,7 @@
 - Superseded: earlier synthetic/hung/partial runs are archived outside the public repo and logged in `BUILD_LOG.md`. None are used as headline evidence.
 
 ## Pending (external)
-- DSH package integration (vendored with LICENSE/NOTICE, not wired; the native TUI ships).
+- DSH package integration declined: unused source removed, license/notice retained; the native TUI ships.
 - Live gateway DLP and canary scan: needs a Linux Bifrost loading the Go plugin.
 - 3-5 run variance sweep on the full set; harder tasks where F fails and C/D succeed.
 - Demo recording/slides, Bifrost repo star, key rotation.

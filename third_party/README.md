@@ -1,5 +1,5 @@
 > **Current state (2026-11-03):** the DSH TUI is vendored at
-> `third_party/dsh-tui` with LICENSE/NOTICE, and the Go plugin compiles and
+> the DSH TUI license/notice retained, and the Go plugin compiles and
 > tests against the real Bifrost SDK. The historical notes below describing
 > "not vendored" or "Go toolchain not installed" are superseded.
 # Third-party register
@@ -14,7 +14,7 @@ Current state is in `README.md`, `BUILD_REPORT.md`, and `FINAL_STATE.md`. The bu
 |---|---|---|---|
 | Bifrost (`maximhq/bifrost`) | Model gateway and only model egress path | Apache-2.0 | Runtime dependency, not vendored here. Include the license and NOTICE for the pinned release. State that Gidorah is not an official Bifrost product. Pinned release and NOTICE are recorded in this repo. |
 | Tavily API (`tavily.com`) | Web research and extraction service | Commercial API terms | Not open source. Follow the terms of service and acceptable use policy, cite sources, and do not redistribute page content beyond what the terms allow. PENDING: terms review for caching and benchmark publication. No API key is present in this build. |
-| DeepSeek Harness TUI (`@deepseek-ai/dsh-tui`) | Vendored terminal UI package at `third_party/dsh-tui` (192 files) | MIT AND BSD-3-Clause | Vendored with both license texts (`LICENSE`) and `NOTICE`; SPDX expression preserved. Gidorah-specific adapter panels live in `apps/tui`; full package integration is pending. |
+| DeepSeek Harness TUI (`@deepseek-ai/dsh-tui`) | Historical design reference; no longer imported | MIT AND BSD-3-Clause | Unused vendored source removed; license and notice retained at `third_party/dsh-tui.LICENSE` and `third_party/dsh-tui.NOTICE`. |
 | pi-tui (`@earendil-works/pi-tui`) | Legacy TUI framework (plain/demo path) | MIT, pinned 0.80.7 | Installed; license at `third_party/pi-tui.LICENSE`; no longer used by `gidorah tui`. |
 | OpenTUI (`@opentui/core`) | Interactive TUI framework (opencode uses it) | MIT, pinned 0.8.2 | Installed with native win32/darwin/linux prebuilds; license at `third_party/opentui.LICENSE`. |
 | Node.js | Runtime | MIT | Not vendored. Include the Node.js license in a distribution that bundles the binary. Standard attribution. |
@@ -36,6 +36,6 @@ Current state is in `README.md`, `BUILD_REPORT.md`, and `FINAL_STATE.md`. The bu
 
 ## Update 2026-11-03
 
-- DeepSeek Harness TUI package is now vendored at `third_party/dsh-tui` (192 files) with its LICENSE and a NOTICE; the Gidorah panel adaptation is still PENDING.
+- DeepSeek Harness TUI source was removed as unused; its LICENSE and NOTICE remain for attribution. The current TUI is OpenTUI-based.
 - Bifrost DLP plugin now compiles and tests against the real Bifrost core SDK (v1.14.1).
 
