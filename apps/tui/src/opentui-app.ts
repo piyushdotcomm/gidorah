@@ -209,9 +209,9 @@ export class OpenTuiApp {
     this.renderer.root.add(root);
 
     // Header
-    const header = new BoxRenderable(this.renderer, { id: "header", width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" });
-    const brand = new BoxRenderable(this.renderer, { id: "brand", flexDirection: "column" });
-    const logo = new ASCIIFontRenderable(this.renderer, { id: "logo", text: "GIDORAH", font: "block", color: [color(T.accent), color(T.purple), color(T.red)] });
+    const header = new BoxRenderable(this.renderer, { id: "header", width: "100%", flexShrink: 0, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" });
+    const brand = new BoxRenderable(this.renderer, { id: "brand", flexShrink: 0, flexDirection: "column" });
+    const logo = new ASCIIFontRenderable(this.renderer, { id: "logo", flexShrink: 0, text: "GIDORAH", font: "block", color: [color(T.accent), color(T.purple), color(T.red)] });
     brand.add(logo);
     brand.add(new TextRenderable(this.renderer, { id: "tagline", content: "governed coding agent · Bifrost model plane × Tavily knowledge plane", fg: color(T.dim) }));
     const badge = new BoxRenderable(this.renderer, { id: "badge", flexDirection: "column", alignItems: "flex-end", gap: 0 });
@@ -248,7 +248,7 @@ export class OpenTuiApp {
     root.add(this.banner);
 
     // Status pills (two compact rows so every pill stays visible)
-    const status = new BoxRenderable(this.renderer, { id: "status", width: "100%", height: 2, flexDirection: "column", gap: 0 });
+    const status = new BoxRenderable(this.renderer, { id: "status", width: "100%", height: 2, flexShrink: 0, flexDirection: "column", gap: 0 });
     const allPills = this.statusPills();
     for (const rowPills of [allPills.slice(0, 4), allPills.slice(4)]) {
       const row = new BoxRenderable(this.renderer, { id: `status-row-${rowPills[0]?.[0] ?? "x"}`, flexDirection: "row", gap: 1, flexWrap: "wrap" });
@@ -265,6 +265,8 @@ export class OpenTuiApp {
       id: "transcript",
       width: "100%",
       flexGrow: 1,
+      minHeight: 0,
+      flexShrink: 1,
       border: true,
       borderStyle: "rounded",
       borderColor: color(T.border),
@@ -287,6 +289,7 @@ export class OpenTuiApp {
     const composer = new BoxRenderable(this.renderer, {
       id: "composer",
       width: "100%",
+      flexShrink: 0,
       border: true,
       borderStyle: "rounded",
       borderColor: color(T.accent),
@@ -326,6 +329,7 @@ export class OpenTuiApp {
     // Footer
     root.add(new TextRenderable(this.renderer, {
       id: "footer",
+      flexShrink: 0,
       fg: color(T.dim),
       content: `${this.opts.branch} · ${this.opts.cwd.split(/[\\\\/]/).at(-1) ?? this.opts.cwd} · session ${this.session.header.sessionId} · /help`,
     }));
@@ -529,7 +533,7 @@ export class OpenTuiApp {
   private sync(): void {
     this.badgeMode.content = `${this.opts.mode.toUpperCase()} MODE`;
     this.badgeMode.fg = color(this.opts.mode === "mock" ? T.yellow : T.green);
-    this.badgeModel.content = this.modelAlias;
+    this.badgeModel.content = this.modelAlias.split("/").at(-1) ?? this.modelAlias;
     this.banner.visible = this.opts.mode === "mock";
     const values = [this.opts.mode, this.modelAlias.split("/").at(-1) ?? this.modelAlias, `$${this.llmUsd.toFixed(3)}/$${this.llmLimit.toFixed(2)}`, `${this.researchCredits}/${this.researchLimit}`, this.dlp, `${Math.round(this.cacheHitRate * 100)}%`, `${Math.round(this.contextPressure * 100)}%`, this.compaction];
     this.statusValues.forEach((text, index) => {
