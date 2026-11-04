@@ -111,7 +111,7 @@ Tavily honesty: current full run C 12/12 vs D 12/12 with D ~35 percent more expe
 
 ### Superseded artifacts (archived)
 
-`bench/real_mw0etfge` (synthetic pilot), `bench/real_mw0f94jv` (hung), `bench/real_mw0ffoii` (synthetic tasks, fake cascade), `bench/real_mw0g3w0s` (corrected pilot, pre research trigger), `bench/real_mw0g7hvx` (partial A run), `bench/real_mw0gj157` (Class B only), `bench/real_mw0i03nt` (full 1-run, pre field fix), `bench/real_mw0jtdu3` (variance pilot, pre field fix). Current verified evidence: `bench/real_mw0or6tw` (post-nudge full run, 48/48) and `bench/real_mw0ksdno` (post-fix 3-run pilot). `bench/real_mw0nvfe6` (47/48) is pre-nudge and superseded; the table with `real_mw0i03nt` is pre-fix economics only.
+Earlier synthetic, hung, partial, single-run and pre-nudge runs are archived outside the public repo and logged in `BUILD_LOG.md`. Current verified evidence: `bench/real_mw0or6tw` (post-nudge full run, 48/48). The post-fix 3-run pilot is also archived.
 
 ## Post-fix 3-run pilot (current evidence)
 
