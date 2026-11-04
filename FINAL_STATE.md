@@ -16,7 +16,7 @@
 - Current full run: `bench/real_mw0or6tw` with `promptVersion: edit-nudge-v1`, **48/48 solved, 100%, $0.111062 total, $0.002314 per solved task, 0 errored**.
 - Per arm (all 12/12): F $0.001272, C $0.001802, D $0.002383, A $0.003797 per solved. F is cheapest; C is cheaper than D.
 - Three-sample Tavily picture: current full C 12/12 vs D 12/12 with D about 32% more expensive per solved; Class B-only D 5/6 vs C 6/6; post-fix pilot D 9/9 vs C 8/9 vs A 7/9. The samples disagree at small n; no reliable pass-rate claim is made, and Tavily value is stated as citations plus cost avoidance.
-- Superseded: `bench/real_mw0nvfe6` (47/48 pre-nudge), and all older synthetic/hung/partial runs listed in `BUILD_LOG.md`. None are used as headline evidence.
+- Superseded: earlier synthetic/hung/partial runs are archived outside the public repo and logged in `BUILD_LOG.md`. None are used as headline evidence.
 
 ## Pending (external)
 - DSH package integration (vendored with LICENSE/NOTICE, not wired; the native TUI ships).

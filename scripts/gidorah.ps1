@@ -3,7 +3,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$repo = "C:\Users\13725\OneDrive\Desktop\gidorah"
+$repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
 
 # Load local credentials (gitignored).

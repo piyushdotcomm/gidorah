@@ -5,7 +5,7 @@ Deterministic, offline (`gidorah tui --demo`). The model is a fake streaming mod
 ### 1. Streaming assistant text + tool card
 ```text
 Gidorah  the governed coding agent
-cwd: C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl  ·  branch: main  ·  sess…
+cwd: /tmp/gidorah-tui-demo  ·  branch: main  ·  sess…
 mode: mock  route: gidorah-auto  budget: $0.0000/$1.00  research: 0/50  dlp: clean  cache: 0%  cont…
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 › patch greeting.txt and verify the runtime
@@ -42,7 +42,7 @@ running…  Ctrl+C cancel  Ctrl+O expand tools  Ctrl+L clear
 ### 2. Edit approval with path and numbered diff
 ```text
 Gidorah  the governed coding agent
-cwd: C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl  ·  branch: main  ·  sess…
+cwd: /tmp/gidorah-tui-demo  ·  branch: main  ·  sess…
 mode: mock  route: fireworks/deepseek-v4p1-flash  budget: $0.0000/$1.00  research: 0/50  dlp: clean…
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 › patch greeting.txt and verify the runtime
@@ -79,7 +79,7 @@ mode: mock  route: fireworks/deepseek-v4p1-flash  budget: $0.0000/$1.00  researc
 ### 3. Shell approval hint (read-only/mutating)
 ```text
 Gidorah  the governed coding agent
-cwd: C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl  ·  branch: main  ·  sess…
+cwd: /tmp/gidorah-tui-demo  ·  branch: main  ·  sess…
 mode: mock  route: fireworks/deepseek-v4p1-flash  budget: $0.0000/$1.00  research: 0/50  dlp: clean…
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 › patch greeting.txt and verify the runtime
@@ -116,7 +116,7 @@ mode: mock  route: fireworks/deepseek-v4p1-flash  budget: $0.0000/$1.00  researc
 ### 4. Research card and denied shell tool
 ```text
 Gidorah  the governed coding agent
-cwd: C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl  ·  branch: main  ·  sess…
+cwd: /tmp/gidorah-tui-demo  ·  branch: main  ·  sess…
 mode: mock  route: fireworks/deepseek-v4p1-flash  budget: $0.0000/$1.00  research: 1/50  dlp: clean…
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 › patch greeting.txt and verify the runtime
@@ -153,7 +153,7 @@ running…  Ctrl+C cancel  Ctrl+O expand tools  Ctrl+L clear
 ### 5. Turn complete: takeover banner, receipt
 ```text
 Gidorah  the governed coding agent
-cwd: C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl  ·  branch: main  ·  sess…
+cwd: /tmp/gidorah-tui-demo  ·  branch: main  ·  sess…
 mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 › patch greeting.txt and verify the runtime
@@ -190,7 +190,7 @@ Enter send  ↑↓ history  /help  Ctrl+D quit
 ### 6. /status, /trace, /receipt
 ```text
 Gidorah  the governed coding agent
-cwd: C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl  ·  branch: main  ·  sess…
+cwd: /tmp/gidorah-tui-demo  ·  branch: main  ·  sess…
 mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ● Let me check the current Node docs before using AbortSignal.
@@ -206,7 +206,7 @@ mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/5
 ⇄ takeover: fireworks/deepseek-v4p1-flash → fireworks/glm-5p3-flash (fallback #1)
 ✓ receipt: success · 2000 tokens · $0.0016 · 1 fallback(s) · Done. greeting.txt is updated and the …
 · session ses_mw0ql9wv_1rjpzk · cwd
-C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl · mode mock · model
+/tmp/gidorah-tui-demo · mode mock · model
 gidorah-auto · budget $0.0016/$1.00 · receipts 1
 · #  Phase     Requested            Served               Fallback  Cache  Tokens  Cost
 1   explore    fireworks/deepseek-v4p1-flash  fireworks/deepseek-v4p1-flash  no         no      500
@@ -227,7 +227,7 @@ Enter send  ↑↓ history  /help  Ctrl+D quit
 ### 7. /resume picker (arrow keys or number, Esc cancels)
 ```text
 Gidorah  the governed coding agent
-cwd: C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl  ·  branch: main  ·  sess…
+cwd: /tmp/gidorah-tui-demo  ·  branch: main  ·  sess…
 mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ● Let me check the current Node docs before using AbortSignal.
@@ -243,7 +243,7 @@ mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/5
 ⇄ takeover: fireworks/deepseek-v4p1-flash → fireworks/glm-5p3-flash (fallback #1)
 ✓ receipt: success · 2000 tokens · $0.0016 · 1 fallback(s) · Done. greeting.txt is updated and the …
 · session ses_mw0ql9wv_1rjpzk · cwd
-C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl · mode mock · model
+/tmp/gidorah-tui-demo · mode mock · model
 gidorah-auto · budget $0.0016/$1.00 · receipts 1
 · #  Phase     Requested            Served               Fallback  Cache  Tokens  Cost
 1   explore    fireworks/deepseek-v4p1-flash  fireworks/deepseek-v4p1-flash  no         no      500
@@ -264,7 +264,7 @@ Enter send  ↑↓ history  /help  Ctrl+D quit
 ### 8. /model aliases
 ```text
 Gidorah  the governed coding agent
-cwd: C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl  ·  branch: main  ·  sess…
+cwd: /tmp/gidorah-tui-demo  ·  branch: main  ·  sess…
 mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/50  dlp: clean  cach…
 ────────────────────────────────────────────────────────────────────────────────────────────────────
   Question: How do I compose abort signals in current Node?
@@ -277,7 +277,7 @@ mode: mock  route: fireworks/glm-5p3-flash  budget: $0.0016/$1.00  research: 1/5
 ⇄ takeover: fireworks/deepseek-v4p1-flash → fireworks/glm-5p3-flash (fallback #1)
 ✓ receipt: success · 2000 tokens · $0.0016 · 1 fallback(s) · Done. greeting.txt is updated and the …
 · session ses_mw0ql9wv_1rjpzk · cwd
-C:/Users/13725/AppData/Local/Temp/dsh-bIcLkC/gidorah-tui-demo-oWxtJl · mode mock · model
+/tmp/gidorah-tui-demo · mode mock · model
 gidorah-auto · budget $0.0016/$1.00 · receipts 1
 · #  Phase     Requested            Served               Fallback  Cache  Tokens  Cost
 1   explore    fireworks/deepseek-v4p1-flash  fireworks/deepseek-v4p1-flash  no         no      500

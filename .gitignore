@@ -38,3 +38,11 @@ worktrees/
 .gidorah-*/
 
 *.tgz
+
+# generated benchmark runs, caches and DB artifacts
+bench/real_*/
+!bench/real_mw0or6tw/
+!bench/real_mw0or6tw/**
+bench/run_*/
+bench/traces/
+*.db
