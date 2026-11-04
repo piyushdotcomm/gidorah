@@ -246,7 +246,7 @@ export class OpenTuiApp {
       border: true,
       borderStyle: "rounded",
       borderColor: color(T.yellow),
-      backgroundColor: color("#2a2418"),
+      backgroundColor: color(T.panelAlt),
       paddingX: 1,
       height: 4,
       flexDirection: "column",
@@ -338,7 +338,7 @@ export class OpenTuiApp {
     composer.add(new TextRenderable(this.renderer, {
       id: "composer-hint",
       fg: color(T.dim),
-      content: "Enter send · Shift+Enter newline · Tab complete · Ctrl+O expand tools · Ctrl+C cancel",
+      content: "Enter send · Shift+Enter newline · Tab complete · Ctrl+O expand tools · Ctrl+T theme · Ctrl+C cancel",
     }));
     root.add(composer);
 
@@ -371,7 +371,7 @@ export class OpenTuiApp {
       border: true,
       borderStyle: "double",
       borderColor: color(T.yellow),
-      backgroundColor: color("#161b26"),
+      backgroundColor: color(T.panel),
       flexDirection: "column",
       padding: 1,
       gap: 1,
@@ -409,7 +409,7 @@ export class OpenTuiApp {
       border: true,
       borderStyle: "double",
       borderColor: color(T.cyan),
-      backgroundColor: color("#161b26"),
+      backgroundColor: color(T.panel),
       flexDirection: "column",
       padding: 1,
       gap: 1,
@@ -456,7 +456,7 @@ export class OpenTuiApp {
       border: true,
       borderStyle: "double",
       borderColor: color(T.cyan),
-      backgroundColor: color("#161b26"),
+      backgroundColor: color(T.panel),
       flexDirection: "column",
       padding: 1,
       gap: 1,
@@ -466,7 +466,7 @@ export class OpenTuiApp {
       id: "theme-list",
       width: "100%",
       height: 10,
-      options: this.themeNames.map((name) => ({ name, description: "", value: name })),
+      options: this.themeNames.map((name) => ({ name: name === this.themeName ? `${name}  (current)` : name, description: "", value: name })),
       backgroundColor: color(T.panel),
       textColor: color(T.text),
       focusedBackgroundColor: color(T.panelAlt),
@@ -632,6 +632,11 @@ export class OpenTuiApp {
         this.toggleTool(true);
         return;
       }
+      if (key.ctrl === true && key.name === "t") {
+        key.preventDefault();
+        this.showThemePicker();
+        return;
+      }
       if (key.name === "return" && key.shift !== true && this.phase !== "running") {
         key.preventDefault();
         const text = this.textarea.plainText.trim();
@@ -721,7 +726,7 @@ export class OpenTuiApp {
     box.add(new TextRenderable(this.renderer, { id: "welcome-mode", content: `mode ${this.opts.mode} · model ${this.modelAlias}`, fg: color(T.dim) }));
     box.add(new TextRenderable(this.renderer, { id: "welcome-help", content: "Ask for a code change, a review, or a shell task. `/help` lists commands.", fg: color(T.text) }));
     const chips = new BoxRenderable(this.renderer, { id: "welcome-chips", flexDirection: "row", flexWrap: "wrap", gap: 1 });
-    for (const command of ["/status", "/resume", "/trace", "/receipt", "/help"]) {
+    for (const command of ["/theme", "/status", "/resume", "/trace", "/receipt", "/help"]) {
       chips.add(this.chip(command, () => void this.submit(command)));
     }
     box.add(chips);
@@ -1217,7 +1222,7 @@ export class OpenTuiApp {
 
   private complete(): void {
     const value = this.textarea.plainText;
-    const commands = ["/help", "/status", "/model", "/budget", "/trace", "/receipt", "/new", "/resume", "/doctor", "/quit"];
+    const commands = ["/help", "/status", "/model", "/theme", "/budget", "/trace", "/receipt", "/new", "/resume", "/doctor", "/quit"];
     if (value.startsWith("/")) {
       const matches = commands.filter((command) => command.startsWith(value));
       if (matches.length === 1) {
