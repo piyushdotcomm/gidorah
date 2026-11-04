@@ -36,7 +36,10 @@ export function pathMatches(pattern: string, cwd: string): boolean {
   const target = normalizeForMatch(cwd);
   const base = normalizeForMatch(pattern.replace(/[\\/]+$/, ""));
   if (!base.includes("*")) {
-    return target === base || target.startsWith(base + (process.platform === "win32" ? "\\" : sep));
+    // Policy paths must match the same canonical form the cwd is classified
+    // with: Windows short paths (RUNNER~1), symlinks and case differences.
+    const canonicalBase = normalizeForMatch(canonicalize(pattern));
+    return target === base || target === canonicalBase || target.startsWith(base + (process.platform === "win32" ? "\\" : sep)) || target.startsWith(canonicalBase + (process.platform === "win32" ? "\\" : sep));
   }
   const escaped = base
     .split("*")
