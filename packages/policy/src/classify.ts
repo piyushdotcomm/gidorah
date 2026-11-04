@@ -32,14 +32,25 @@ function normalizeForMatch(path: string): string {
 }
 
 /** Convert a policy glob (`*` wildcard) into an anchored matcher for paths. */
+/** Canonicalize the literal directory prefix of a policy glob when it exists. */
+function canonicalizePattern(pattern: string): string {
+  const star = pattern.indexOf("*");
+  if (star < 0) return canonicalize(pattern);
+  const prefix = pattern.slice(0, star);
+  const sepIndex = Math.max(prefix.lastIndexOf("/"), prefix.lastIndexOf("\\"));
+  if (sepIndex < 0) return pattern;
+  const dir = prefix.slice(0, sepIndex);
+  if (!existsSync(dir)) return pattern;
+  return canonicalize(dir) + pattern.slice(sepIndex);
+}
+
+/** Convert a policy glob (`*` wildcard) into an anchored matcher for paths. */
 export function pathMatches(pattern: string, cwd: string): boolean {
   const target = normalizeForMatch(cwd);
-  const base = normalizeForMatch(pattern.replace(/[\\/]+$/, ""));
+  const clean = pattern.replace(/[\\/]+$/, "");
+  const base = normalizeForMatch(canonicalizePattern(clean));
   if (!base.includes("*")) {
-    // Policy paths must match the same canonical form the cwd is classified
-    // with: Windows short paths (RUNNER~1), symlinks and case differences.
-    const canonicalBase = normalizeForMatch(canonicalize(pattern));
-    return target === base || target === canonicalBase || target.startsWith(base + (process.platform === "win32" ? "\\" : sep)) || target.startsWith(canonicalBase + (process.platform === "win32" ? "\\" : sep));
+    return target === base || target.startsWith(base + (process.platform === "win32" ? "\\" : sep));
   }
   const escaped = base
     .split("*")
@@ -47,7 +58,6 @@ export function pathMatches(pattern: string, cwd: string): boolean {
     .join(".*");
   return new RegExp(`^${escaped}(?:[\\\\/].*)?$`).test(target);
 }
-
 export function remoteMatches(pattern: string, remote: string): boolean {
   if (pattern === "") return false;
   const normalizedRemote = remote.toLowerCase();
