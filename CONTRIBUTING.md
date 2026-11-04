@@ -6,7 +6,7 @@ matter more than feature count.
 ## Setup
 
 ```bash
-git clone https://github.com/piyushdotcom/gidorah.git
+git clone https://github.com/piyushdotcomm/gidorah.git
 cd gidorah
 npm ci
 node apps/cli/src/main.ts doctor
