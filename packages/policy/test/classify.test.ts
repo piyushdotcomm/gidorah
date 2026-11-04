@@ -70,26 +70,30 @@ test("classification: invalid policy fails closed", () => {
 
 test("virtual keys: confidential uses the local key; exhausted budget degrades per policy", () => {
   const policy = DEFAULT_POLICY;
-  const confidentialRepo = classifyRepo(
-    policyFromRaw({ mode: { default: "cloud", confidential: { paths: ["C:/work/bank-*"] } } }),
-    "C:/work/bank-secret",
-  );
-  const selected = selectVirtualKey(policy, confidentialRepo, { usedUsd: 0, limitUsd: 10, remainingUsd: 10 });
-  assert.equal(selected.kind, "local");
-  assert.equal(selected.name, policy.budgets.llm.virtual_key_local);
+  const dir = tempDir();
+  try {
+    const confidentialRepoPath = join(dir, "bank-secret");
+    mkdirSync(confidentialRepoPath, { recursive: true });
+    const confidentialPolicy = policyFromRaw({ mode: { default: "cloud", confidential: { paths: [join(dir, "bank-*")] } } });
+    const confidentialRepo = classifyRepo(confidentialPolicy, confidentialRepoPath);
+    const selected = selectVirtualKey(policy, confidentialRepo, { usedUsd: 0, limitUsd: 10, remainingUsd: 10 });
+    assert.equal(selected.kind, "local");
+    assert.equal(selected.name, policy.budgets.llm.virtual_key_local);
 
-  const cloudRepo = classifyRepo(policy, "C:/work/public");
-  const broke = selectVirtualKey(policy, cloudRepo, { usedUsd: 10, limitUsd: 10, remainingUsd: 0 });
-  assert.equal(broke.kind, "local");
-  assert.match(broke.reason, /local_first/);
+    const cloudRepo = classifyRepo(policy, join(dir, "public"));
+    const broke = selectVirtualKey(policy, cloudRepo, { usedUsd: 10, limitUsd: 10, remainingUsd: 0 });
+    assert.equal(broke.kind, "local");
+    assert.match(broke.reason, /local_first/);
 
-  const stopPolicy = {
-    ...policy,
-    budgets: { ...policy.budgets, llm: { ...policy.budgets.llm, at_limit: "stop" as const } },
-  };
-  assert.throws(() => selectVirtualKey(stopPolicy, cloudRepo, { usedUsd: 10, limitUsd: 10, remainingUsd: 0 }), /budget exhausted/i);
+    const stopPolicy = {
+      ...policy,
+      budgets: { ...policy.budgets, llm: { ...policy.budgets.llm, at_limit: "stop" as const } },
+    };
+    assert.throws(() => selectVirtualKey(stopPolicy, cloudRepo, { usedUsd: 10, limitUsd: 10, remainingUsd: 0 }), /budget exhausted/i);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
-
 test("aliases resolve to provider/model and unknown aliases fail closed", () => {
   assert.deepEqual(resolveAlias(DEFAULT_POLICY, "gidorah-strong"), { provider: "deepseek", model: "deepseek-pro" });
   assert.throws(() => resolveAlias(DEFAULT_POLICY, "gidorah-nonexistent"), /Unknown model alias/);
