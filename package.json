@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@earendil-works/pi-tui": "0.80.7",
-    "@opentui/core": "0.8.2"
+    "@opentui/core": "0.8.3"
   },
   "bin": {
     "gidorah": "./bin/gidorah.js"
